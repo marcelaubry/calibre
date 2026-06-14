@@ -1,0 +1,3 @@
+# calibre-ui — UI-only prototype
+User-agent: *
+Allow: /
