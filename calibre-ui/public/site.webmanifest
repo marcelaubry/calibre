@@ -1,0 +1,17 @@
+{
+  "name": "Calibre — Modern UI",
+  "short_name": "Calibre",
+  "description": "A UI-only desktop-web prototype of the Calibre e-book manager, rendered in a dark-navy glassmorphic design system.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0C0E1A",
+  "theme_color": "#0C0E1A",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any"
+    }
+  ]
+}
