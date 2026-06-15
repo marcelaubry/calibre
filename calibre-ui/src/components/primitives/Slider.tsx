@@ -53,10 +53,12 @@
  * token (#7B61FF→#4838C8, -45deg). On a thin 6px bar a -45deg gradient reads as
  * a left→right transition (clearly wrong); the design is a near-uniform,
  * slightly-lighter-on-top vertical fill. To match Figma's orientation EXACTLY
- * while keeping ZERO hardcoded colors, the fill is composed from the two accent
- * color TOKENS — `bg-[image:linear-gradient(to_top,var(--color-accent),var(--color-accent-light))]`
- * (`to top` ≡ 0deg: `--color-accent` #7B61FF at the bottom, `--color-accent-light`
- * #A78BFA at the top). Per the CRITICAL Precedence Directive (exact Figma values
+ * while keeping ZERO hardcoded values, this vertical accent ramp is declared
+ * ONCE as the named `--gradient-slider-track` token in globals.css and consumed
+ * here via the `bg-gradient-slider-track` utility (`to top` ≡ 0deg:
+ * `--color-accent` #7B61FF at the bottom, `--color-accent-light` #A78BFA at the
+ * top) — no inline gradient string lives in this component. Per the CRITICAL
+ * Precedence Directive (exact Figma values
  * override brief defaults — a default that masks Figma is a hallucination) and
  * the house pattern set by the siblings `Toggle` / `Select` (implement CONFIRMED
  * Figma, flag the deviation). The AAP §0.3.3 intent ("purple-filled track") is
@@ -244,14 +246,15 @@ const TRACK_UNFILLED =
 /**
  * FILLED bar — the purple progress portion, painted over the unfilled base.
  * Width is set inline (dynamic geometry; see {@link Slider}). The fill is the
- * VERTICAL accent gradient composed from the two accent color TOKENS
- * (`var(--color-accent)` bottom → `var(--color-accent-light)` top); `to_top`
- * (Tailwind arbitrary-value spelling of `to top`) is 0deg, matching CONFIRMED
- * Figma `8:100`. ZERO hardcoded colors (see BLITZY [COLOR] in the header).
+ * VERTICAL accent gradient — the named `--gradient-slider-track` token
+ * (`var(--color-accent)` bottom → `var(--color-accent-light)` top, `to top` =
+ * 0deg), consumed via the ergonomic `bg-gradient-slider-track` utility declared
+ * in globals.css. CONFIRMED Figma `8:100`; ZERO inline gradient literal (the
+ * gradient definition lives in the token manifest, not here).
  */
 const TRACK_FILLED =
   'pointer-events-none absolute left-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full ' +
-  'bg-[image:linear-gradient(to_top,var(--color-accent),var(--color-accent-light))]';
+  'bg-gradient-slider-track';
 
 /**
  * Native `<input type="range">` classes — the single token-backed control.
@@ -267,8 +270,9 @@ const TRACK_FILLED =
  *   border), `bg-white` (the sanctioned pure-#FFFFFF keyword). No resting shadow
  *   (Figma defines none — DS2-d).
  * - Focus: a token-backed `:focus-visible` halo on the thumb
- *   (`shadow-[0_0_0_3px_var(--border-accent)]`), shown for keyboard users only
- *   (UI3) and invisible at rest (DS2-e); the default UA outline is removed.
+ *   (`shadow-[0_0_0_var(--ring-focus-width)_var(--border-accent)]` — both the
+ *   3px width and the color resolve to named tokens), shown for keyboard users
+ *   only (UI3) and invisible at rest (DS2-e); the default UA outline is removed.
  * - Disabled: not-allowed cursor (paired with the native `disabled` attr; the
  *   wrapper carries the `opacity-50` dim so the bars + value label dim too).
  */
@@ -283,9 +287,9 @@ const INPUT_CLASSES =
   '[&::-moz-range-track]:h-5 [&::-moz-range-track]:bg-transparent ' +
   '[&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:rounded-full ' +
   '[&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-white ' +
-  // Keyboard-only focus halo on the knob (token-sourced; invisible at rest)
-  '[&:focus-visible::-webkit-slider-thumb]:shadow-[0_0_0_3px_var(--border-accent)] ' +
-  '[&:focus-visible::-moz-range-thumb]:shadow-[0_0_0_3px_var(--border-accent)]';
+  // Keyboard-only focus halo on the knob (token-sourced width + color; invisible at rest)
+  '[&:focus-visible::-webkit-slider-thumb]:shadow-[0_0_0_var(--ring-focus-width)_var(--border-accent)] ' +
+  '[&:focus-visible::-moz-range-thumb]:shadow-[0_0_0_var(--ring-focus-width)_var(--border-accent)]';
 
 /**
  * Value-label classes (CONFIRMED Figma `8:102`): the light-violet

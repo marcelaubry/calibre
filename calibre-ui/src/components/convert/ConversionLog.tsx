@@ -202,10 +202,11 @@ const LEVEL_TEXT_CLASS: Record<LogLevel, string> = {
 
 /**
  * Base classes for the terminal/inset container (Figma `6:88`):
- *   • flex flex-col gap-[3px]                   → vertical stack; the 3px gap +
- *                                                 12px line box = Figma's 15px
- *                                                 line pitch with a 117px text
- *                                                 block (matches node 6:88)
+ *   • flex flex-col gap-[var(--space-conversion-log-gap)]
+ *                                               → vertical stack; the 3px gap
+ *                                                 token + 12px line box = Figma's
+ *                                                 15px line pitch with a 117px
+ *                                                 text block (matches node 6:88)
  *   • w-full                                    → fill the dialog body width (responsive)
  *   • bg-[var(--color-bg-app)]/40               → fill rgba(12,14,26,0.4)
  *   • shadow-[inset_0_0_0_1px_var(--border-white-07)]
@@ -216,18 +217,22 @@ const LEVEL_TEXT_CLASS: Record<LogLevel, string> = {
  *                                                 layout `border` would add 1px top +
  *                                                 1px bottom (132px). See BLITZY [GEOMETRY].
  *   • rounded-control                           → 8px radius (--radius-control)
- *   • px-2.5 pt-2 pb-[5px]                       → 10px inline · 8px top / 5px bottom
- *                                                 (Figma 6:88's asymmetric insets)
- *   • max-h-[140px] overflow-y-auto             → fits the 8 default lines; scrolls
- *                                                 beyond, keeping the 880×740 dialog
- *                                                 free of vertical clipping
+ *   • px-2.5 pt-2 pb-[var(--space-conversion-log-pb)]
+ *                                               → 10px inline · 8px top / 5px
+ *                                                 bottom token (Figma 6:88's
+ *                                                 asymmetric insets)
+ *   • max-h-[var(--size-conversion-log-max-h)] overflow-y-auto
+ *                                               → 140px max fits the 8 default
+ *                                                 lines; scrolls beyond, keeping
+ *                                                 the 880×740 dialog free of
+ *                                                 vertical clipping
  *   • text-meta-label                           → Inter 10px / 400 (inherited by lines)
  *   • leading-3                                 → 12px line box (Figma's per-line box)
  */
 const CONTAINER_BASE =
-  'flex flex-col gap-[3px] w-full bg-[var(--color-bg-app)]/40 ' +
-  'shadow-[inset_0_0_0_1px_var(--border-white-07)] rounded-control px-2.5 pt-2 pb-[5px] ' +
-  'max-h-[140px] overflow-y-auto text-meta-label leading-3';
+  'flex flex-col gap-[var(--space-conversion-log-gap)] w-full bg-[var(--color-bg-app)]/40 ' +
+  'shadow-[inset_0_0_0_1px_var(--border-white-07)] rounded-control px-2.5 pt-2 pb-[var(--space-conversion-log-pb)] ' +
+  'max-h-[var(--size-conversion-log-max-h)] overflow-y-auto text-meta-label leading-3';
 
 /**
  * Per-line classes: the level colour token plus `break-words`

@@ -22,14 +22,12 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# environment files — NEVER commit secrets (AAP §0.1.2)
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-.env*.local
-# but DO commit the non-secret template:
+# environment files — NEVER commit secrets (AAP §0.1.2).
+# Ignore EVERY .env variant (.env, .env.local, .env.production, .env.staging,
+# .env.preview, .env.development.local, .env*.local, …) so no real secret can
+# ever be committed — matches the checkpoint requirement to ignore `.env*`:
+.env*
+# … but DO keep the non-secret, names-only template tracked:
 !.env.example
 
 # typescript

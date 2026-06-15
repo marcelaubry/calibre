@@ -77,24 +77,31 @@
  * (`bg-[var(--scrim-convert)]`, `bg-[var(--scrim-metadata)]`,
  * `border-[var(--border-white-10)]`, `border-[var(--border-white-07)]`,
  * `bg-[var(--border-white-06)]`, `ring-[var(--border-accent)]`). There are NO
- * raw hex / rgba color literals. The only bare literals are LAYOUT / geometry
- * values that carry no color information — the dialog footprint (`w-[880px]`,
- * `h-[740px]`, `w-[860px]`, `h-[800px]`), the close-button size (`h-6`, `w-6`),
- * the stacking keyword (`z-50`), flex/padding/gap utilities, and the allowed
- * transition timings — all permitted (AAP: "Geometric px (w/h) are layout
- * utilities (allowed)").
+ * raw hex / rgba color literals. The dialog footprint ALSO resolves to named
+ * `@theme` size tokens — consumed via arbitrary `var()` utilities
+ * (`w-[var(--size-modal-convert-w)]`, `h-[var(--size-modal-convert-h)]`,
+ * `w-[var(--size-modal-metadata-w)]`, `h-[var(--size-modal-metadata-h)]`), so no
+ * bare px literal remains. The only remaining bare utilities are Tailwind's
+ * standard scale (the close-button size `h-6` / `w-6`, the stacking keyword
+ * `z-50`, flex/padding/gap utilities) and the allowed transition timings.
  *
  * RENDERING MODEL & ACCESSIBILITY (UI3 — invisible a11y, always applied)
  * --------------------------------------------------------------------------
- * Marked `'use client'` (first line) because it owns interactive state: an
- * Escape-key `keydown` listener and a backdrop click both call `onClose`, and a
- * body scroll-lock is toggled — all in a single `useEffect` whose cleanup
- * removes the listener AND restores the prior `document.body.style.overflow` (no
- * scroll-lock leaks). The effect is called UNCONDITIONALLY (before the
- * `open === false → null` early return) to honor the Rules of Hooks, and is
- * internally guarded so it only binds while open.
- *   • The dialog card is a semantic `role="dialog"` with `aria-modal="true"` and
- *     `aria-label={title}`.
+ * Marked `'use client'` (first line) because it owns interactive state: a
+ * `keydown` listener (Escape closes; Tab/Shift+Tab is trapped), a backdrop click
+ * that calls `onClose`, a body scroll-lock, and full focus management — all in a
+ * single `useEffect` whose cleanup removes the listener, restores the prior
+ * `document.body.style.overflow` (no scroll-lock leaks), AND returns focus to the
+ * opener. The effect is called UNCONDITIONALLY (before the `open === false → null`
+ * early return) to honor the Rules of Hooks, and is internally guarded so it only
+ * runs while open.
+ *   • The dialog card is a semantic `role="dialog"` with `aria-modal="true"`,
+ *     `aria-label={title}`, and `tabIndex={-1}` so it can receive initial focus.
+ *   • FOCUS MANAGEMENT (modal-correct, AAP A11y): on open the effect records the
+ *     opener (`document.activeElement`), moves focus into the dialog (its first
+ *     tabbable, else the dialog container), and TRAPS Tab/Shift+Tab so focus
+ *     cycles among the dialog's tabbable descendants and can never reach the
+ *     inert background; on close/unmount it restores focus to the opener.
  *   • The close control is a real `<button type="button">` with `aria-label`
  *     and a token-backed `:focus-visible` ring (keyboard users only, invisible
  *     at rest — DS2-e); the "×" glyph itself is `aria-hidden`.
@@ -111,7 +118,7 @@
  * @see Agent Action Plan §0.3.2 / §0.3.3 / §0.4.2 — token & component manifests.
  */
 
-import { useEffect, type JSX, type ReactNode } from 'react';
+import { useEffect, useRef, type JSX, type ReactNode } from 'react';
 
 /**
  * The two dialog geometries this scaffold encodes. Each value selects a matched
@@ -185,15 +192,18 @@ const DIALOG_SHADOW: Record<ModalVariant, string> = {
 };
 
 /**
- * Card footprint per variant (CONFIRMED Figma px — layout utilities, not
- * colors). The base classes pair these with `max-w-full max-h-full` so the card
- * never exceeds the padded viewport (the scrim's `p-8` keeps a gutter), holding
- * the 1440 baseline down to ≥1280 with zero horizontal overflow; tall content
- * scrolls inside the body band instead.
+ * Card footprint per variant — the CONFIRMED Figma dialog dimensions promoted to
+ * named `@theme` size tokens (`--size-modal-convert-w/h` = 880×740 for `6:9`;
+ * `--size-modal-metadata-w/h` = 860×800 for `9:9`), consumed via arbitrary
+ * `var()` utilities so no bare px literal lives in this component. The base
+ * classes pair these with `max-w-full max-h-full` so the card never exceeds the
+ * padded viewport (the scrim's `p-8` keeps a gutter), holding the 1440 baseline
+ * down to ≥1280 with zero horizontal overflow; tall content scrolls inside the
+ * body band instead.
  */
 const DIALOG_SIZE: Record<ModalVariant, string> = {
-  convert: 'w-[880px] h-[740px]',
-  metadata: 'w-[860px] h-[800px]',
+  convert: 'w-[var(--size-modal-convert-w)] h-[var(--size-modal-convert-h)]',
+  metadata: 'w-[var(--size-modal-metadata-w)] h-[var(--size-modal-metadata-h)]',
 };
 
 /**
@@ -297,8 +307,10 @@ const FOOTER =
  * propagation, declares `role="dialog"`/`aria-modal`/`aria-label`, and lays out
  * a fixed header (title + ✕ close), a scrollable body (`children`), and — when
  * `footer` is provided — a right-aligned footer action row beneath a hairline.
- * Escape closes the dialog and the body scroll is locked while open (both set up
- * and torn down in one effect). When `open` is `false` it renders `null`.
+ * While open: Escape closes, the body scroll is locked, focus is moved into the
+ * dialog and trapped within it, and focus is restored to the opener on close
+ * (all set up and torn down in one effect). When `open` is `false` it renders
+ * `null`.
  *
  * @param props - {@link ModalShellProps}
  * @returns The rendered modal overlay, or `null` when closed.
@@ -311,19 +323,73 @@ export function ModalShell({
   children,
   footer,
 }: ModalShellProps): JSX.Element | null {
-  // Escape-to-close + body scroll-lock. Called UNCONDITIONALLY (before the
-  // early return below) to honor the Rules of Hooks; the internal `open` guard
-  // means nothing is bound while the dialog is closed. The cleanup removes the
-  // listener AND restores the exact prior `overflow`, so there are no
-  // scroll-lock leaks across open/close cycles or on unmount.
+  // The dialog card element — focus target on open and the focus-trap boundary.
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  // Focus management + Escape-to-close + body scroll-lock for the open dialog.
+  // Called UNCONDITIONALLY (before the early return below) to honor the Rules of
+  // Hooks; the internal `open` guard means nothing runs while closed. On open it
+  // (1) remembers the opener (`document.activeElement`), (2) moves focus into the
+  // dialog (first tabbable, else the container), and (3) traps Tab/Shift+Tab
+  // among the dialog's tabbables so keyboard focus can never reach the inert
+  // background. The cleanup removes the listener, restores the exact prior
+  // `overflow`, and returns focus to the opener — no leaks across open/close
+  // cycles or on unmount.
   useEffect(() => {
     if (!open) {
       return;
     }
 
+    const dialog = dialogRef.current;
+    // Remember who opened the dialog so focus can be restored on close.
+    const opener = document.activeElement as HTMLElement | null;
+
+    // Tabbable descendants in document order (excludes disabled controls and
+    // tabindex="-1"); the dialog container itself is the focus-of-last-resort.
+    const FOCUSABLE_SELECTOR =
+      'a[href], button:not([disabled]), textarea:not([disabled]), ' +
+      'input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+    const getTabbables = (): HTMLElement[] =>
+      dialog == null
+        ? []
+        : Array.from(dialog.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR));
+
+    // Initial focus: the first tabbable (e.g. the ✕ close button), else the
+    // dialog container (which carries tabIndex={-1}).
+    const initialTabbables = getTabbables();
+    (initialTabbables[0] ?? dialog)?.focus();
+
     const handleKeyDown = (event: KeyboardEvent): void => {
       if (event.key === 'Escape') {
         onClose();
+        return;
+      }
+      if (event.key !== 'Tab' || dialog == null) {
+        return;
+      }
+
+      const focusables = getTabbables();
+      // No tabbable children → keep focus pinned on the dialog container.
+      if (focusables.length === 0) {
+        event.preventDefault();
+        dialog.focus();
+        return;
+      }
+
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      const active = document.activeElement;
+
+      if (event.shiftKey) {
+        // Shift+Tab off the first element (or the container) wraps to the last.
+        if (active === first || active === dialog || !dialog.contains(active)) {
+          event.preventDefault();
+          last.focus();
+        }
+      } else if (active === last || !dialog.contains(active)) {
+        // Tab off the last element wraps back to the first.
+        event.preventDefault();
+        first.focus();
       }
     };
 
@@ -335,6 +401,8 @@ export function ModalShell({
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = previousOverflow;
+      // Restore focus to the element that had it before the dialog opened.
+      opener?.focus?.();
     };
   }, [open, onClose]);
 
@@ -359,9 +427,11 @@ export function ModalShell({
       {/* Dialog card. stopPropagation keeps inner clicks from reaching the
           backdrop handler so only true outside clicks dismiss the dialog. */}
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-label={title}
+        tabIndex={-1}
         className={dialogClassName}
         onClick={(event) => event.stopPropagation()}
       >

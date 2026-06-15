@@ -99,13 +99,16 @@ export const colors = {
 } as const;
 
 // ---------------------------------------------------------------------------
-// Gradients — 2 named tokens (distinct: `accent` ≠ `cta`)
+// Gradients — 3 named tokens (distinct: `accent` ≠ `cta` ≠ `sliderTrack`)
 // ---------------------------------------------------------------------------
 export const gradients = {
   // accent gradient (e.g. CheckBadge fill) — ends in accent-light #A78BFA
   accent: 'linear-gradient(-45deg, #7B61FF 0%, #A78BFA 100%)',
   // primary CTA gradient (e.g. Read Now / Save) — ends in accent-indigo #4838C8
   cta: 'linear-gradient(-45deg, #7B61FF 0%, #4838C8 100%)',
+  // Slider filled-track fill (App 06 margins slider) — bottom-up accent→accent-light
+  // ramp. Mirrors `--gradient-slider-track`; consumed via `bg-gradient-slider-track`.
+  sliderTrack: 'linear-gradient(to top, var(--color-accent), var(--color-accent-light))',
 } as const;
 
 // ---------------------------------------------------------------------------
@@ -144,6 +147,44 @@ export const radii = {
 export const shadows = {
   convert: '0 24px 64px rgba(0,0,0,0.6)',
   metadata: '0 20px 60px rgba(0,0,0,0.65)',
+} as const;
+
+// ---------------------------------------------------------------------------
+// Sizes — 13 named component-geometry tokens (widths / heights / icon / ring)
+// Mirror of the `--size-*` / `--ring-*` `@theme` vars in globals.css. Promoted
+// from confirmed Figma pixel geometry so component TSX carries no bare px
+// literal (AAP §0.4.5). Values are byte-consistent with globals.css.
+// ---------------------------------------------------------------------------
+export const sizes = {
+  windowDot: '11px',          // --size-window-dot         · WindowTitleBar traffic-light dot
+  scrollbar: '10px',          // --size-scrollbar          · WebKit scrollbar width/height
+  buttonH: '38px',            // --size-button-h           · primary/toolbar button height
+  buttonCompactH: '32px',     // --size-button-compact-h   · secondary/danger compact height
+  toolbarButtonW: '84px',     // --size-toolbar-button-w   · toolbar button fixed min-width
+  toolbarIcon: '15px',        // --size-toolbar-icon       · toolbar glyph size
+  toggleKnob: '18px',         // --size-toggle-knob        · Toggle iOS knob diameter
+  conversionLogMaxH: '140px', // --size-conversion-log-max-h · Convert dialog log max-height
+  modalConvertW: '880px',     // --size-modal-convert-w    · Convert dialog width (6:9)
+  modalConvertH: '740px',     // --size-modal-convert-h    · Convert dialog height (6:9)
+  modalMetadataW: '860px',    // --size-modal-metadata-w   · Metadata dialog width (9:9)
+  modalMetadataH: '800px',    // --size-modal-metadata-h   · Metadata dialog height (9:9)
+  focusRingWidth: '3px',      // --ring-focus-width        · Slider thumb focus halo width
+} as const;
+
+// ---------------------------------------------------------------------------
+// Spacing — 8 named component spacing/offset tokens
+// Mirror of the `--space-*` `@theme` vars in globals.css (gaps, insets, and the
+// Toggle knob translation distance). Values are byte-consistent with globals.css.
+// ---------------------------------------------------------------------------
+export const spacing = {
+  toolbarButtonGap: '5px',   // --space-toolbar-button-gap  · Button toolbar glyph→label gap
+  chipY: '5px',              // --space-chip-y              · TagPill vertical padding
+  toggleKnobInsetX: '4px',   // --space-toggle-knob-inset-x · Toggle knob left inset
+  toggleKnobInsetY: '3px',   // --space-toggle-knob-inset-y · Toggle knob top inset
+  toggleKnobTravel: '18px',  // --space-toggle-knob-travel  · Toggle knob horizontal travel
+  windowTitleNudge: '3px',   // --space-window-title-nudge  · WindowTitleBar title vertical nudge
+  conversionLogGap: '3px',   // --space-conversion-log-gap  · ConversionLog per-line gap
+  conversionLogPb: '5px',    // --space-conversion-log-pb   · ConversionLog bottom inset
 } as const;
 
 // ---------------------------------------------------------------------------
@@ -196,13 +237,15 @@ export const tokens = {
   scrims,
   radii,
   shadows,
+  sizes,
+  spacing,
   fontFamily,
   typography,
 } as const;
 
 /** Union of valid color token keys, e.g. `'bgApp' | 'accent' | …`. */
 export type ColorToken = keyof typeof colors;
-/** Union of valid gradient token keys: `'accent' | 'cta'`. */
+/** Union of valid gradient token keys: `'accent' | 'cta' | 'sliderTrack'`. */
 export type GradientToken = keyof typeof gradients;
 /** Union of valid border token keys, e.g. `'white06' | … | 'accent'`. */
 export type BorderToken = keyof typeof borders;
@@ -212,6 +255,10 @@ export type ScrimToken = keyof typeof scrims;
 export type RadiusToken = keyof typeof radii;
 /** Union of valid shadow token keys: `'convert' | 'metadata'`. */
 export type ShadowToken = keyof typeof shadows;
+/** Union of valid size token keys, e.g. `'windowDot' | … | 'focusRingWidth'`. */
+export type SizeToken = keyof typeof sizes;
+/** Union of valid spacing token keys, e.g. `'toolbarButtonGap' | … | 'conversionLogPb'`. */
+export type SpacingToken = keyof typeof spacing;
 /** Union of valid typography role keys, e.g. `'windowTitle' | … | 'readerBody'`. */
 export type TypographyToken = keyof typeof typography;
 /** The fully-typed shape of the aggregate `tokens` object. */

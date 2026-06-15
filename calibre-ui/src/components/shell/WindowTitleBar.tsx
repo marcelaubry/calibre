@@ -77,10 +77,12 @@
  * (`text-window-title` for the 11px / weight-500 type role, `text-text-muted`
  * for the muted-slate color). There are NO raw hex / rgba color literals
  * anywhere in this file (not even in comments — colors are named by their
- * token). The only bare literals are pure GEOMETRY (`h-8` = the 32px bar,
- * `h-[11px] w-[11px]` = the 11px dots, `gap-1.5` = the 6px dot gap, `pl-3` =
- * the 12px left inset) — which carry no color information — plus layout
- * keywords. No image / SVG asset is created or imported: the dots are CSS
+ * token). Confirmed Figma GEOMETRY also resolves to named `@theme` tokens — the
+ * 11px traffic-light dots via `h-[var(--size-window-dot)] w-[var(--size-window-dot)]`
+ * and the centered-title vertical nudge via `pt-[var(--space-window-title-nudge)]`.
+ * The only remaining bare utilities are Tailwind's standard scale (`h-8` = the
+ * 32px bar, `gap-1.5` = the 6px dot gap, `pl-3` = the 12px left inset) plus
+ * layout keywords. No image / SVG asset is created or imported: the dots are CSS
  * circles (Figma Asset Inventory = 0).
  *
  * Design-parity reference only (NO code reuse): `src/calibre/gui2/ui.py`
@@ -147,11 +149,13 @@ const BAR_CLASSES =
 const DOT_CLUSTER_CLASSES = 'flex items-center gap-1.5';
 
 /**
- * Per-dot base classes: an 11×11 px (`h-[11px] w-[11px]`) perfect circle
- * (`rounded-full`); `shrink-0` keeps each dot from compressing if the row is
+ * Per-dot base classes: an 11×11 px perfect circle via the named
+ * `--size-window-dot` token (`h-[var(--size-window-dot)] w-[var(--size-window-dot)]`)
+ * + `rounded-full`; `shrink-0` keeps each dot from compressing if the row is
  * ever space-constrained. The fill color is supplied per dot from {@link DOTS}.
  */
-const DOT_BASE_CLASSES = 'h-[11px] w-[11px] shrink-0 rounded-full';
+const DOT_BASE_CLASSES =
+  'h-[var(--size-window-dot)] w-[var(--size-window-dot)] shrink-0 rounded-full';
 
 /**
  * Title classes. `absolute inset-0` fills the bar's padding box (x = 0 → full
@@ -162,18 +166,19 @@ const DOT_BASE_CLASSES = 'h-[11px] w-[11px] shrink-0 rounded-full';
  * applies the muted-slate color. `pointer-events-none` keeps the overlay from
  * intercepting interaction; `select-none` keeps the chrome text unselectable.
  *
- * VERTICAL nudge — `pt-[3px]`: Figma node `2:7` positions the title text box at
- * y = 10 (height 16, TOP-aligned), so its rendered glyph center sits at ≈ y17.4
- * — i.e. ~1.4px BELOW the 32px bar's midline (y16), NOT on it. A pure
- * `items-center` would center the glyph at y16 and read ~1.4px high vs the
- * design. The `pt-[3px]` top inset shifts the flex-centering band to y3→32
- * (center ≈ y17.5), reproducing Figma's exact vertical glyph position while
- * leaving horizontal centering (x = 720) untouched. (Pure geometry — carries no
- * color — so it is permitted under the zero-hardcoded-token rule.)
+ * VERTICAL nudge — `pt-[var(--space-window-title-nudge)]` (3px token): Figma node
+ * `2:7` positions the title text box at y = 10 (height 16, TOP-aligned), so its
+ * rendered glyph center sits at ≈ y17.4 — i.e. ~1.4px BELOW the 32px bar's
+ * midline (y16), NOT on it. A pure `items-center` would center the glyph at y16
+ * and read ~1.4px high vs the design. The 3px top inset shifts the flex-centering
+ * band to y3→32 (center ≈ y17.5), reproducing Figma's exact vertical glyph
+ * position while leaving horizontal centering (x = 720) untouched. The nudge is
+ * supplied by the named `--space-window-title-nudge` token so no bare px literal
+ * is used.
  */
 const TITLE_CLASSES =
   'pointer-events-none absolute inset-0 flex select-none items-center ' +
-  'justify-center pt-[3px] text-window-title text-text-muted';
+  'justify-center pt-[var(--space-window-title-nudge)] text-window-title text-text-muted';
 
 /**
  * The default centered title — the exact App 01 design string (Figma node

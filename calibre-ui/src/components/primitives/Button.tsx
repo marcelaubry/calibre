@@ -60,12 +60,16 @@
  * (`bg-gradient-cta`, `rounded-control`, `text-button-primary`, `text-danger`,
  * `text-text-secondary`) or a CSS-variable arbitrary value
  * (`bg-[var(--border-white-06)]`, `ring-[var(--border-accent)]`). There are NO
- * raw hex / rgba color literals. The only bare literals used are layout / icon
- * dimensions expressed as arbitrary sizes (`min-h-[38px]`, `min-w-[84px]`,
- * `text-[15px]`, `gap-[5px]`) — which carry no color information — plus the
- * allowed keywords (`transparent`, and `text-white` is intentionally avoided in
- * favor of the exact token). The gradient is consumed only via the
- * `bg-gradient-cta` token utility, never an inline gradient string.
+ * raw hex / rgba color literals. Layout / icon dimensions ALSO resolve to named
+ * `@theme` tokens — the button heights, the toolbar footprint, the glyph→label
+ * gap, and the toolbar glyph size are consumed via arbitrary `var()` utilities
+ * (`min-h-[var(--size-button-h)]`, `min-h-[var(--size-button-compact-h)]`,
+ * `min-w-[var(--size-toolbar-button-w)]`, `gap-[var(--space-toolbar-button-gap)]`,
+ * `text-[length:var(--size-toolbar-icon)]`). The only bare literals are the
+ * allowed neutral keywords (`transparent`; `text-white` is intentionally avoided
+ * in favor of the exact token) and Tailwind's standard spacing-scale utilities
+ * (`px-4`, `gap-2`). The gradient is consumed only via the `bg-gradient-cta`
+ * token utility, never an inline gradient string.
  *
  * BLITZY [COLOR] (danger fill): Figma node 2:375 confirms a SOLID dark-maroon
  * fill `#2A1A1A` (opacity 1), which is NOT part of the named `@theme` token set
@@ -165,9 +169,9 @@ const BASE_CLASSES =
  * Token trace per variant (all values resolve to `globals.css` `@theme`):
  *   • primary   — `bg-gradient-cta` (--gradient-cta), `text-text-primary`
  *                 (#F1F5FF), `rounded-control` (8px), `text-button-primary`
- *                 (12px/600). Height ≈38px via `min-h-[38px]`. Subtle
- *                 `hover:opacity-90` feedback (the gradient cannot be hover-
- *                 tinted via a color token).
+ *                 (12px/600). Height 38px via `min-h-[var(--size-button-h)]`.
+ *                 Subtle `hover:opacity-90` feedback (the gradient cannot be
+ *                 hover-tinted via a color token).
  *   • secondary — `bg-[var(--border-white-06)]`, 1px `border-[var(--border-white-09)]`,
  *                 `text-text-secondary` (#94A3B8), `rounded-control`,
  *                 `text-button-secondary` (11px/500). Height ≈32px.
@@ -178,26 +182,29 @@ const BASE_CLASSES =
  *                 `rounded-control`, `text-button-secondary`. Height ≈32px.
  *                 `hover:bg-danger/20`.
  *   • toolbar   — transparent idle, `text-text-muted` (#64748B label),
- *                 `rounded-toolbar` (7px), fixed 84×38 footprint via
- *                 `min-w-[84px] min-h-[38px]`, 5px glyph→label gap.
+ *                 `rounded-toolbar` (7px), fixed 84×38 footprint via the named
+ *                 tokens `min-w-[var(--size-toolbar-button-w)]` (84px) +
+ *                 `min-h-[var(--size-button-h)]` (38px), with a
+ *                 `gap-[var(--space-toolbar-button-gap)]` (5px) glyph→label gap.
  *                 `hover:bg-[var(--border-white-06)]`. The typography scale is
  *                 applied to the LABEL span (not the button) so the 15px glyph
- *                 is not shrunk to the 9px label size.
+ *                 (`--size-toolbar-icon`) is not shrunk to the 9px label size.
  */
 const VARIANT_CLASSES: Record<ButtonVariant, string> = {
   primary:
     'bg-gradient-cta text-text-primary rounded-control text-button-primary ' +
-    'min-h-[38px] px-4 gap-2 hover:opacity-90',
+    'min-h-[var(--size-button-h)] px-4 gap-2 hover:opacity-90',
   secondary:
     'bg-[var(--border-white-06)] border border-[var(--border-white-09)] ' +
     'text-text-secondary rounded-control text-button-secondary ' +
-    'min-h-[32px] px-4 gap-2 hover:bg-[var(--border-white-09)]',
+    'min-h-[var(--size-button-compact-h)] px-4 gap-2 hover:bg-[var(--border-white-09)]',
   danger:
     'bg-danger/10 border border-danger/30 text-danger rounded-control ' +
-    'text-button-secondary min-h-[32px] px-4 gap-2 hover:bg-danger/20',
+    'text-button-secondary min-h-[var(--size-button-compact-h)] px-4 gap-2 hover:bg-danger/20',
   toolbar:
     'bg-transparent text-text-muted rounded-toolbar ' +
-    'min-w-[84px] min-h-[38px] gap-[5px] hover:bg-[var(--border-white-06)]',
+    'min-w-[var(--size-toolbar-button-w)] min-h-[var(--size-button-h)] ' +
+    'gap-[var(--space-toolbar-button-gap)] hover:bg-[var(--border-white-06)]',
 };
 
 /**
@@ -243,10 +250,14 @@ export function Button({
     onClick?.();
   };
 
-  // The toolbar glyph is sized to its Figma 15px (an icon dimension, not a type
-  // token); other variants let the icon inherit the button's typography scale.
-  // `leading-none` keeps the glyph from adding stray vertical line-box space.
-  const iconClassName = isToolbar ? 'text-[15px] leading-none' : 'leading-none';
+  // The toolbar glyph is sized to its Figma 15px via the named
+  // `--size-toolbar-icon` token (a `length:` hint forces font-size, not color,
+  // for the arbitrary `var()`); other variants let the icon inherit the button's
+  // typography scale. `leading-none` keeps the glyph from adding stray vertical
+  // line-box space.
+  const iconClassName = isToolbar
+    ? 'text-[length:var(--size-toolbar-icon)] leading-none'
+    : 'leading-none';
 
   // The toolbar applies its 9px type scale to the LABEL (so the 15px glyph is
   // unaffected); other variants carry their type scale on the button itself, so

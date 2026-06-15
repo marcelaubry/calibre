@@ -46,12 +46,16 @@
  * ──────────────────────────────────────────────────────────────────────────
  * TOKEN BOUNDARY (theme contract)
  * ──────────────────────────────────────────────────────────────────────────
- * The sibling `@/theme/tokens` module deliberately EXCLUDES the per-book cover
- * tints `#1C1442` (deep indigo) and `#2A1028` (deep plum) from the global
- * `@theme` token set — they belong LOCALLY here. This file therefore owns its
- * own {@link COVER_PALETTE}, while importing only the two named tokens the
- * theme contract sanctions for cover use: `colors.accentIndigo` (`#4838C8`,
- * one palette entry) and `colors.textPrimary` (`#F1F5FF`, the title color).
+ * The sibling `@/theme/tokens` module deliberately EXCLUDES per-book cover
+ * tints from the global `@theme` token set — generated-cover art owns its
+ * palette LOCALLY here. This file therefore owns its full {@link COVER_PALETTE}
+ * of sanctioned, generated-cover-only tint literals (11 hex values: the deep
+ * indigo / deep plum / navy / steel-navy / brighter-violet / deep-forest stops
+ * enumerated in full on COVER_PALETTE below), while importing only the two named
+ * tokens the theme contract sanctions for cover use: `colors.accentIndigo`
+ * (`#4838C8`, one palette base) and `colors.textPrimary` (`#F1F5FF`, the title
+ * color). These cover-tint literals are the file's ONLY sanctioned color-literal
+ * exception; see COVER_PALETTE for the authoritative, per-literal enumeration.
  *
  * ──────────────────────────────────────────────────────────────────────────
  * DESIGN-PARITY REFERENCE ONLY — NOT CODE REUSE (+ a DELIBERATE deviation)
@@ -112,14 +116,29 @@ export interface CoverPalette {
 // ───────────────────────────────────────────────────────────────────────────
 
 /**
- * LOCAL cover-tint palette — navy / indigo / plum tones matching the Figma
- * book-cover style (nodes 2:347, 3:82). Each entry is a same-family pair: a
- * dark `bg` base tint and a slightly brighter `bgAccent` for the subtle
- * diagonal gradient. `#1C1442` and `#2A1028` are intentionally LOCAL tints
- * (NOT theme tokens — the theme contract excludes them on purpose), and one
- * entry incorporates the theme accent-indigo (`colors.accentIndigo`) for
- * cohesion with the rest of the design system. These are the ONLY color
- * literals sanctioned in this file.
+ * LOCAL cover-tint palette — navy / indigo / plum / forest tones matching the
+ * Figma book-cover style (nodes 2:347, 3:82). Each entry is a same-family pair:
+ * a dark `bg` base tint and a slightly brighter `bgAccent` for the subtle
+ * diagonal gradient.
+ *
+ * SANCTIONED GENERATED-COVER-ONLY LITERAL EXCEPTION (AAP §0.4.4 / §0.3.4 + the
+ * TOKEN BOUNDARY note in the file header). The global `@theme` token set in
+ * `@/theme/tokens` deliberately does NOT model per-book cover tints — generated
+ * placeholder-cover art owns its palette LOCALLY, here. EVERY color literal in
+ * this array is therefore an intentional, generated-cover-only exception to the
+ * "zero hardcoded values" rule: none is ever used for application chrome, only
+ * for placeholder cover art. The COMPLETE sanctioned set (11 local hex literals
+ * + the single named-token reference) is:
+ *   • Pair 1 — deep indigo  : bg `#1C1442`, bgAccent `#2A1860`  (Dune family; node 2:347)
+ *   • Pair 2 — deep plum    : bg `#2A1028`, bgAccent `#451530`  (1984 family; node 2:347)
+ *   • Pair 3 — navy         : bg `#0F1A3C`, bgAccent `#162A5E`
+ *   • Pair 4 — steel navy   : bg `#142036`, bgAccent `#1D2F50`
+ *   • Pair 5 — accent-indigo: bg `colors.accentIndigo` (`#4838C8`, the ONE named
+ *                              token — not a literal), bgAccent `#5B39F3` (brighter violet)
+ *   • Pair 6 — deep forest  : bg `#1A2A1A`, bgAccent `#243A24`
+ * No other color literal exists in this file — the title overlay uses the
+ * `colors.textPrimary` token; every remaining bare literal is non-color
+ * (geometry / opacity / font size / font-family stack).
  */
 const COVER_PALETTE: ReadonlyArray<{ bg: string; bgAccent: string }> = [
   { bg: '#1C1442', bgAccent: '#2A1860' }, // deep indigo (Figma cover 2:347 family; Dune = #1C1442)

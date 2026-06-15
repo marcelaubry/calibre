@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 /**
  * ==========================================================================
  * Calibre-UI Design System — globals.css
@@ -17,8 +19,10 @@
  *      intentionally NOT used).
  *   2. `@theme static { … }` — declares the FULL bespoke dark-navy glassmorphic
  *      token manifest (AAP §0.3.2): colors, white-opacity borders, gradients,
- *      scrims, radii, shadows, the Inter font binding, and the per-role
- *      typography scale. Tailwind turns these into utilities (`bg-card`,
+ *      scrims, radii, shadows, the Inter font binding, the per-role typography
+ *      scale, and the named component-geometry tokens (sizes, spacing/offsets,
+ *      and focus-ring widths) that back component dimensions so no TSX carries a
+ *      bare px literal. Tailwind turns these into utilities (`bg-card`,
  *      `text-accent`, `border-line-07`, `rounded-card`, `shadow-convert`,
  *      `text-detail-title`, …) AND emits them as `:root` CSS custom properties.
  *   3. Base styles (`@layer base`) — box-sizing reset, margin/padding reset,
@@ -60,8 +64,6 @@
  * @see src/theme/tokens.ts — the byte-for-byte TypeScript mirror.
  * @see Agent Action Plan §0.3.2 — the Figma Token Manifest (single source of truth).
  */
-
-@import "tailwindcss";
 
 /* ==========================================================================
  * Design tokens — bespoke Calibre-UI Design System (AAP §0.3.2).
@@ -129,9 +131,12 @@
   --border-white-10: rgba(255,255,255,0.10);
   --border-accent: rgba(123,97,255,0.6);
 
-  /* ---- Gradients (2) — consumed via `var()` / `bg-gradient-*` utility -- */
+  /* ---- Gradients (3) — consumed via `var()` / `bg-gradient-*` utility -- */
   --gradient-accent: linear-gradient(-45deg, #7B61FF 0%, #A78BFA 100%);
   --gradient-cta: linear-gradient(-45deg, #7B61FF 0%, #4838C8 100%);
+  /* Slider filled-track fill (Figma 8:100 — Preferences margins slider). Bottom-up
+   * accent→accent-light ramp; consumed via the `bg-gradient-slider-track` utility. */
+  --gradient-slider-track: linear-gradient(to top, var(--color-accent), var(--color-accent-light));
 
   /* ---- Scrims (2) — modal overlay backdrops, consumed via `var()` ------ */
   --scrim-convert: rgba(12,14,26,0.6);
@@ -196,6 +201,43 @@
   --text-reader-body: 15px;
   --text-reader-body--line-height: 26px;
   --text-reader-body--font-weight: 400;
+
+  /* ---- Component geometry — sizes (12) --------------------------------
+   * Confirmed Figma pixel geometry promoted to named tokens so component TSX
+   * carries zero bare px literals (AAP §0.4.5 "zero hardcoded values"). Each is
+   * consumed via an arbitrary `var()` utility, e.g. `h-[var(--size-window-dot)]`.
+   * Mirrored byte-for-byte in `src/theme/tokens.ts` (`sizes` group). */
+  --size-window-dot: 11px;               /* WindowTitleBar traffic-light dot (2:3–2:5, 11×11) */
+  --size-scrollbar: 10px;                /* WebKit scrollbar width/height */
+  --size-button-h: 38px;                 /* Primary/toolbar button height (toolbar 84×38) */
+  --size-button-compact-h: 32px;         /* Secondary/danger compact button height */
+  --size-toolbar-button-w: 84px;         /* Toolbar button fixed min-width */
+  --size-toolbar-icon: 15px;             /* Toolbar glyph size (use `text-[length:var(--size-toolbar-icon)]`) */
+  --size-toggle-knob: 18px;              /* Toggle iOS knob diameter */
+  --size-conversion-log-max-h: 140px;    /* Convert dialog log max-height (6:88) */
+  --size-modal-convert-w: 880px;         /* Convert dialog width (6:9) */
+  --size-modal-convert-h: 740px;         /* Convert dialog height (6:9) */
+  --size-modal-metadata-w: 860px;        /* Metadata dialog width (9:9) */
+  --size-modal-metadata-h: 800px;        /* Metadata dialog height (9:9) */
+
+  /* ---- Component geometry — spacing & offsets (8) ----------------------
+   * Sub-grid spacings/insets/translations promoted to named tokens. Consumed via
+   * arbitrary utilities, e.g. `gap-[var(--space-toolbar-button-gap)]`,
+   * `translate-x-[var(--space-toggle-knob-travel)]`. Mirrored in `tokens.ts`
+   * (`spacing` group). */
+  --space-toolbar-button-gap: 5px;       /* Button toolbar glyph→label gap */
+  --space-chip-y: 5px;                   /* TagPill vertical padding */
+  --space-toggle-knob-inset-x: 4px;      /* Toggle knob left inset (knob travels 4→22) */
+  --space-toggle-knob-inset-y: 3px;      /* Toggle knob top inset */
+  --space-toggle-knob-travel: 18px;      /* Toggle knob horizontal travel distance */
+  --space-window-title-nudge: 3px;       /* WindowTitleBar centered-title vertical nudge */
+  --space-conversion-log-gap: 3px;       /* ConversionLog per-line vertical gap */
+  --space-conversion-log-pb: 5px;        /* ConversionLog scroll-area bottom inset */
+
+  /* ---- Rings (1) — focus-halo widths ----------------------------------
+   * Consumed via arbitrary box-shadow utilities, e.g.
+   * `shadow-[0_0_0_var(--ring-focus-width)_var(--border-accent)]`. */
+  --ring-focus-width: 3px;               /* Slider thumb focus halo width */
 }
 
 /* ==========================================================================
@@ -244,8 +286,8 @@
 
   /* WebKit/Blink: */
   ::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
+    width: var(--size-scrollbar);
+    height: var(--size-scrollbar);
   }
 
   ::-webkit-scrollbar-track {
@@ -273,4 +315,8 @@
 
 @utility bg-gradient-cta {
   background-image: var(--gradient-cta);
+}
+
+@utility bg-gradient-slider-track {
+  background-image: var(--gradient-slider-track);
 }

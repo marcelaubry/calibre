@@ -80,12 +80,12 @@
  *              is superseded by the confirmed 10px).
  *   • remove "×" hover → `hover:text-accent` (`--color-accent` #7B61FF).
  *   • focus ring → `ring-[var(--border-accent)]`.
- * There are NO raw hex / rgba color literals anywhere in this file. The only
- * bare literals are LAYOUT sizes that carry no color information — the
- * arbitrary vertical inset `py-[5px]` (Figma's exact 5px inset; with
- * `leading-none`, the global `border-box`, and the 1px border this yields the
- * 22px pill height: 10 + 5 + 5 + 1 + 1 = 22) — plus the permitted keyword
- * `transparent`-class utilities are not needed here.
+ * There are NO raw hex / rgba color literals anywhere in this file. The vertical
+ * inset resolves to the named `--space-chip-y` token via
+ * `py-[var(--space-chip-y)]` (Figma's exact 5px inset; with `leading-none`, the
+ * global `border-box`, and the 1px border this yields the 22px pill height:
+ * 10 + 5 + 5 + 1 + 1 = 22); the remaining bare utilities are Tailwind's standard
+ * spacing scale (`px-2`, `gap-0.5`) and permitted neutral keywords.
  *
  * BLITZY [COLOR]: the SIDEBAR display chips are authored in Figma with a SOLID
  * baked fill `#1D2148`, a white-7% stroke, and a slate `#94A3B8` label — none of
@@ -190,15 +190,16 @@ export interface TagPillProps {
  * - Surface: `bg-accent/20` translucent-purple fill + 1px `border-accent/30`
  *   hairline (see the file header's ZERO-HARDCODED-TOKEN RULE for the exact
  *   Figma → token mapping).
- * - Spacing: `px-2` (8px) horizontal inset; `py-[5px]` vertical inset (Figma's
- *   exact 5px) → 22px pill height with `leading-none` + the global border-box.
+ * - Spacing: `px-2` (8px) horizontal inset; `py-[var(--space-chip-y)]` vertical
+ *   inset (the named 5px chip token) → 22px pill height with `leading-none` +
+ *   the global border-box.
  * - Typography: `text-meta-value` (10px / Inter Medium 500) + `text-accent-light`
  *   (#A78BFA); `leading-none` keeps the line box tight so the height math holds.
  */
 const CHIP_BASE_CLASSES =
   'inline-flex items-center gap-0.5 align-middle whitespace-nowrap ' +
   'rounded-full border border-accent/30 bg-accent/20 ' +
-  'px-2 py-[5px] leading-none ' +
+  'px-2 py-[var(--space-chip-y)] leading-none ' +
   'text-meta-value text-accent-light';
 
 /**

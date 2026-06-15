@@ -83,11 +83,13 @@
  * `text-body`, `text-text-secondary`) or a CSS-variable arbitrary value
  * (`focus-visible:ring-[var(--border-accent)]`), plus the design-sanctioned
  * `bg-white` keyword for the pure-#FFFFFF knob. There are NO raw hex / rgba
- * color literals in any className. The only bare literals are LAYOUT / geometry
- * values that carry no color information — the switch footprint (`h-6`, `w-11`),
- * the knob size & placement (`h-[18px]`, `w-[18px]`, `top-[3px]`, `left-[4px]`,
- * `translate-x-[18px]`), the gap (`gap-2`), and the allowed transition
- * timings — all permitted.
+ * color literals in any className. Geometry values also resolve to named
+ * `@theme` tokens — the knob size & placement are consumed via arbitrary `var()`
+ * utilities (`h-[var(--size-toggle-knob)]`, `w-[var(--size-toggle-knob)]`,
+ * `top-[var(--space-toggle-knob-inset-y)]`, `left-[var(--space-toggle-knob-inset-x)]`,
+ * `translate-x-[var(--space-toggle-knob-travel)]`). The only remaining bare
+ * utilities are Tailwind's standard spacing scale (the switch footprint `h-6` /
+ * `w-11`, the `gap-2` row gap) and the allowed transition timings.
  *
  * RENDERING MODEL
  * --------------------------------------------------------------------------
@@ -105,10 +107,14 @@
  * • Renders a semantic `<button role="switch" aria-checked={checked}>` — a
  *   native button is focusable and toggles on BOTH Space and Enter for free,
  *   so no custom key handling is needed.
- * • When `label` is supplied it is rendered as visible text and wired to the
- *   switch as its accessible name via `aria-labelledby` (a `useId`-generated
- *   id) — the gold-standard "associate the visible label" pattern (no hidden
- *   duplicate text).
+ * • The switch ALWAYS exposes an accessible name, resolved in priority order:
+ *   (1) a visible `label`, rendered as text and wired via `aria-labelledby`
+ *   (a `useId`-generated id) — the gold-standard "associate the visible label"
+ *   pattern (no hidden duplicate text); (2) else a caller `ariaLabelledby`
+ *   pointing at a separately-rendered title (the App 06 "labeled row" case);
+ *   (3) else a caller `ariaLabel` literal; (4) else a last-resort
+ *   `aria-label="Toggle"` so `role="switch"` can never be anonymous to AT. Exactly
+ *   one mechanism is emitted at a time (labelledby and label are never both set).
  * • The knob is decorative and marked `aria-hidden`; the switch owns the state.
  * • A token-backed `:focus-visible` ring (`--border-accent`) is shown for
  *   keyboard users only — invisible at rest (DS2-e).
@@ -131,9 +137,13 @@ import { useId, type JSX } from 'react';
  * Props for {@link Toggle} — the exact AAP §0.3.3 contract.
  *
  * Intentionally a CLOSED interface (it does NOT extend the native `<button>`
- * attribute set): the switch's accessible name comes from the {@link label}
- * prop, and its only other inputs are the controlled state, the change handler,
- * the disabled flag, and an outer-wrapper `className`.
+ * attribute set): the switch's accessible name comes from EITHER the visible
+ * {@link ToggleProps.label} prop, OR — when the switch sits inside a
+ * separately-labeled row — one of {@link ToggleProps.ariaLabelledby} /
+ * {@link ToggleProps.ariaLabel}. Its other inputs are the controlled state, the
+ * change handler, the disabled flag, and an outer-wrapper `className`. The switch
+ * is NEVER rendered without an accessible name: a last-resort name is supplied if
+ * a caller provides none, so `role="switch"` can never be anonymous to AT.
  */
 export interface ToggleProps {
   /**
@@ -161,9 +171,26 @@ export interface ToggleProps {
    * the switch (`text-body` / `text-text-secondary`) AND wired as the switch's
    * accessible name via `aria-labelledby`. Omit it when the switch sits inside
    * a separately-labeled row (e.g. an App 06 setting card that renders its own
-   * title + description).
+   * title + description) — in that case wire the name via {@link ToggleProps.ariaLabelledby}
+   * or {@link ToggleProps.ariaLabel} instead.
    */
   label?: string;
+  /**
+   * Id of a SEPARATELY-rendered element that names this switch, mapped to the
+   * `aria-labelledby` attribute. Use this (instead of {@link ToggleProps.label})
+   * when the switch sits in a row that already renders its own visible title —
+   * e.g. point it at an App 06 setting-card heading's id. Ignored when a visible
+   * {@link ToggleProps.label} is supplied (the label's own id wins).
+   */
+  ariaLabelledby?: string;
+  /**
+   * Literal accessible name, mapped to the `aria-label` attribute. Use this when
+   * the switch has NO visible label element to reference (no {@link ToggleProps.label}
+   * and no {@link ToggleProps.ariaLabelledby}). If none of `label` /
+   * `ariaLabelledby` / `ariaLabel` is provided, the switch still receives a
+   * last-resort `aria-label` of `"Toggle"` so it is never unnamed.
+   */
+  ariaLabel?: string;
   /**
    * Extra classes merged onto the outer WRAPPER `<span>` — callers own the
    * control's outer layout / spacing here (e.g. `ms-auto`, `self-center`).
@@ -213,21 +240,24 @@ const TRACK_OFF = 'bg-card';
  * Variant-invariant KNOB classes — the sliding white thumb.
  *
  * `pointer-events-none` lets every click fall through to the track button.
- * `absolute left-[4px] top-[3px]` seats the OFF knob at the CONFIRMED (4,3);
- * `h-[18px] w-[18px] rounded-full` is the 18px circle; `bg-white` is the
- * sanctioned keyword for the pure-#FFFFFF thumb. The slide animates only when
- * motion is allowed (UI6).
+ * `absolute left-[var(--space-toggle-knob-inset-x)] top-[var(--space-toggle-knob-inset-y)]`
+ * seats the OFF knob at the CONFIRMED (4,3) via the named inset tokens;
+ * `h-[var(--size-toggle-knob)] w-[var(--size-toggle-knob)] rounded-full` is the
+ * 18px circle; `bg-white` is the sanctioned keyword for the pure-#FFFFFF thumb.
+ * The slide animates only when motion is allowed (UI6).
  */
 const KNOB_BASE =
-  'pointer-events-none absolute left-[4px] top-[3px] h-[18px] w-[18px] rounded-full bg-white ' +
+  'pointer-events-none absolute left-[var(--space-toggle-knob-inset-x)] top-[var(--space-toggle-knob-inset-y)] ' +
+  'h-[var(--size-toggle-knob)] w-[var(--size-toggle-knob)] rounded-full bg-white ' +
   'motion-safe:transition-transform motion-safe:duration-200 motion-safe:ease-out';
 
 /**
- * Knob horizontal placement by state. OFF stays at the base `left-[4px]`
- * (translateX 0 → x=4); ON shifts right by the CONFIRMED 18px travel
- * (4 + 18 = x=22), seating the knob at the 4px right inset.
+ * Knob horizontal placement by state. OFF stays at the base inset (translateX 0
+ * → x=4); ON shifts right by the CONFIRMED 18px travel
+ * (`--space-toggle-knob-travel`; 4 + 18 = x=22), seating the knob at the 4px
+ * right inset.
  */
-const KNOB_ON = 'translate-x-[18px]';
+const KNOB_ON = 'translate-x-[var(--space-toggle-knob-travel)]';
 const KNOB_OFF = 'translate-x-0';
 
 /**
@@ -257,6 +287,8 @@ export function Toggle({
   onChange,
   disabled = false,
   label,
+  ariaLabelledby,
+  ariaLabel,
   className,
 }: ToggleProps): JSX.Element {
   // A stable, SSR-safe unique id (React 19 `useId`) used to associate the
@@ -264,6 +296,21 @@ export function Toggle({
   // to honor the Rules of Hooks; only referenced when a label is present.
   const labelId = useId();
   const hasLabel = label != null && label !== '';
+  const hasAriaLabelledby = ariaLabelledby != null && ariaLabelledby !== '';
+
+  // Accessible-name resolution — the switch must NEVER be anonymous to AT.
+  // Priority: visible label (wired by its own id) > caller `ariaLabelledby`
+  // (points at a separately-rendered title) > caller `ariaLabel` > a last-resort
+  // literal. Exactly ONE of aria-labelledby / aria-label is emitted: when a
+  // labelledby source exists, aria-label stays undefined; otherwise an aria-label
+  // is always present (caller-supplied or the "Toggle" fallback).
+  const resolvedLabelledBy = hasLabel
+    ? labelId
+    : hasAriaLabelledby
+      ? ariaLabelledby
+      : undefined;
+  const resolvedAriaLabel =
+    resolvedLabelledBy == null ? (ariaLabel ?? 'Toggle') : undefined;
 
   // Defensive flip guard. The native `disabled` attribute already suppresses
   // clicks, but short-circuiting here guarantees the handler can never run while
@@ -287,7 +334,8 @@ export function Toggle({
         type="button"
         role="switch"
         aria-checked={checked}
-        aria-labelledby={hasLabel ? labelId : undefined}
+        aria-labelledby={resolvedLabelledBy}
+        aria-label={resolvedAriaLabel}
         disabled={disabled}
         onClick={handleToggle}
         className={trackClassName}
