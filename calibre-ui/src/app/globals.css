@@ -89,6 +89,17 @@
   --color-text-muted: #64748B;
   --color-text-placeholder: #3A4060;
 
+  /* ---- Colors — viewer-theme sample inks (3) -------------------------- *
+   * The body-text "ink" color of each reading theme, used by the ThemeSwatch
+   * "Aa" preview (App06 Preferences `8:2`, nodes 8:83/8:88/8:91) and reusable
+   * by the App03 viewer reading surface. CONFIRMED Figma values: dark theme
+   * ink = soft light-gray #C8CAD8 (8:83), light theme ink = near-black navy
+   * #1A1A2A (8:88), sepia theme ink = warm dark-brown #2A200A (8:91). The
+   * high-contrast theme ink is pure #FFFFFF (the `text-white` keyword). */
+  --color-viewer-ink-dark: #C8CAD8;
+  --color-viewer-ink-light: #1A1A2A;
+  --color-viewer-ink-sepia: #2A200A;
+
   /* ---- Colors — accents (3) ------------------------------------------- */
   --color-accent: #7B61FF;
   --color-accent-light: #A78BFA;
