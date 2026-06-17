@@ -78,12 +78,19 @@
  * BLITZY [DESIGN]: title overlay placement & visibility.
  *   The primitive renders the AAP §0.3.3/§0.3.4-mandated Inter-Bold-white title
  *   overlay, positioned LEFT + BOTTOM to match the one context where Figma shows
- *   an on-cover title (the `md` grid card, node `3:82`) — NOT centered. It is
- *   single-line with ellipsis truncation (Figma confirms titles render on one
- *   line). The title is HIDDEN below `SHOW_TITLE_MIN_WIDTH` so the tiny `sm`
- *   table thumb stays a plain tinted tile (matching Figma `2:2`) instead of
- *   showing an illegible/overflowing 14px title. The author line is omitted
- *   (Figma shows no author on the cover; the prompt makes it optional).
+ *   an on-cover title (the `md` grid card, node `3:82`) — NOT centered (the LEFT
+ *   + BOTTOM anchor is corroborated by Calibre's `cover_grid_text_flush_bottom`
+ *   in `alternate_views.py`). The title WRAPS to at most three lines via
+ *   `line-clamp-3` (per the file directive's "Add a subtle line-clamp
+ *   (`line-clamp-3`) for long titles" / "title … line-clamped" requirement, and
+ *   matching the sibling `generateCoverDataUri`, which wraps the title onto up to
+ *   three lines): short titles still occupy a single bottom line, while long
+ *   titles such as "The Left Hand of Darkness" render in full across up to three
+ *   lines instead of being hard-truncated to "The Left Hand of Da…". The title is
+ *   HIDDEN below `SHOW_TITLE_MIN_WIDTH` so the tiny `sm` table thumb stays a plain
+ *   tinted tile (matching Figma `2:2`) instead of showing an illegible/overflowing
+ *   14px title. The author line is omitted (Figma shows no author on the cover;
+ *   the prompt makes it optional).
  *
  * ZERO-HARDCODED-VALUES RULE (AAP §0.4.5) + TOKEN BOUNDARY
  * --------------------------------------------------------------------------
@@ -251,12 +258,19 @@ const CONTAINER_BASE =
 const TITLE_INSET = 'px-4 pb-6';
 
 /**
- * Title overlay classes: full content width with single-line ellipsis
- * truncation (`block w-full truncate`), the `text-cover-title` role (Inter 700
- * 14px/18px), and the `text-text-primary` token color (#F1F5FF, = `palette.text`).
- * Left alignment is the default (LTR), matching the Figma grid-card title.
+ * Title overlay classes: full content width with up-to-three-line clamping
+ * (`w-full line-clamp-3` — `line-clamp-3` supplies `overflow: hidden` and the
+ * `-webkit-box`/`-webkit-line-clamp: 3` behavior, so no separate `block`/
+ * `truncate` is needed), the `text-cover-title` role (Inter 700 14px/18px), and
+ * the `text-text-primary` token color (#F1F5FF, = `palette.text`). Left
+ * alignment is the default (LTR), matching the Figma grid-card title; combined
+ * with the container's `justify-end` the (possibly multi-line) title stays
+ * anchored to the bottom-left and grows upward. The three-line clamp satisfies
+ * the file directive's "line-clamped" requirement and mirrors the sibling
+ * `generateCoverDataUri` (which wraps the title onto up to three lines), so long
+ * titles render in full rather than being hard-truncated on a single line.
  */
-const TITLE_CLASSES = 'block w-full truncate text-cover-title text-text-primary';
+const TITLE_CLASSES = 'w-full line-clamp-3 text-cover-title text-text-primary';
 
 /**
  * Resolve a `size` prop into concrete pixel dimensions plus the radius-token

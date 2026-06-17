@@ -285,14 +285,18 @@ export function TagChipEditor({
    */
   const commitDraft = (): void => {
     const trimmed = draft.trim();
-    if (trimmed.length === 0) {
-      return;
-    }
-    const alreadyPresent = tags.some(
-      (existing) => existing.toLowerCase() === trimmed.toLowerCase(),
-    );
-    if (!alreadyPresent) {
-      onAddTag(trimmed);
+    // Only a non-empty value that is not already present (compared
+    // case-insensitively) is forwarded to the parent. An empty or
+    // whitespace-only draft adds nothing — but the draft is still cleared
+    // below, so the field always resets after a commit gesture regardless of
+    // whether the tag was added, was a duplicate, or was blank.
+    if (trimmed.length > 0) {
+      const alreadyPresent = tags.some(
+        (existing) => existing.toLowerCase() === trimmed.toLowerCase(),
+      );
+      if (!alreadyPresent) {
+        onAddTag(trimmed);
+      }
     }
     setDraft('');
   };
@@ -332,10 +336,14 @@ export function TagChipEditor({
 
         {/* The add-tag input. Fully controlled (`value`/`onChange`); commits on
             Enter/comma via `onKeyDown`. `aria-label` supplies the accessible
-            name the label-less InputField requires. It grows to fill the row
-            and wraps cleanly (flex-1 / min-w-32) for 1440→1280 integrity. */}
+            name the label-less InputField requires; `name` gives the form field
+            a stable identifier (cleanly satisfying the browser best-practice that
+            every form field carry an id/name — both are invisible, never affecting
+            the design). It grows to fill the row and wraps cleanly (flex-1 /
+            min-w-32) for 1440→1280 integrity. */}
         <InputField
           variant="text"
+          name="add-tag"
           value={draft}
           onChange={setDraft}
           placeholder={ADD_TAG_PLACEHOLDER}

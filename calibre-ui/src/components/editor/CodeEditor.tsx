@@ -307,5 +307,3 @@ export async function CodeEditor({
     </section>
   );
 }
-
-export default CodeEditor;

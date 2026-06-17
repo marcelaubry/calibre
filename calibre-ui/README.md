@@ -203,10 +203,21 @@ The app deploys as a **single Nixpacks service** on
 
 ```json
 {
-  "build": { "builder": "NIXPACKS" },
-  "deploy": { "startCommand": "npm run start" }
+  "$schema": "https://railway.com/railway.schema.json",
+  "build": {
+    "builder": "NIXPACKS"
+  },
+  "deploy": {
+    "startCommand": "npm run start",
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 10
+  }
 }
 ```
+
+The `build.builder` is **`NIXPACKS`** and `deploy.startCommand` is
+**`npm run start`** (which runs `next start -p ${PORT:-3000}`); the restart
+policy retries on failure.
 
 ### 🚩 CRITICAL: set the service **Root Directory** to `calibre-ui/`
 

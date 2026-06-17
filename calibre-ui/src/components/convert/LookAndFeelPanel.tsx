@@ -50,7 +50,8 @@
  * This panel never hand-rolls a raw range input, a raw checkbox, or any
  * unstyled control; it composes the primitives, imported
  * from their CONCRETE module paths (there is no `@/components/primitives`
- * barrel). Each carded switch cell is the `GlassCard` surface primitive.
+ * barrel). Each processing-option cell is a FLUSH `label + Toggle` row (no
+ * per-cell card surface — see BLITZY [LAYOUT] / [COLOR]).
  *
  * FIGMA SOURCE OF TRUTH (file `JduUzjVHNhZivm5A0pAiCD`, screen `6:9`)
  * --------------------------------------------------------------------------
@@ -79,15 +80,22 @@
  * confirm the grid orientation and styling.
  *
  * BLITZY [LAYOUT]: the processing switches are laid out as a 3-COLUMN × 2-ROW
- * grid — the exact orientation CONFIRMED in the `6:9` render (column gap ≈ the
- * `gap-x-7` step, row gap ≈ the `gap-y-3` step).
+ * grid — the exact orientation CONFIRMED (both prior `6:9` reconciliations
+ * agree: 3 cols × 2 rows, not 2×3). Column gap ≈ the `gap-x-7` step, row gap ≈
+ * the `gap-y-3` step. Each cell is a FLUSH `label + Toggle` row: the `6:9`
+ * Figma render lays the processing options out as bare status-dot + label rows
+ * with NO per-cell filled card, so wrapping each cell in a `GlassCard` surface
+ * would hallucinate card chrome (a `bg-card` fill + hairline) not present in
+ * the design (DS2-d). The cells therefore sit flush on the dialog body; the
+ * grid's `gap-x-7` / `gap-y-3` provide all the inter-option separation.
  *
  * BLITZY [COLOR]: control labels + the "Processing options" caption resolve to
  * the `text-secondary` token; a switch's adjacent label brightens to the
  * `text-primary` token when that switch is ON (the Figma on/off label
  * treatment) and stays `text-secondary` when OFF. Section dividers use the
- * `border-white-07` hairline token, and the panel sits FLUSH on the dialog
- * surface (the render shows no inset card behind the panel as a whole).
+ * `border-white-07` hairline token, and BOTH the panel as a whole AND every
+ * processing cell sit FLUSH on the dialog surface (the render shows no inset
+ * card behind the panel or behind any individual option).
  *
  * ZERO-HARDCODED-TOKEN RULE (AAP §0.4.5)
  * --------------------------------------------------------------------------
@@ -101,7 +109,6 @@
  *
  * @see src/components/primitives/Slider.tsx  — the range-control primitive.
  * @see src/components/primitives/Toggle.tsx  — the on/off switch primitive.
- * @see src/components/primitives/GlassCard.tsx — the carded surface primitive.
  * @see src/app/globals.css — the authoritative `@theme` token declarations.
  * @see Agent Action Plan §0.3 / §0.7.4 (App05) — the Look & Feel option subset.
  */
@@ -109,7 +116,6 @@
 import { useId, useState } from 'react';
 import type { JSX } from 'react';
 
-import { GlassCard } from '@/components/primitives/GlassCard';
 import { Slider } from '@/components/primitives/Slider';
 import { Toggle } from '@/components/primitives/Toggle';
 
@@ -192,12 +198,14 @@ const PROCESSING_GROUP = 'flex flex-col gap-3';
 const PROCESSING_GRID = 'grid grid-cols-3 gap-x-7 gap-y-3';
 
 /**
- * One carded switch cell (a `GlassCard` surface): a flex row with the switch on
- * the left and its label to the right (`gap-3`). `min-w-0` lets the cell shrink
- * within its grid column; `px-3 py-2.5` gives the chip its padding (and a ≥44px
- * comfortable target height around the switch).
+ * One FLUSH switch cell: a flex row with the switch on the left and its label to
+ * the right (`gap-3`), sitting directly on the dialog body with NO card surface
+ * (BLITZY [LAYOUT] — the `6:9` render shows bare dot+label rows, not cards).
+ * `min-w-0` lets the cell shrink within its grid column so a long label can wrap
+ * instead of forcing horizontal overflow; `py-0.5` adds a hair of vertical
+ * breathing room around the 24px switch without implying a filled chip.
  */
-const PROCESSING_CELL = 'flex min-w-0 items-center gap-3 px-3 py-2.5';
+const PROCESSING_CELL = 'flex min-w-0 items-center gap-3 py-0.5';
 
 /**
  * Base classes for a switch's adjacent label. The color is appended at render
@@ -226,9 +234,10 @@ function switchLabelClasses(checked: boolean): string {
  * a "Justify text" switch, and a 3×2 grid of six paragraph/processing switches,
  * each backed by its own internal `useState`. Nothing is applied or persisted —
  * the panel is a demonstrative, UI-only surface composed entirely from the
- * design-system `Slider`, `Toggle`, and `GlassCard` primitives, so every purple
- * accent, radius, and border resolves to an `@theme` token inside those
- * primitives. The caller `className` is merged onto the outer container.
+ * design-system `Slider` and `Toggle` primitives, so every purple accent,
+ * radius, and border resolves to an `@theme` token inside those primitives. The
+ * processing cells sit FLUSH (no per-cell card). The caller `className` is
+ * merged onto the outer container.
  *
  * @param props - {@link LookAndFeelPanelProps}
  * @returns The rendered Look & Feel option panel.
@@ -350,7 +359,7 @@ export function LookAndFeelPanel({ className }: LookAndFeelPanelProps): JSX.Elem
           {processingToggles.map((toggle, index) => {
             const id = `${fieldId}-processing-${index}`;
             return (
-              <GlassCard key={toggle.label} surface="card" className={PROCESSING_CELL}>
+              <div key={toggle.label} className={PROCESSING_CELL}>
                 <Toggle
                   checked={toggle.checked}
                   onChange={toggle.onChange}
@@ -360,7 +369,7 @@ export function LookAndFeelPanel({ className }: LookAndFeelPanelProps): JSX.Elem
                 <span id={id} className={switchLabelClasses(toggle.checked)}>
                   {toggle.label}
                 </span>
-              </GlassCard>
+              </div>
             );
           })}
         </div>
