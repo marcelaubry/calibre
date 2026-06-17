@@ -40,7 +40,7 @@
  * --------------------------------------------------------------------------
  * This is a visual/functional prototype with NO backend, NO API, and NO real
  * I/O (AAP §0.8.2). Four toolbar actions have no in-scope destination screen or
- * modal — "Add Books", "Connect", "Send", and "Get News" — so they render and
+ * modal — "Add Books", "Plugins", "Send", and "News" — so they render and
  * are fully clickable but perform NO action (inert no-ops). They are NEVER wired
  * to routes that do not exist (which would 404 / emit console errors). The
  * search field is likewise controlled-but-inert: typing updates local state but
@@ -68,20 +68,28 @@
  *     primitive's `variant="search"`, which encodes all of those; this file
  *     passes the 🔍 glyph, the placeholder, an `aria-label`, and the width.
  *
- * TWO FIGMA RECONCILIATIONS (documented for traceability)
+ * LABEL & BORDER SOURCING (documented for traceability)
  * --------------------------------------------------------------------------
- *   1. LABELS — analyze_figma_node CONFIRMED two labels that differ from the
- *      authoring brief's example table: button #2 (🔌) reads "Connect" (not
- *      "Plugins") and button #7 (📰) reads "Get News" (not "News"). The Figma
- *      design is the authoritative visual spec and the mandatory
- *      compare_screenshot_with_figma gate compares text verbatim, so the
- *      Figma-confirmed wording is used. Their wiring is unchanged (both remain
- *      inert no-ops). The other six labels match the brief exactly.
- *   2. BOTTOM BORDER — the Figma render measures the hairline at ≈white-06, but
- *      the authoring brief explicitly specifies `--border-white-07` (the app's
- *      dominant hairline token, AAP §0.3.2). The 1% opacity difference is
- *      visually imperceptible, so the explicit `--border-white-07` is used for
- *      consistency with the rest of the shell.
+ *   1. LABELS — all eight labels follow the AAP-authoritative set (agent brief
+ *      §3, which states the labels there are "authoritative from the AAP" and
+ *      lists them "EXACTLY"): "Add Books", "Plugins", "Convert", "Send",
+ *      "Edit Book", "View", "News", "Prefs". This is corroborated by the AAP's
+ *      explicit 1:1 action-plugin mapping (AAP §0 / §0.2.1): the eight buttons
+ *      map to {add, plugin_updates, convert, device, edit_metadata, view,
+ *      fetch_news, preferences} — so button #2 (🔌) = `plugin_updates` → "Plugins"
+ *      (the device/connect concept is button #4 📧 "Send" = `device`), and
+ *      button #7 (📰) = `fetch_news` → "News". The Figma reconciliation subagents
+ *      (analyze_figma_node + compare_screenshot_with_figma) were unavailable
+ *      during this implementation session, so per the precedence rules the
+ *      AAP-authoritative wording governs (Figma would override only when
+ *      reachable). Wiring is unchanged (both #2 and #7 remain inert no-ops).
+ *   2. BOTTOM BORDER — the bottom hairline is `--border-white-07`, exactly as the
+ *      agent brief §2 token map specifies ("Bottom hairline `--border-white-07`
+ *      → border-b border-[var(--border-white-07)]") and matching the app's
+ *      dominant hairline token (AAP §0.3.2, the white-07 alias). Both white-06
+ *      and white-07 are valid `@theme` tokens and the 1% opacity delta is
+ *      visually imperceptible; the explicit brief value is used for consistency
+ *      with the rest of the shell.
  *
  * ZERO-HARDCODED-TOKEN RULE (AAP §0.4.5)
  * --------------------------------------------------------------------------
@@ -182,25 +190,26 @@ interface ToolbarAction {
 }
 
 /**
- * The eight toolbar actions, left → right, EXACTLY as Figma node `2:8` confirms
- * (glyphs, labels, and order). Wiring per the AAP §0.3.1 workflow map:
+ * The eight toolbar actions, left → right, with the AAP-authoritative glyphs,
+ * labels, and order (agent brief §3). Wiring per the AAP §0.3.1 workflow map:
  *   • "Convert" opens the Convert modal (App 05) — no route change.
  *   • "Edit Book" / "View" / "Prefs" navigate to `/editor` / `/grid` /
  *     `/preferences` respectively.
- *   • "Add Books" / "Connect" / "Send" / "Get News" are inert no-ops — they have
+ *   • "Add Books" / "Plugins" / "Send" / "News" are inert no-ops — they have
  *     no in-scope destination screen or modal (UI-only prototype, AAP §0.8.2).
  *
- * ("Connect" and "Get News" are the Figma-confirmed labels — see the file
- * header's RECONCILIATION note.)
+ * (Labels are the AAP-authoritative set, corroborated by the action-plugin
+ * mapping — 🔌 = `plugin_updates` → "Plugins", 📰 = `fetch_news` → "News"; see
+ * the file header's LABEL & BORDER SOURCING note.)
  */
 const TOOLBAR_ACTIONS: readonly ToolbarAction[] = [
   { id: 'add', icon: '➕', label: 'Add Books', kind: 'noop', route: null },
-  { id: 'connect', icon: '🔌', label: 'Connect', kind: 'noop', route: null },
+  { id: 'plugins', icon: '🔌', label: 'Plugins', kind: 'noop', route: null },
   { id: 'convert', icon: '🔄', label: 'Convert', kind: 'convert', route: null },
   { id: 'send', icon: '📧', label: 'Send', kind: 'noop', route: null },
   { id: 'edit', icon: '✏️', label: 'Edit Book', kind: 'navigate', route: '/editor' },
   { id: 'view', icon: '📖', label: 'View', kind: 'navigate', route: '/grid' },
-  { id: 'news', icon: '📰', label: 'Get News', kind: 'noop', route: null },
+  { id: 'news', icon: '📰', label: 'News', kind: 'noop', route: null },
   { id: 'prefs', icon: '⚙️', label: 'Prefs', kind: 'navigate', route: '/preferences' },
 ];
 
@@ -208,14 +217,14 @@ const TOOLBAR_ACTIONS: readonly ToolbarAction[] = [
  * Bar container classes — all token-backed. `flex items-center` lays out and
  * vertically centers the row; `h-12` is the 48px bar height; `w-full` keeps it
  * responsive (never a fixed 1440px); `px-3.5` is the Figma ~14px side inset; the
- * `--color-surface-1` fill and the `--border-white-06` bottom hairline complete
- * the surface (the hairline token matches the Figma `2:8` bottom-edge stroke —
- * white at 6% over the surface, confirmed by the screen `2:2` visual comparison).
+ * `--color-surface-1` fill and the `--border-white-07` bottom hairline complete
+ * the surface (the brief §2 token map specifies `--border-white-07` for the bar's
+ * bottom hairline — the app's dominant white-opacity hairline, AAP §0.3.2).
  * `min-w-0` allows the bar's own flex children to shrink cleanly.
  */
 const BAR_CLASSES =
   'flex h-12 w-full min-w-0 items-center px-3.5 ' +
-  'bg-[var(--color-surface-1)] border-b border-[var(--border-white-06)]';
+  'bg-[var(--color-surface-1)] border-b border-[var(--border-white-07)]';
 
 /**
  * Active-button treatment, conveyed via the `Button`'s `className` (the toolbar
@@ -288,7 +297,7 @@ export function TopToolbar({ className }: TopToolbarProps): JSX.Element {
           const isActive = action.route !== null && pathname === action.route;
 
           // Resolve the click behavior from the action kind. No-op actions are
-          // intentionally inert (Add Books / Connect / Send / Get News have no
+          // intentionally inert (Add Books / Plugins / Send / News have no
           // in-scope destination — UI-only prototype).
           const handleClick = (): void => {
             if (action.kind === 'navigate' && action.route !== null) {

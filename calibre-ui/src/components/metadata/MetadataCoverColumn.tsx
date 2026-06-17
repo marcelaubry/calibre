@@ -59,10 +59,12 @@
  *     content box; the AAP sanctions an explicit size matching the Figma cover).
  *   • Cover-action buttons — "Change Cover" full-width, then "Download" +
  *     "Generate" as an even two-up row (each `flex-1`), all `secondary`.
- *   • Rating label "Rating" (sentence-case, NOT uppercase — Figma transform is
- *     none) above 20px amber stars.
- *   • "Available formats" label (sentence-case) above the format rows, then
- *     "+ Add format".
+ *   • Rating label "Rating" above 20px amber stars. The label is rendered
+ *     UPPERCASE ("RATING") via the shared `text-meta-label uppercase` treatment
+ *     so it matches every other App 07 section label (see SECTION_LABEL_CLASSES).
+ *   • "Available formats" label above the format rows, then "+ Add format". The
+ *     label is likewise rendered UPPERCASE ("AVAILABLE FORMATS") to match the
+ *     modal-wide field-label case.
  *
  * BLITZY [COLOR]: Figma tints each format ROW with the format hue (green/red/
  *   violet washes) and renders the format NAME as plain colored text. Per the
@@ -201,12 +203,19 @@ const REMOVE_GLYPH = '\u2715';
 
 /**
  * Section-label classes (e.g. "Rating", "Available formats"): the muted text
- * token at the 10px/400 meta-label scale. Sentence-case is preserved (NO
- * `uppercase`) to match Figma's `text-transform: none`; the sibling editors use
- * the same muted/meta-label pair (TagChipEditor adds `uppercase`, which Figma
- * does NOT show here).
+ * token at the 10px/400 meta-label scale, rendered UPPERCASE. This is the
+ * EXACT label treatment every other Metadata Editor section uses —
+ * `MetadataFields` (right-column field labels AND its "Rating" read-back
+ * label), `TagChipEditor` ("Tags"), and `IdentifierRows` ("Identifiers") all
+ * declare `text-text-muted text-meta-label uppercase select-none`. The App 07
+ * modal therefore presents a single, consistent field-label case throughout
+ * (e.g. the right column's "RATING"/"LANGUAGE" read these labels uppercase), so
+ * the left column's "RATING" and "AVAILABLE FORMATS" labels match rather than
+ * standing out in sentence case. `uppercase` is a text-transform utility only
+ * (it carries NO color/size token), and `select-none` keeps the decorative
+ * label from being text-selected — both matching the sibling convention.
  */
-const SECTION_LABEL_CLASSES = 'text-text-muted text-meta-label';
+const SECTION_LABEL_CLASSES = 'text-text-muted text-meta-label uppercase select-none';
 
 /**
  * A single hairline divider: a 1px-tall, full-width rule filled with the
