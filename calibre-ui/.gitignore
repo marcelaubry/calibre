@@ -22,12 +22,12 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# environment files — NEVER commit secrets (AAP §0.1.2).
+# environment files — NEVER commit secrets (AAP §0.1.2, §0.9).
 # Ignore EVERY .env variant (.env, .env.local, .env.production, .env.staging,
-# .env.preview, .env.development.local, .env*.local, …) so no real secret can
-# ever be committed — matches the checkpoint requirement to ignore `.env*`:
+# .env.preview, .env.development.local, .env*.local, …) so RAILWAY_TOKEN or any
+# credential can never be committed — per AAP §0.7.1 the rule is the broad glob:
 .env*
-# … but DO keep the non-secret, names-only template tracked:
+# …but DO keep the non-secret, names-only template tracked:
 !.env.example
 
 # typescript
