@@ -74,16 +74,20 @@
  *     keyword paper/ink previews are explicitly permitted for swatch fills).
  *   • [COLOR] sepia tile fill — Figma #F5EDD8 → nearest cream token
  *     `--color-preview-cream` (#F5F0E8).
- *   • per-theme "Aa" ink — mapped EXACTLY (no deviation). The reading-theme
- *     body-ink colors recur across App 03 (viewer) and App 06 (these swatches),
- *     so per the AAP's own "appears 2+ times → named token" rule they are
- *     promoted to dedicated `@theme` tokens in `globals.css`:
- *     `--color-viewer-ink-dark` #C8CAD8 (`8:83`), `--color-viewer-ink-light`
- *     #1A1A2A (`8:88`), `--color-viewer-ink-sepia` #2A200A (`8:91`); the
- *     high-contrast ink is the exact `text-white` keyword #FFFFFF (`8:94`). This
- *     resolves the Figma-fidelity findings for the sepia (warm brown), dark
- *     (light-gray), and light (near-black) sample text while keeping every value
- *     token-backed (zero hardcoded hex).
+ *   • [COLOR] per-theme "Aa" ink — the ThemeSwatch agent spec (AAP §0.3.3) maps
+ *     each sample ink to an EXISTING design-system token or a design-sanctioned
+ *     paper/ink keyword, NOT to bespoke per-theme ink tokens: dark →
+ *     `text-text-primary` (#F1F5FF light ink on the #0F1020 tile); light → the
+ *     `text-black` keyword (dark ink on paper-white); sepia → the `text-black`
+ *     keyword (dark ink on cream); high-contrast → the `text-white` keyword
+ *     (#FFFFFF, EXACT — Figma node `8:94`). The raw Figma sample inks (dark
+ *     #C8CAD8 `8:83`, light #1A1A2A `8:88`, sepia #2A200A `8:91`) are deliberately
+ *     NOT promoted to `@theme` tokens: the authoritative token manifest (AAP
+ *     §0.3.2 / the globals.css `@theme` block) is a fixed 29-color set with no
+ *     viewer-ink entries, and AAP precedence (D1) ranks the §0.3.2/agent-spec
+ *     manifest above the raw Figma hex. This closest-token / sanctioned-keyword
+ *     mapping keeps every value token-backed (zero hardcoded hex) and is visually
+ *     indistinguishable on the tiny "Aa" preview glyph.
  *   • [TYPOGRAPHY] "Aa" — Figma Inter Bold 22px; the type scale's largest role
  *     is `--text-dialog-heading` (20px). The size is consumed via the
  *     size-only `text-[length:var(--text-dialog-heading)]` arbitrary value and
@@ -99,14 +103,14 @@
  * --------------------------------------------------------------------------
  * Every COLOR value resolves to an `@theme` token from `src/app/globals.css`,
  * consumed via a Tailwind v4 utility (`bg-reading-surface`, `bg-preview-cream`,
- * `text-viewer-ink-dark`, `text-viewer-ink-light`, `text-viewer-ink-sepia`,
- * `text-accent-light`, `text-text-muted`) or
+ * `text-text-primary`, `text-accent-light`, `text-text-muted`) or
  * a CSS-variable arbitrary value (`border-[var(--border-accent)]`,
  * `border-[var(--border-white-09)]`, `ring-[var(--border-accent)]`), plus the
- * design-sanctioned `bg-white` / `bg-black` / `text-white` keywords for the
- * literal paper-white / ink-black theme PREVIEWS (these are not arbitrary hex —
- * they represent the reading theme each tile previews, and the brief explicitly
- * permits them for the swatch fills). Typography SIZE values resolve to the
+ * design-sanctioned `bg-white` / `bg-black` / `text-white` / `text-black`
+ * keywords for the literal paper-white / ink-black theme PREVIEWS (these are not
+ * arbitrary hex — they represent the reading theme each tile previews, and the
+ * brief explicitly permits them for the swatch fills and sample inks).
+ * Typography SIZE values resolve to the
  * `--text-*` tokens via `text-[length:var(...)]`. There are NO raw hex / rgba
  * literals anywhere in this file. The only bare literals are LAYOUT / geometry
  * values that carry no color information — the tile footprint (`w-[154px]
@@ -211,16 +215,18 @@ const THEME_PREVIEW: Record<
   ViewerTheme,
   { readonly tileFill: string; readonly sampleColor: string; readonly label: string }
 > = {
-  // Dark: #0F1020 tile (= --color-reading-surface, EXACT) + soft light-gray "Aa"
-  // ink (= --color-viewer-ink-dark #C8CAD8, EXACT — Figma node 8:83).
-  dark: { tileFill: 'bg-reading-surface', sampleColor: 'text-viewer-ink-dark', label: 'Dark' },
-  // Light: literal paper-white tile (Figma #FFFEF8 → bg-white keyword) + near-black
-  // navy ink (= --color-viewer-ink-light #1A1A2A, EXACT — Figma node 8:88).
-  light: { tileFill: 'bg-white', sampleColor: 'text-viewer-ink-light', label: 'Light' },
-  // Sepia: cream tile (= --color-preview-cream, nearest token) + warm dark-brown ink
-  // (= --color-viewer-ink-sepia #2A200A, EXACT — Figma node 8:91).
-  sepia: { tileFill: 'bg-preview-cream', sampleColor: 'text-viewer-ink-sepia', label: 'Sepia' },
-  // High Contrast: pure-black tile (bg-black keyword, EXACT) + pure-white "Aa"
+  // Dark: #0F1020 tile (= --color-reading-surface) + light "Aa" ink. Per the
+  // ThemeSwatch agent spec the dark-theme sample ink maps to the primary text
+  // token `text-text-primary` (#F1F5FF) — see the [COLOR] per-theme-ink flag.
+  dark: { tileFill: 'bg-reading-surface', sampleColor: 'text-text-primary', label: 'Dark' },
+  // Light: literal paper-white tile (Figma #FFFEF8 → bg-white keyword) + dark "Aa"
+  // ink via the sanctioned `text-black` keyword (paper/ink keywords are permitted
+  // for the swatch previews; see the [COLOR] per-theme-ink flag).
+  light: { tileFill: 'bg-white', sampleColor: 'text-black', label: 'Light' },
+  // Sepia: cream tile (= --color-preview-cream, nearest token) + dark "Aa" ink via
+  // the sanctioned `text-black` keyword (see the [COLOR] per-theme-ink flag).
+  sepia: { tileFill: 'bg-preview-cream', sampleColor: 'text-black', label: 'Sepia' },
+  // High Contrast: pure-black tile (bg-black keyword) + pure-white "Aa"
   // (text-white keyword = #FFFFFF, EXACT — Figma node 8:94).
   'high-contrast': { tileFill: 'bg-black', sampleColor: 'text-white', label: 'High Contrast' },
 };
