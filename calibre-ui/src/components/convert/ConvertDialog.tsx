@@ -56,7 +56,10 @@
  *   §6.2 FormatSelectRow               → input → output format dropdowns (output
  *                                       accent-gradient highlighted).
  *   §6.3 ConvertOptionTabs             → the six option-category tabs.
- *   §6.4 LookAndFeelPanel | placeholder → the active option panel body.
+ *   §6.4 LookAndFeelPanel | ConvertOptionPanel → the active option panel body
+ *                                       ("Look & Feel" → LookAndFeelPanel; the
+ *                                       other five tabs → a fully-built
+ *                                       ConvertOptionPanel; never a placeholder).
  *   §6.5 ConversionLog                 → terminal-style mock conversion log.
  *   §6.6 footer (authored here)        → Cancel · Convert Book (both `close()`).
  *
@@ -89,18 +92,19 @@ import { useEffect, useState, type JSX } from 'react';
 
 import { ModalShell } from '@/components/primitives/ModalShell';
 import { Button } from '@/components/primitives/Button';
-import { GlassCard } from '@/components/primitives/GlassCard';
 import { useModal } from '@/state/ModalProvider';
 import { useLibrary } from '@/state/LibraryProvider';
 import type { Book } from '@/types';
 import { FormatSelectRow } from '@/components/convert/FormatSelectRow';
 import { ConvertOptionTabs } from '@/components/convert/ConvertOptionTabs';
 import { LookAndFeelPanel } from '@/components/convert/LookAndFeelPanel';
+import { ConvertOptionPanel } from '@/components/convert/ConvertOptionPanels';
 import { ConversionLog } from '@/components/convert/ConversionLog';
 
 /**
- * The option tab shown by default when the dialog opens — the only fully-built
- * panel per the AAP (the other five tabs render a muted placeholder).
+ * The option tab shown by default when the dialog opens. "Look & Feel" renders
+ * the {@link LookAndFeelPanel}; every OTHER tab renders its own fully-built
+ * panel via {@link ConvertOptionPanel} — no tab is ever a placeholder.
  */
 const DEFAULT_OPTION_TAB = 'Look & Feel';
 
@@ -142,18 +146,23 @@ export function ConvertDialog(): JSX.Element {
   const { books, currentBook } = useLibrary();
 
   // Resolve the target book: the modal's target id → the library's current book
-  // → the first book as a guaranteed non-null fallback. The dataset is a fixed,
-  // non-empty 15-book array (AAP §0.1.2), so `books[0]` is always a real `Book`
-  // and `book` is never undefined.
-  const book: Book =
+  // → the first book as a fallback. The shipped dataset is a fixed, non-empty
+  // 15-book array (AAP §0.1.2), so in practice this always resolves; but the
+  // provider could surface an empty / unavailable dataset, so `book` is typed as
+  // possibly-`undefined` and the empty case is handled explicitly below — there
+  // is no unguarded `books[0]` access and no modulo-by-zero.
+  const book: Book | undefined =
     books.find((b) => b.id === targetBookId) ?? currentBook ?? books[0];
 
   // Local, dialog-owned selection state (UI-only; reseeded per target book in
-  // the effect below). `inputFormat` mirrors the book's current format; the
-  // initial output is a sensible differing target.
-  const [inputFormat, setInputFormat] = useState<string>(book.format);
+  // the effect below). Hooks run UNCONDITIONALLY (Rules of Hooks) — they are all
+  // declared before any conditional return. `inputFormat` mirrors the resolved
+  // book's format; the initial output is a sensible differing target. When the
+  // dataset is empty the seeds fall back to `''` and are never surfaced (the
+  // dialog renders an empty-state body in that case).
+  const [inputFormat, setInputFormat] = useState<string>(book?.format ?? '');
   const [outputFormat, setOutputFormat] = useState<string>(
-    defaultOutputFor(book.format),
+    book ? defaultOutputFor(book.format) : '',
   );
   const [activeTab, setActiveTab] = useState<string>(DEFAULT_OPTION_TAB);
 
@@ -161,8 +170,10 @@ export function ConvertDialog(): JSX.Element {
   // re-targets a different book — e.g. via the prev/next steppers, which call
   // `openConvert(otherId)`. `book` keeps a STABLE reference across renders for a
   // given target (it is an element of the stable `books` array), so this effect
-  // runs only when the target actually changes, never on every render.
+  // runs only when the target actually changes, never on every render. Guarded
+  // for the empty-dataset case (no book → nothing to reseed).
   useEffect(() => {
+    if (!book) return;
     setInputFormat(book.format);
     setOutputFormat(defaultOutputFor(book.format));
   }, [book]);
@@ -170,18 +181,51 @@ export function ConvertDialog(): JSX.Element {
   // Step to the adjacent book and RE-TARGET the open dialog in place — no close,
   // no navigation — by re-opening convert at the neighbour's id (the provider
   // exposes no `setTargetBookId`; `openConvert(id)` is the re-target path). The
-  // index wraps around both ends so both steppers are always enabled (zero dead
-  // controls).
-  const currentIndex = books.findIndex((b) => b.id === book.id);
+  // index wraps around both ends so both steppers are enabled whenever there are
+  // 2+ books. Stepping requires a count > 1; with 0 or 1 books the steppers are
+  // disabled and `stepTo` is a guarded no-op (it never indexes an invalid slot
+  // and never computes a modulo-by-zero / `NaN` index).
+  const canStep = books.length > 1;
+  const currentIndex = book ? books.findIndex((b) => b.id === book.id) : -1;
   const stepTo = (delta: number): void => {
+    if (!canStep || currentIndex < 0) return;
     const count = books.length;
     const nextIndex = (currentIndex + delta + count) % count;
     openConvert(books[nextIndex].id);
   };
 
+  const isConvertOpen = openModal === 'convert';
+
+  // Empty-data edge (CP3 edge-handling requirement): no resolvable target book —
+  // the provider dataset is empty or unavailable. Render the shell with a
+  // token-compliant empty state instead of indexing `books[0]`. Every hook above
+  // has already run, so this conditional return does not violate the Rules of
+  // Hooks. The shell still self-gates on `isConvertOpen`, so nothing mounts while
+  // the convert modal is closed.
+  if (!book) {
+    return (
+      <ModalShell
+        open={isConvertOpen}
+        title="Convert Books"
+        variant="convert"
+        onClose={close}
+        footer={<Button variant="secondary" label="Close" onClick={close} />}
+      >
+        <div className="flex flex-col items-center justify-center gap-2 px-5 py-12 text-center">
+          <p className="text-detail-title text-text-primary">
+            No book to convert
+          </p>
+          <p className="text-body text-text-muted">
+            Select a book from the library to configure a conversion.
+          </p>
+        </div>
+      </ModalShell>
+    );
+  }
+
   return (
     <ModalShell
-      open={openModal === 'convert'}
+      open={isConvertOpen}
       title="Convert Books"
       variant="convert"
       onClose={close}
@@ -218,12 +262,14 @@ export function ConvertDialog(): JSX.Element {
               variant="secondary"
               label={PREV_GLYPH}
               aria-label="Previous book"
+              disabled={!canStep}
               onClick={() => stepTo(-1)}
             />
             <Button
               variant="secondary"
               label={NEXT_GLYPH}
               aria-label="Next book"
+              disabled={!canStep}
               onClick={() => stepTo(1)}
             />
           </div>
@@ -240,19 +286,15 @@ export function ConvertDialog(): JSX.Element {
         />
 
         {/* §6.3 + §6.4 — the option-category tab strip and its active panel,
-            grouped so the panel sits flush beneath its tabs. Only "Look & Feel"
-            is fully built (AAP); the other five tabs render a muted placeholder. */}
+            grouped so the panel sits flush beneath its tabs. EVERY tab renders a
+            fully-built panel: "Look & Feel" → LookAndFeelPanel; each of the other
+            five tabs → its concrete ConvertOptionPanel (never a placeholder). */}
         <div className="flex flex-col gap-4">
           <ConvertOptionTabs active={activeTab} onSelect={setActiveTab} />
           {activeTab === DEFAULT_OPTION_TAB ? (
             <LookAndFeelPanel />
           ) : (
-            <GlassCard
-              surface="surface-1"
-              className="flex items-center justify-center px-5 py-10 text-center"
-            >
-              <p className="text-body text-text-muted">{`${activeTab} options`}</p>
-            </GlassCard>
+            <ConvertOptionPanel activeTab={activeTab} />
           )}
         </div>
 

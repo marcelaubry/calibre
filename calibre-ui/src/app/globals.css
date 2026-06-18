@@ -240,6 +240,8 @@
   --size-cover-metadata-w: 178px;        /* BookCoverPlaceholder `metadata` cover width (9:21) */
   --size-cover-metadata-h: 238px;        /* BookCoverPlaceholder `metadata` cover height (9:21) */
   --size-toolbar-search-w: 220px;        /* App 01/02 TopToolbar search field width (2:34) */
+  --size-sidebar-w: 216px;               /* App 01/02 Sidebar column width (2:36) */
+  --size-detail-panel-w: 236px;          /* App 01/02 BookDetailPanel + BatchActionsPanel column width (2:345) */
   --size-filetree-w: 200px;              /* App 04 FileTree column width (5:53) */
   --size-preview-basis: 504px;           /* App 04 PreviewPane flex-basis width (5:131) */
   --size-toc-basis: 220px;               /* App 03 TableOfContents flex-basis width (4:23) */

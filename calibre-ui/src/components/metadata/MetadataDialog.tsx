@@ -35,15 +35,21 @@
  * itself into any route and contains NO `page.tsx` logic. (The macOS window
  * title bar belongs to `AppShell`, not this modal.)
  *
- * UI-ONLY / MOCK — NO PERSISTENCE, NO WRITE-BACK (AAP §0.1.2 · §0.9)
+ * UI-ONLY / MOCK — IN-MEMORY COMMIT, NO DURABLE PERSISTENCE (AAP §0.1.2 · §0.9)
  * --------------------------------------------------------------------------
- * There is no backend, no database, no API, no real file I/O, and no metadata
- * write-back: `LibraryProvider` exposes NO `updateBook`/mutation method, so
- * **Save and Apply are deliberate UI-only no-ops** over local React state — the
- * user's edits live in this component's `useState` and are simply discarded when
- * the modal closes (consistent with the no-persistence rule; a reload resets
- * everything). Save dismisses the modal; Apply keeps it open. Nothing is written
- * to `localStorage`, the network, or the shared library state.
+ * There is no backend, no database, no API, and no real file I/O. Save and Apply
+ * DO commit the user's edits — but ONLY into the in-memory shared library state
+ * via `LibraryProvider`'s `updateBook(id, patch)` mutation, so the edited title /
+ * author / rating / tags / series / date / format / identifiers / synopsis
+ * immediately reflect in the library list row, the grid card, and the detail
+ * panel (realizing the App 07 workflow, AAP §0.3.1 Workflow 5). This is NOT
+ * durable persistence: nothing is written to `localStorage`, a database, or the
+ * network, so a full reload resets everything (consistent with the
+ * in-memory-only rule, AAP §0.8.2). **Save commits then closes; Apply commits and
+ * keeps the modal open; Cancel closes WITHOUT committing** (in-progress edits are
+ * discarded). Because the edited form state lives in the keyed INNER content but
+ * the Apply/Save buttons live in the OUTER footer, the commit is bridged through
+ * a ref (see the STATE ARCHITECTURE note below).
  *
  * STATE ARCHITECTURE — OPEN GATING + KEYED INNER CONTENT (no `useEffect` sync)
  * --------------------------------------------------------------------------
@@ -59,6 +65,14 @@
  *     inner content, REMOUNTING it so every field re-seeds cleanly from the new
  *     book. This avoids a `useEffect` state-sync (and the uncontrolled→controlled
  *     warnings such sync invites) entirely — the remount IS the re-seed.
+ *   • COMMIT-VIA-REF: the Apply/Save buttons live in the OUTER footer but the
+ *     edited state lives in the INNER content, so the inner registers a
+ *     `buildPatch()` getter (a closure over its freshest edited fields) into a
+ *     ref owned by the outer (`registerBuildPatch`), clearing it on unmount. The
+ *     outer's `commit()` reads that getter and writes the resulting
+ *     `Partial<Book>` patch back through `updateBook`. This keeps the footer
+ *     handler identities stable while always committing the inner's latest edits,
+ *     and survives ← → stepping (the ref is re-registered by the remounted inner).
  *
  * `ModalShell` CONTRACT (geometry/scrim/shadow DELEGATED — never re-implemented)
  * --------------------------------------------------------------------------
@@ -113,12 +127,12 @@
  * @see src/components/metadata/TagChipEditor.tsx — the Tags chip editor (injected child).
  * @see src/components/metadata/IdentifierRows.tsx — the Identifiers editor (injected child).
  * @see src/state/ModalProvider.tsx — `useModal` (open-state; never navigates).
- * @see src/state/LibraryProvider.tsx — `useLibrary` (books; no `updateBook`).
+ * @see src/state/LibraryProvider.tsx — `useLibrary` (books + `updateBook` commit).
  * @see src/app/globals.css — the authoritative `@theme` token declarations.
  * @see Agent Action Plan §0.3 (App 07) / §0.4.2 — component & token mapping.
  */
 
-import { useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { JSX } from 'react';
 
 import { ModalShell } from '@/components/primitives/ModalShell';
@@ -140,16 +154,6 @@ import type { Book, FormatKind } from '@/types';
 /* ==========================================================================
  * Module-scope constants & helpers (stable identities; no per-render churn).
  * ======================================================================== */
-
-/**
- * Stable no-op for the "Apply" footer action. Apply is, by the UI-only/mock
- * contract, a deliberate no-op: there is no persistence layer to flush to and no
- * `updateBook` to call, so "applying" simply keeps the user's in-state edits and
- * leaves the modal open. A single module-level reference keeps the handler
- * identity stable across renders (matching the sibling `MetadataCoverColumn`'s
- * `noop` convention) so the footer `Button` never sees needless prop churn.
- */
-const noop = (): void => {};
 
 /**
  * The canonical three-format ordering used by {@link MetadataDialogContent}'s
@@ -300,6 +304,14 @@ interface MetadataDialogContentProps {
    * remounts this content so the form re-seeds from the newly-targeted book.
    */
   readonly onStep: (bookId: string) => void;
+  /**
+   * Registers (or, with `null`, clears) this content's `buildPatch()` getter
+   * into the OUTER component's ref so the footer's Apply/Save can read the
+   * freshest edited fields and commit them via `updateBook`. The inner calls
+   * this on mount/whenever `buildPatch` changes and clears it on unmount — see
+   * the COMMIT-VIA-REF note in the file header.
+   */
+  readonly registerBuildPatch: (build: (() => Partial<Book>) | null) => void;
 }
 
 /**
@@ -308,8 +320,10 @@ interface MetadataDialogContentProps {
  * field grid with Tags/Identifiers injected), all backed by local form state.
  *
  * All state is seeded ONCE at mount from `book`; the parent's `key={book.id}`
- * remount handles re-seeding on book change (no `useEffect`). Array/derived
- * fields use lazy `useState` initializers so the seed work runs only on mount.
+ * remount handles re-seeding on book change (no state-sync `useEffect`).
+ * Array/derived fields use lazy `useState` initializers so the seed work runs
+ * only on mount. (A separate `useEffect` registers the commit getter with the
+ * outer footer — see the COMMIT-VIA-REF note — but never syncs form state.)
  *
  * @param props - {@link MetadataDialogContentProps}.
  * @returns the metadata modal's header + two-column body.
@@ -318,6 +332,7 @@ function MetadataDialogContent({
   book,
   books,
   onStep,
+  registerBuildPatch,
 }: MetadataDialogContentProps): JSX.Element {
   /* ------------------------------------------------------------------ *
    * Scalar fields. Fields that exist on the `Book` contract seed from it
@@ -412,6 +427,58 @@ function MetadataDialogContent({
       return [...prev, { format: next, sizeBytes: MOCK_ADDED_FORMAT_SIZE }];
     });
   };
+
+  /* ------------------------------------------------------------------ *
+   * Commit bridge — build a `Partial<Book>` patch from the CURRENT edited
+   * fields and register it with the outer footer (Apply/Save). Only fields that
+   * exist on the `Book` contract are included; the mock-only fields (Title Sort,
+   * Author Sort, Series Index, Publisher, Language) are intentionally NOT
+   * committed. `series` collapses an empty string back to `undefined` (the
+   * optional contract marker). The format list's PRIMARY entry maps to the
+   * single `Book.format` / `Book.sizeBytes` (falling back to the book's existing
+   * values if the list was emptied), and the identifier rows fold back into the
+   * `Record<string,string>` map, dropping rows with a blank key.
+   * ------------------------------------------------------------------ */
+  const buildPatch = useCallback((): Partial<Book> => {
+    const trimmedSeries = series.trim();
+    const primaryFormat = formats[0];
+    return {
+      title: title.trim(),
+      author: author.trim(),
+      series: trimmedSeries === '' ? undefined : trimmedSeries,
+      date: publicationDate,
+      rating,
+      tags: [...tags],
+      format: primaryFormat?.format ?? book.format,
+      sizeBytes: primaryFormat?.sizeBytes ?? book.sizeBytes,
+      identifiers: Object.fromEntries(
+        identifiers
+          .filter((row) => row.key.trim() !== '')
+          .map((row) => [row.key.trim(), row.value]),
+      ),
+      synopsis,
+    };
+  }, [
+    title,
+    author,
+    series,
+    publicationDate,
+    rating,
+    tags,
+    formats,
+    identifiers,
+    synopsis,
+    book.format,
+    book.sizeBytes,
+  ]);
+
+  // Register the latest `buildPatch` getter with the outer component (and clear
+  // it on unmount). Runs whenever `buildPatch` changes — i.e. whenever any edited
+  // field changes — so the footer always commits the freshest edits.
+  useEffect(() => {
+    registerBuildPatch(buildPatch);
+    return () => registerBuildPatch(null);
+  }, [registerBuildPatch, buildPatch]);
 
   /* ------------------------------------------------------------------ *
    * Prev/next stepping — wrap-around relative to the book's index in `books`.
@@ -523,7 +590,7 @@ function MetadataDialogContent({
  */
 export function MetadataDialog(): JSX.Element {
   const { openModal, targetBookId, close, openMetadata } = useModal();
-  const { books, currentBook } = useLibrary();
+  const { books, currentBook, updateBook } = useLibrary();
 
   // Open strictly when the metadata modal is the active overlay.
   const open = openModal === 'metadata';
@@ -534,15 +601,46 @@ export function MetadataDialog(): JSX.Element {
     ?? currentBook
     ?? books[0];
 
-  // Footer: Cancel (dismiss) · Apply (UI-only no-op, stays open) · Save (UI-only
-  // no-op, then dismiss). The shell's footer band is right-aligned with a gap,
-  // so these render as a trailing button cluster. Save is `variant="primary"`
-  // (the accent gradient CTA); Cancel/Apply are secondary.
+  // Commit-via-ref bridge: the edited form state lives in the keyed INNER
+  // content, but the Apply/Save buttons live here in the OUTER footer. The inner
+  // registers a `buildPatch()` getter into this ref (and clears it on unmount);
+  // `commit()` reads the latest getter and writes the patch back into the shared
+  // library via `updateBook`. `registerBuildPatch` is identity-stable (empty deps)
+  // so the inner's registration effect only re-runs when the edited state changes.
+  const buildPatchRef = useRef<(() => Partial<Book>) | null>(null);
+  const registerBuildPatch = useCallback(
+    (build: (() => Partial<Book>) | null): void => {
+      buildPatchRef.current = build;
+    },
+    [],
+  );
+
+  // Commit the inner's current edits to the target book in the shared (in-memory)
+  // library. A guarded no-op when there is no resolvable book or the inner has
+  // not registered its getter yet.
+  const commit = useCallback((): void => {
+    const build = buildPatchRef.current;
+    if (build === null || book === undefined) {
+      return;
+    }
+    updateBook(book.id, build());
+  }, [updateBook, book]);
+
+  // Save commits then closes; Apply (wired below) commits and stays open.
+  const handleSave = useCallback((): void => {
+    commit();
+    close();
+  }, [commit, close]);
+
+  // Footer: Cancel (dismiss WITHOUT committing — edits discarded) · Apply (commit,
+  // stay open) · Save (commit, then dismiss). The shell's footer band is
+  // right-aligned with a gap, so these render as a trailing button cluster. Save
+  // is `variant="primary"` (the accent gradient CTA); Cancel/Apply are secondary.
   const footer = (
     <>
       <Button label="Cancel" variant="secondary" onClick={close} />
-      <Button label="Apply" variant="secondary" onClick={noop} />
-      <Button label="Save" variant="primary" onClick={close} />
+      <Button label="Apply" variant="secondary" onClick={commit} />
+      <Button label="Save" variant="primary" onClick={handleSave} />
     </>
   );
 
@@ -561,6 +659,7 @@ export function MetadataDialog(): JSX.Element {
           book={book}
           books={books}
           onStep={openMetadata}
+          registerBuildPatch={registerBuildPatch}
         />
       ) : null}
     </ModalShell>

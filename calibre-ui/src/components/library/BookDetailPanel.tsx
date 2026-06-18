@@ -46,16 +46,19 @@
  * Every color / gradient / radius / typography value resolves to an `@theme`
  * token, consumed via a token utility (`text-detail-title`, `text-text-primary`,
  * `text-meta-label`, `text-star`) or a CSS-variable arbitrary value
- * (`border-[var(--border-white-07)]`). The only bare literals are the permitted
- * neutral keywords and Tailwind's standard spacing-scale utilities (`px-4`,
- * `gap-5`, `basis-[14.75rem]`). The panel is composed EXCLUSIVELY from the
+ * (`border-[var(--border-white-07)]`, `basis-[var(--size-detail-panel-w)]`). The
+ * only bare literals are the permitted neutral keywords and Tailwind's standard
+ * spacing-scale utilities (`px-4`, `gap-5`). The panel width resolves to the
+ * named `--size-detail-panel-w` token (mirrored in `src/theme/tokens.ts` as
+ * `sizes.detailPanelW`). The panel is composed EXCLUSIVELY from the
  * bespoke design-system primitives — `GlassCard`, `Button`, `StarRating`,
  * `TagPill`, `FormatBadge`, `BookCoverPlaceholder` — never a raw control.
  *
  * RESPONSIVE WIDTH (1440 → 1280, zero horizontal overflow)
  * --------------------------------------------------------------------------
- * The panel is a flex child sized by `shrink-0 basis-[14.75rem]` (236 px) with a
- * matching `min-w-[14.75rem]` floor — never a hard `w-[236px]` — so the center
+ * The panel is a flex child sized by `shrink-0 basis-[var(--size-detail-panel-w)]`
+ * (the 236 px `--size-detail-panel-w` token) with a matching
+ * `min-w-[var(--size-detail-panel-w)]` floor — never a hard `w-[236px]` — so the center
  * book table (a sibling `flex-1 min-w-0`) absorbs the 160 px difference as the
  * window narrows from 1440 to 1280. With `box-sizing: border-box`, the 236 px
  * width minus the 1 px left hairline minus the 32 px `px-4` padding leaves
@@ -111,7 +114,7 @@ const noop = (): void => {};
  * (`surface-2` tone is set via the `GlassCard surface` prop, not here.)
  */
 const PANEL_CONTAINER =
-  'flex h-full shrink-0 basis-[14.75rem] min-w-[14.75rem] flex-col gap-5 ' +
+  'flex h-full shrink-0 basis-[var(--size-detail-panel-w)] min-w-[var(--size-detail-panel-w)] flex-col gap-5 ' +
   'overflow-y-auto border-l border-[var(--border-white-07)] px-4 py-4';
 
 /**
@@ -120,7 +123,7 @@ const PANEL_CONTAINER =
  * no current book) but centers its single muted prompt on both axes.
  */
 const EMPTY_CONTAINER =
-  'flex h-full shrink-0 basis-[14.75rem] min-w-[14.75rem] items-center ' +
+  'flex h-full shrink-0 basis-[var(--size-detail-panel-w)] min-w-[var(--size-detail-panel-w)] items-center ' +
   'justify-center overflow-y-auto border-l border-[var(--border-white-07)] px-4 py-4';
 
 /** A metadata row: label on the left, value on the right, on a single line. */

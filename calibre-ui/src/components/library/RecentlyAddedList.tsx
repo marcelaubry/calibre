@@ -68,16 +68,18 @@
  * INSIDE `@/lib/covers` (intentionally outside the global token set) and is
  * applied solely by the `BookCoverPlaceholder` primitive — never here.
  *
- * COMPOSE-FROM-PRIMITIVES & ACCESSIBILITY
+ * COMPOSE-FROM-PRIMITIVES & ACCESSIBILITY (R4 — native semantics)
  * --------------------------------------------------------------------------
- * The cover is the `BookCoverPlaceholder` design-system primitive; structural
- * HTML (`<section>` / `<h3>` / `<ul role="list">` / `<li>` / a clickable
- * `role="button"` region) carries the layout. Each row is keyboard-operable
- * (`role="button"`, `tabIndex={0}`, an Enter/Space activator, and an
- * `aria-label` naming the target book), shows a faint accent hover wash and a
- * token-backed `:focus-visible` ring (both invisible at rest), and animates only
- * under `motion-safe`. Long titles/authors truncate (`min-w-0` + `truncate`) so
- * the list never forces horizontal overflow as the layout degrades 1440 → 1280.
+ * The cover is the `BookCoverPlaceholder` design-system primitive; each clickable
+ * row is the shared `NavRowButton` primitive (a real `<button type="button">`),
+ * nested in structural HTML (`<section>` / `<h3>` / `<ul role="list">` / `<li>`).
+ * Because the row is a native button, keyboard operability (Enter/Space) and the
+ * button role come for free — there is NO `div role="button"`, `tabIndex`, or
+ * `onKeyDown` shim. Each row passes an `aria-label` naming the target book,
+ * shows a faint accent hover wash and the primitive's token-backed inset
+ * `:focus-visible` ring (both invisible at rest), and animates only under
+ * `motion-safe`. Long titles/authors truncate (`min-w-0` + `truncate`) so the
+ * list never forces horizontal overflow as the layout degrades 1440 → 1280.
  *
  * @see @/state/LibraryProvider — the library Context (`recentlyAddedBooks`, `selectOnly`).
  * @see @/components/primitives/BookCoverPlaceholder — the generated-cover primitive.
@@ -87,9 +89,10 @@
  * @see src/calibre/gui2/library/models.py — Calibre `BooksModel` date/sort (reference only).
  */
 
-import { useId, type JSX, type KeyboardEvent } from 'react';
+import { useId, type JSX } from 'react';
 
 import { useLibrary } from '@/state/LibraryProvider';
+import { NavRowButton } from '@/components/primitives/NavRowButton';
 import { BookCoverPlaceholder } from '@/components/primitives/BookCoverPlaceholder';
 import { formatDate } from '@/lib/format';
 
@@ -123,23 +126,6 @@ const META_SEPARATOR = '\u00B7';
  */
 function cx(...parts: Array<string | false | undefined>): string {
   return parts.filter(Boolean).join(' ');
-}
-
-/**
- * Build an Enter/Space keyboard activator for a `role="button"` region, so the
- * clickable rows are operable by keyboard exactly like a native button. Space is
- * `preventDefault`-ed to suppress the default page scroll.
- *
- * @param handler - the action to run on Enter/Space.
- * @returns a React `onKeyDown` handler for a `<div>` row.
- */
-function activateOnKey(handler: () => void): (event: KeyboardEvent<HTMLDivElement>) => void {
-  return (event) => {
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      handler();
-    }
-  };
 }
 
 /* --------------------------------------------------------------------------
@@ -177,18 +163,16 @@ const LIST = 'flex flex-col';
 const LIST_ITEM = 'min-w-0 border-b border-[var(--border-white-07)] last:border-b-0';
 
 /**
- * The clickable row region — a keyboard-operable `role="button"` filling its
- * `<li>`. Horizontal layout (cover + text), token padding/gap, a faint accent
- * hover wash and an INSET token focus-visible ring (so the ring never bleeds
- * onto the dividers or siblings). Hover/focus visuals are invisible at rest;
- * color transitions run only under `motion-safe`.
+ * Per-context LAYOUT classes for the clickable row, merged onto the
+ * {@link NavRowButton} primitive that supplies the row SEMANTICS. Horizontal
+ * layout (cover + text), token padding/gap, and a faint accent hover wash; the
+ * `min-w-0` lets the inner text truncate. The variant-invariant button
+ * semantics — `w-full text-left`, `cursor-pointer select-none`, the INSET
+ * token-backed `:focus-visible` ring (`--border-accent`), and the `motion-safe`
+ * color transition — are owned by `NavRowButton` (R4), so they are intentionally
+ * absent here (a future change to the primitive then governs every row).
  */
-const ROW =
-  'flex w-full min-w-0 cursor-pointer items-center gap-2 px-2 py-2 text-left ' +
-  'hover:bg-accent/5 ' +
-  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset ' +
-  'focus-visible:ring-[var(--border-accent)] ' +
-  'motion-safe:transition-colors';
+const ROW = 'flex min-w-0 items-center gap-2 px-2 py-2 hover:bg-accent/5';
 
 /** The cover thumbnail never shrinks (keeps a stable leading column). */
 const COVER = 'shrink-0';
@@ -253,13 +237,10 @@ export function RecentlyAddedList({ className }: RecentlyAddedListProps = {}): J
 
           return (
             <li key={book.id} className={LIST_ITEM}>
-              <div
+              <NavRowButton
                 className={ROW}
-                role="button"
-                tabIndex={0}
                 aria-label={`Select ${book.title}`}
                 onClick={focusBook}
-                onKeyDown={activateOnKey(focusBook)}
               >
                 <BookCoverPlaceholder book={book} size="sm" className={COVER} />
 
@@ -267,7 +248,7 @@ export function RecentlyAddedList({ className }: RecentlyAddedListProps = {}): J
                   <span className={ROW_TITLE}>{book.title}</span>
                   {metaLine.length > 0 ? <span className={ROW_META}>{metaLine}</span> : null}
                 </div>
-              </div>
+              </NavRowButton>
             </li>
           );
         })}

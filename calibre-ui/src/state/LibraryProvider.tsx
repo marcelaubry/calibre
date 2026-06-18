@@ -183,6 +183,16 @@ export interface LibraryContextValue {
   // ----- current book -----
   /** Set (or clear, with `null`) the current/detail book. */
   setCurrentBookId: (id: string | null) => void;
+  // ----- mutation actions (UI-only, in-memory) -----
+  /**
+   * Merge a partial patch into the book matching `id`, replacing the catalog
+   * entry immutably so every derived selector (`filteredBooks`, `selectedBooks`,
+   * `currentBook`, `recentlyAddedBooks`) reflows and all views re-render with the
+   * edit. Drives the App 07 Metadata Editor Save/Apply workflow — purely
+   * client-side React state, NO persistence/network/file I/O. The book's `id` is
+   * always preserved so selection/current-book references never desync.
+   */
+  updateBook: (id: string, patch: Partial<Book>) => void;
 }
 
 /**
@@ -238,7 +248,7 @@ function compareBooks(a: Book, b: Book, field: SortField, order: SortOrder): num
  */
 export function LibraryProvider({ children }: { children: ReactNode }) {
   // ---------- raw state (deterministic defaults) ----------
-  const [books] = useState<Book[]>(bookData);
+  const [books, setBooks] = useState<Book[]>(bookData);
   const [viewMode, setViewModeState] = useState<ViewMode>('list');
   const [selectedIds, setSelectedIdsState] = useState<string[]>(() =>
     bookData.length > 0 ? [bookData[0].id] : [],
@@ -305,6 +315,18 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
     (id: string | null) => setCurrentBookIdState(id),
     [],
   );
+
+  // ---------- mutation actions (UI-only, in-memory) ----------
+  // Immutably merge `patch` into the matching book. The original `id` is forced
+  // back onto the merged record so a patch can never accidentally re-key a book
+  // (which would desync `selectedIds` / `currentBookId`). Books that don't match
+  // are returned by reference, so React only re-renders consumers of the edited
+  // record. NO persistence — state is in-memory only (AAP §0.8.2).
+  const updateBook = useCallback((id: string, patch: Partial<Book>) => {
+    setBooks((prev) =>
+      prev.map((b) => (b.id === id ? { ...b, ...patch, id: b.id } : b)),
+    );
+  }, []);
 
   // ---------- derived selectors ----------
   const filteredBooks = useMemo<Book[]>(() => {
@@ -400,6 +422,7 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
       isSelected,
       setSelectedIds,
       setCurrentBookId,
+      updateBook,
     }),
     [
       books,
@@ -428,6 +451,7 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
       isSelected,
       setSelectedIds,
       setCurrentBookId,
+      updateBook,
     ],
   );
 

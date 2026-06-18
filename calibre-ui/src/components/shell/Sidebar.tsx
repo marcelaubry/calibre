@@ -35,11 +35,11 @@
  *
  * WHY `'use client'`
  * --------------------------------------------------------------------------
- * The panel consumes the `useLibrary()` Context hook and binds `onClick` /
- * `onKeyDown` handlers on every interactive row and chip — both client-only
- * concerns (App Router components default to Server Components, which cannot use
- * hooks or attach event handlers). The directive is the very first line, before
- * any import.
+ * The panel consumes the `useLibrary()` Context hook and binds an `onClick`
+ * handler on every interactive row and chip — both client-only concerns (App
+ * Router components default to Server Components, which cannot use hooks or
+ * attach event handlers). The directive is the very first line, before any
+ * import.
  *
  * FIGMA SOURCE OF TRUTH (file `JduUzjVHNhZivm5A0pAiCD`, screen `2:2` = App 01)
  * --------------------------------------------------------------------------
@@ -77,31 +77,41 @@
  * `--color-accent` token; `/15` is a numeric opacity, not a color literal). The
  * remaining bare utilities are Tailwind's standard layout / spacing scale
  * (`flex`, `gap-5`, `px-3`, `py-2`, `w-5`, `truncate`, `flex-wrap`) plus the
- * panel width (`w-[216px]`, the exact Figma width — the same Figma-exact sizing
- * hook the sibling `TopToolbar` uses for its `w-[220px]` search field); none of
- * these carry color information.
+ * panel width, which resolves to the named `--size-sidebar-w` token
+ * (`w-[var(--size-sidebar-w)]` = 216px, the exact Figma width — mirrored in
+ * `src/theme/tokens.ts` as `sizes.sidebarW`, the same tokenized sizing hook the
+ * sibling `TopToolbar` search field uses); none of these carry color information.
  *
  * RESPONSIVE (1440 → 1280, zero horizontal overflow — AAP §0.9)
  * --------------------------------------------------------------------------
- * The panel is `w-[216px] shrink-0` — it holds its width and never compresses;
+ * The panel is `w-[var(--size-sidebar-w)] shrink-0` — it holds its 216px width
+ * and never compresses;
  * the surrounding `AppShell` row gives the center content `flex-1 min-w-0` so
  * the center (not the sidebar) absorbs the slack. Long author names truncate
  * (`truncate` + `min-w-0`) and tag chips `flex-wrap`, so nothing ever forces
  * horizontal overflow. Long lists scroll vertically (`overflow-y-auto`) instead
  * of breaking the 820px design height.
  *
- * COMPOSITION & ACCESSIBILITY
+ * COMPOSITION & ACCESSIBILITY (R4 — native semantics)
  * --------------------------------------------------------------------------
- * Composes the `TagPill` design-system primitive for tag chips. Per the
- * composition rule (no raw `<button>` / `<input>` / `<select>` / `<h*>`), the
- * clickable section rows, author rows, and tag chips are accessible
- * `<div role="button" tabIndex={0}>` controls with an Enter/Space `onKeyDown`
- * handler and an `aria-pressed` state — keyboard-operable with a token-backed
- * `:focus-visible` ring, with NO raw interactive elements. The root is an
- * `<aside>` landmark; group items are real `<ul>`/`<li>` lists; emoji glyphs are
- * `aria-hidden` (decorative — the visible label is the control's accessible
- * name). Color is never the sole active cue (the label brightens AND, for tags,
- * a ring appears; `aria-pressed` carries the state to assistive tech).
+ * Composes design-system primitives rather than hand-rolled controls. The
+ * clickable SECTION and AUTHOR rows are the shared `NavRowButton` primitive
+ * (which renders a real `<button type="button">` with free Enter/Space
+ * activation, a token-backed inset `:focus-visible` ring, and a `motion-safe`
+ * color transition); each supplies only its per-row layout/active-fill via
+ * `className`. The TAG chips are NATIVE `<button type="button">` elements (the
+ * full-width `NavRowButton` is unsuitable for an inline, content-hugging chip),
+ * with their default button chrome neutralized so only the `TagPill` primitive
+ * paints. Every control carries `aria-pressed` to announce its toggle state to
+ * assistive tech — these are FILTER toggles, so `aria-pressed` (not
+ * `aria-current`) is the correct semantic, which is why the rows pass
+ * `aria-pressed` rather than the primitive's `active` prop. There are NO
+ * `div role="button"` controls and NO `onKeyDown` shims — keyboard operability
+ * comes natively from the underlying buttons. The root is an `<aside>` landmark;
+ * group items are real `<ul>`/`<li>` lists; emoji glyphs are `aria-hidden`
+ * (decorative — the visible label is the control's accessible name). Color is
+ * never the sole active cue (the label brightens AND, for tags, a ring appears;
+ * `aria-pressed` carries the state to assistive tech).
  *
  * DESIGN-PARITY REFERENCE ONLY — NOT CODE REUSE
  * --------------------------------------------------------------------------
@@ -120,8 +130,9 @@
  * @see src/calibre/gui2/tag_browser/ui.py — Calibre Tag Browser (reference only).
  */
 
-import type { JSX, KeyboardEvent as ReactKeyboardEvent } from 'react';
+import type { JSX } from 'react';
 import { useLibrary } from '@/state/LibraryProvider';
+import { NavRowButton } from '@/components/primitives/NavRowButton';
 import { TagPill } from '@/components/primitives/TagPill';
 import { sidebarSections, tagFacets, authorFacets } from '@/data/sidebar';
 import type { SidebarSection, TagFacet, AuthorFacet } from '@/types';
@@ -142,7 +153,8 @@ export interface SidebarProps {
 /**
  * Root `<aside>` panel classes — all token-backed.
  *
- * `w-[216px] shrink-0` holds the exact Figma panel width without compressing
+ * `w-[var(--size-sidebar-w)] shrink-0` holds the exact Figma panel width (216px,
+ * the `--size-sidebar-w` token) without compressing
  * (the center content absorbs slack via `flex-1 min-w-0` in `AppShell`);
  * `h-full` fills the available shell row (NOT a hardcoded 820px); `flex-col
  * gap-5` stacks the three groups; `overflow-y-auto` lets long tag/author lists
@@ -151,7 +163,7 @@ export interface SidebarProps {
  * hairline (no radius) are the reconciled Figma values for node `2:36`.
  */
 const ASIDE_CLASSES =
-  'flex h-full w-[216px] shrink-0 flex-col gap-5 overflow-y-auto px-3 py-4 ' +
+  'flex h-full w-[var(--size-sidebar-w)] shrink-0 flex-col gap-5 overflow-y-auto px-3 py-4 ' +
   'bg-[var(--color-surface-1)] border-r border-[var(--border-white-07)]';
 
 /**
@@ -165,19 +177,19 @@ const HEADING_CLASSES =
   'px-2 pb-2 text-meta-label uppercase tracking-wider text-text-muted select-none';
 
 /**
- * Shared base classes for a clickable SECTION / AUTHOR row.
+ * Per-context LAYOUT classes for a SECTION / AUTHOR row, merged onto the
+ * {@link NavRowButton} primitive that supplies the row SEMANTICS.
  *
- * A full-width flex row (icon/name + flexible label + trailing count) with the
+ * A flex row (icon/name + flexible label + trailing count) with the
  * `rounded-control` (8px) corner token, `px-2 py-2` inset, and `min-w-0` so the
- * label can truncate instead of forcing overflow. `cursor-pointer select-none`
- * signal interactivity; `motion-safe:transition-colors` animates the hover/active
- * color change only when the user has not requested reduced motion (UI6); a
- * token-backed `:focus-visible` ring shows focus for keyboard users only (UI3).
+ * label can truncate instead of forcing overflow. The variant-invariant button
+ * semantics — `w-full text-left`, `cursor-pointer select-none`, the token-backed
+ * `:focus-visible` ring (`--border-accent`), and the `motion-safe` color
+ * transition — are owned by `NavRowButton` (R4), so they are intentionally
+ * absent here to avoid duplicating the primitive's base (a future change to the
+ * primitive then governs every row uniformly).
  */
-const ROW_BASE_CLASSES =
-  'flex w-full items-center gap-2 rounded-control px-2 py-2 min-w-0 ' +
-  'cursor-pointer select-none motion-safe:transition-colors ' +
-  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--border-accent)]';
+const ROW_BASE_CLASSES = 'flex items-center gap-2 rounded-control px-2 py-2 min-w-0';
 
 /**
  * ACTIVE row treatment — the translucent purple fill (the `--color-accent`
@@ -218,13 +230,18 @@ const LABEL_CLASSES = 'min-w-0 flex-1 truncate text-body';
 const COUNT_CLASSES = 'shrink-0 text-meta-value text-text-muted';
 
 /**
- * Clickable wrapper around each {@link TagPill}. `inline-flex` hugs the pill;
- * `rounded-full` matches the pill so the `:focus-visible` ring is capsule-shaped;
- * `cursor-pointer select-none` signal interactivity. The pill itself supplies
- * the translucent-purple surface; this wrapper only adds interactivity + focus.
+ * Clickable wrapper around each {@link TagPill} — a NATIVE `<button type="button">`
+ * (R4: native semantics over a `div role="button"`), with its default button
+ * chrome neutralized so ONLY the pill renders: `appearance-none border-0
+ * bg-transparent p-0` strip the user-agent button look, leaving the pill's own
+ * translucent-purple surface intact. `inline-flex` hugs the pill (the full-width
+ * `NavRowButton` is unsuitable for an inline chip); `rounded-full` matches the
+ * pill so the `:focus-visible` ring is capsule-shaped; `cursor-pointer
+ * select-none` signal interactivity. Enter/Space activation and the button role
+ * now come natively from the element (no `onKeyDown` helper needed).
  */
 const TAG_WRAP_CLASSES =
-  'inline-flex rounded-full cursor-pointer select-none ' +
+  'inline-flex rounded-full cursor-pointer select-none appearance-none border-0 bg-transparent p-0 ' +
   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--border-accent)]';
 
 /**
@@ -237,27 +254,6 @@ const TAG_WRAP_CLASSES =
  * token-backed selected cue with zero layout shift.
  */
 const TAG_ACTIVE_CLASSES = 'ring-2 ring-[var(--color-accent)]';
-
-/**
- * Activate a `role="button"` control from the keyboard.
- *
- * Mirrors native `<button>` behavior: Enter and Space both fire the action, and
- * the default Space-scroll is prevented. Keeping this in one helper guarantees
- * every clickable row/chip is keyboard-operable identically (UI3) and satisfies
- * the `jsx-a11y/click-events-have-key-events` rule alongside each `onClick`.
- *
- * @param event - the React keyboard event from the `role="button"` element.
- * @param activate - the same action the element's `onClick` performs.
- */
-function handleActivateKey(
-  event: ReactKeyboardEvent<HTMLDivElement>,
-  activate: () => void,
-): void {
-  if (event.key === 'Enter' || event.key === ' ') {
-    event.preventDefault();
-    activate();
-  }
-}
 
 /**
  * Sidebar — the persistent left library facet panel (sections + tags + authors).
@@ -299,12 +295,9 @@ export function Sidebar({ className }: SidebarProps): JSX.Element {
             const activate = (): void => setActiveSection(section.id);
             return (
               <li key={section.id}>
-                <div
-                  role="button"
-                  tabIndex={0}
+                <NavRowButton
                   aria-pressed={isActive}
                   onClick={activate}
-                  onKeyDown={(event) => handleActivateKey(event, activate)}
                   className={`${ROW_BASE_CLASSES} ${isActive ? ROW_ACTIVE_CLASSES : ROW_INACTIVE_CLASSES}`}
                 >
                   <span className={ICON_CLASSES} aria-hidden="true">
@@ -312,7 +305,7 @@ export function Sidebar({ className }: SidebarProps): JSX.Element {
                   </span>
                   <span className={LABEL_CLASSES}>{section.label}</span>
                   <span className={COUNT_CLASSES}>{section.count}</span>
-                </div>
+                </NavRowButton>
               </li>
             );
           })}
@@ -328,19 +321,17 @@ export function Sidebar({ className }: SidebarProps): JSX.Element {
             const activate = (): void => toggleTag(tag.label);
             return (
               <li key={tag.label}>
-                <div
-                  role="button"
-                  tabIndex={0}
+                <button
+                  type="button"
                   aria-pressed={isActive}
                   onClick={activate}
-                  onKeyDown={(event) => handleActivateKey(event, activate)}
                   className={TAG_WRAP_CLASSES}
                 >
                   <TagPill
                     label={tag.label}
                     className={isActive ? TAG_ACTIVE_CLASSES : undefined}
                   />
-                </div>
+                </button>
               </li>
             );
           })}
@@ -358,17 +349,14 @@ export function Sidebar({ className }: SidebarProps): JSX.Element {
               setActiveAuthor(isActive ? null : author.name);
             return (
               <li key={author.name}>
-                <div
-                  role="button"
-                  tabIndex={0}
+                <NavRowButton
                   aria-pressed={isActive}
                   onClick={activate}
-                  onKeyDown={(event) => handleActivateKey(event, activate)}
                   className={`${ROW_BASE_CLASSES} ${isActive ? ROW_ACTIVE_CLASSES : ROW_INACTIVE_CLASSES}`}
                 >
                   <span className={LABEL_CLASSES}>{author.name}</span>
                   <span className={COUNT_CLASSES}>{author.count}</span>
-                </div>
+                </NavRowButton>
               </li>
             );
           })}

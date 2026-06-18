@@ -64,16 +64,18 @@
  * and primary-gradient treatments come entirely from the `Button` primitive's
  * variants. The only bare literals are layout/spacing utilities on Tailwind's
  * standard scale (`flex`, `gap-2`, `gap-5`, `p-4`, `w-full`, `overflow-y-auto`)
- * and the panel-width FLEX LENGTHS in `rem` (`basis-[14.75rem]`,
- * `min-w-[14.75rem]` ≈ the 236px design width) — none of which carry design-token
- * color/radius/type information, matching the convention used by the sibling
- * `ReaderToolsPanel` / `TableOfContents` side panels.
+ * the panel width resolves to the named `--size-detail-panel-w` token
+ * (`basis-[var(--size-detail-panel-w)] min-w-[var(--size-detail-panel-w)]` =
+ * 236px, mirrored in `src/theme/tokens.ts` as `sizes.detailPanelW`) — the SAME
+ * shared token the sibling `BookDetailPanel` consumes, so both right-column
+ * panels are guaranteed to match.
  *
  * RESPONSIVE WIDTH (1440 → 1280, zero horizontal overflow)
  * --------------------------------------------------------------------------
- * The panel mirrors the `BookDetailPanel` ~236px baseline but expresses it as a
- * min-width + flex-basis (`min-w-[14.75rem] basis-[14.75rem]`) and `shrink-0`,
- * NEVER a hard `w-[236px]`. The grid page's CENTER column (`flex-1 min-w-0`,
+ * The panel mirrors the `BookDetailPanel` 236px baseline via the shared
+ * `--size-detail-panel-w` token, expressed as a min-width + flex-basis
+ * (`min-w-[var(--size-detail-panel-w)] basis-[var(--size-detail-panel-w)]`) and
+ * `shrink-0`, NEVER a hard `w-[236px]`. The grid page's CENTER column (`flex-1 min-w-0`,
  * owned by the page) absorbs the 1440 → 1280 difference, so the right panel keeps
  * its width while the row never overflows horizontally.
  *
@@ -104,11 +106,16 @@
 
 import type { JSX } from 'react';
 
+import type { FormatKind } from '@/types';
 import { useLibrary } from '@/state/LibraryProvider';
 import { useModal } from '@/state/ModalProvider';
 import { GlassCard } from '@/components/primitives/GlassCard';
 import { Button } from '@/components/primitives/Button';
 import { BookCoverPlaceholder } from '@/components/primitives/BookCoverPlaceholder';
+import { FormatBadge } from '@/components/primitives/FormatBadge';
+import { StarRating } from '@/components/primitives/StarRating';
+import { TagPill } from '@/components/primitives/TagPill';
+import { formatFileSize, formatRating } from '@/lib/format';
 
 /**
  * Tiny class-name joiner: keeps truthy parts and space-joins them. Mirrors the
@@ -142,14 +149,15 @@ const PREVIEW_CAP = 6;
  * The panel surface layout, passed to `GlassCard` (which supplies the
  * `surface-2` background, the white-7% hairline border, and the `radius-card`
  * corners). A full-height, vertical-scrolling flex column whose width is the
- * design's ~236px expressed as a flex BASIS + min-width (`basis-[14.75rem]
- * min-w-[14.75rem]`) with `shrink-0` — never a fixed `w-[236px]` — so the grid
+ * design's 236px expressed as a flex BASIS + min-width via the shared
+ * `--size-detail-panel-w` token (`basis-[var(--size-detail-panel-w)]
+ * min-w-[var(--size-detail-panel-w)]`) with `shrink-0` — never a fixed `w-[236px]` — so the grid
  * row holds 1440 → 1280 without horizontal overflow while the center grid
  * (`flex-1`, owned by the page) absorbs the slack. `gap-5` separates the three
  * sections; `p-4` is the inner padding.
  */
 const PANEL_CONTAINER =
-  'flex h-full shrink-0 basis-[14.75rem] min-w-[14.75rem] flex-col gap-5 ' +
+  'flex h-full shrink-0 basis-[var(--size-detail-panel-w)] min-w-[var(--size-detail-panel-w)] flex-col gap-5 ' +
   'overflow-y-auto p-4';
 
 /** Header block: heading stacked above its muted subtitle. */
@@ -178,6 +186,32 @@ const PREVIEW_MORE =
   'border border-[var(--border-white-09)] px-2 ' +
   'text-meta-value text-text-muted';
 
+/**
+ * Maximum distinct tag chips shown in the selection summary's "Common tags"
+ * row before the remainder collapses into a muted "+N" indicator, keeping the
+ * row from overflowing the narrow ~236px panel.
+ */
+const MAX_SUMMARY_TAGS = 4;
+
+/** Selection-summary section: a label stacked above a small token-scale stat list. */
+const SUMMARY_SECTION = 'flex flex-col gap-2';
+/** A single summary stat: muted label on the left, value on the right, one line. */
+const SUMMARY_ROW = 'flex items-center justify-between gap-2 min-w-0';
+/** A stacked summary stat (label above a wrapping value — used for the tags rollup). */
+const SUMMARY_BLOCK = 'flex flex-col gap-1 min-w-0';
+/** Summary stat label: meta-label role (Inter 400 / 10px) in the muted text token. */
+const SUMMARY_LABEL = 'shrink-0 text-meta-label text-text-muted';
+/** Summary stat value: meta-value role (Inter 500 / 10px) in the secondary text token. */
+const SUMMARY_VALUE = 'min-w-0 truncate text-meta-value text-text-secondary';
+/** Inline cluster pairing a value with its primitive (badge/stars) on one baseline. */
+const SUMMARY_INLINE = 'flex min-w-0 items-center gap-1 overflow-hidden';
+/** Formats distribution row: wraps each "badge ×N" pair; clips on the narrow panel. */
+const SUMMARY_FORMATS = 'flex min-w-0 flex-wrap items-center justify-end gap-1.5 overflow-hidden';
+/** Tags rollup row: wraps the common-tag chips + "+N"; clips rather than overflows. */
+const SUMMARY_TAGS = 'flex flex-wrap items-center gap-1 overflow-hidden';
+/** The muted "+N" hidden-tag overflow indicator; `shrink-0` so it never clips. */
+const SUMMARY_TAG_OVERFLOW = 'shrink-0 text-meta-label text-text-muted';
+
 /** Bulk-actions group: a vertical stack with a token-scale gap. */
 const ACTIONS = 'flex flex-col gap-2';
 /** Every action button fills the narrow panel width (full-width block button). */
@@ -200,11 +234,15 @@ export interface BatchActionsPanelProps {
  * BatchActionsPanel — the App 02 Cover-Grid batch-actions right panel.
  *
  * Renders (top → bottom) a "{N} books selected" header, a capped preview of the
- * selected covers with a "+N" overflow chip, and a vertical stack of bulk
- * actions (Convert · Edit Metadata · Delete · Clear Selection), composed only
- * from design-system primitives with every visual value resolving to an
- * `@theme` token. Returns `null` unless the library is in batch mode
- * (`selectedIds.length >= 2`).
+ * selected covers with a "+N" overflow chip, a SELECTION SUMMARY rolling up the
+ * set's metadata (formats distribution, total size, average rating, and common
+ * tags — R6), and a vertical stack of bulk actions (Convert · Edit Metadata ·
+ * Delete · Clear Selection), composed only from design-system primitives with
+ * every visual value resolving to an `@theme` token. The Convert/Edit Metadata
+ * actions open their overlays against the FIRST selected book (a deterministic
+ * target derived from the selection); Delete is a named mock that dismisses the
+ * selection (real deletion is out of scope). Returns `null` unless the library is
+ * in batch mode (`selectedIds.length >= 2`).
  *
  * @param props - {@link BatchActionsPanelProps}
  * @returns The rendered batch-actions panel, or `null` when not in batch mode.
@@ -228,6 +266,53 @@ export function BatchActionsPanel({
   // unlikely event a selected id has no matching book in the catalog.
   const previewBooks = selectedBooks.slice(0, PREVIEW_CAP);
   const remaining = selectionCount - previewBooks.length;
+
+  // ── Selection metadata rollup (R6) — pure, deterministic aggregates over the
+  // resolved `selectedBooks`. Computed after the batch-mode guard, so the set
+  // always has 2+ books. No Date/random/mutation — just reductions/sorts.
+  const totalBytes = selectedBooks.reduce((sum, book) => sum + book.sizeBytes, 0);
+  const averageRating =
+    selectedBooks.length > 0
+      ? selectedBooks.reduce((sum, book) => sum + book.rating, 0) / selectedBooks.length
+      : 0;
+
+  // Formats distribution: count per distinct format, ordered by count DESC then
+  // name ASC for a stable, deterministic render (e.g. "EPUB ×3 · MOBI ×2").
+  const formatCounts = new Map<string, number>();
+  for (const book of selectedBooks) {
+    formatCounts.set(book.format, (formatCounts.get(book.format) ?? 0) + 1);
+  }
+  const formatEntries = [...formatCounts.entries()].sort(
+    (a, b) => b[1] - a[1] || a[0].localeCompare(b[0]),
+  );
+
+  // Common tags: frequency across the selection, most-common first (ties broken
+  // alphabetically), capped at MAX_SUMMARY_TAGS with a "+N" overflow.
+  const tagCounts = new Map<string, number>();
+  for (const book of selectedBooks) {
+    for (const tag of book.tags) {
+      tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1);
+    }
+  }
+  const sortedTags = [...tagCounts.entries()]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .map(([tag]) => tag);
+  const visibleSummaryTags = sortedTags.slice(0, MAX_SUMMARY_TAGS);
+  const hiddenSummaryTagCount = sortedTags.length - visibleSummaryTags.length;
+
+  // Delete (bulk): real deletion is OUT OF SCOPE for this UI-only prototype (the
+  // 15-book mock catalog is fixed and shared by every screen — AAP §0.8.2). The
+  // safe, in-memory mock for a destructive bulk action is to DISMISS the working
+  // selection, which drops the page below the batch threshold and returns the
+  // single-book detail panel. Named (not an empty arrow body) per the checkpoint.
+  const handleDeleteSelected = (): void => {
+    clearSelection();
+  };
+
+  // Deterministic modal target: the FIRST selected book (never the stale current
+  // book). The single-book Convert/Metadata dialogs open against this id so they
+  // act on the selection, not on a book that may not even be selected.
+  const targetBookId = selectedBooks[0]?.id;
 
   return (
     <GlassCard
@@ -256,29 +341,83 @@ export function BatchActionsPanel({
         </div>
       </section>
 
+      {/* ── Selection summary: rollup metadata for the selected set (R6) ────── */}
+      <section className={SUMMARY_SECTION} aria-label="Selection summary">
+        {/* Formats distribution — a colored badge + "×count" per distinct format. */}
+        <div className={SUMMARY_ROW}>
+          <span className={SUMMARY_LABEL}>Formats</span>
+          <div className={SUMMARY_FORMATS}>
+            {formatEntries.map(([format, count]) => (
+              <span key={format} className="inline-flex shrink-0 items-center gap-1">
+                {/* `Book.format` is a plain string per the verbatim contract;
+                    narrow to the badge's `FormatKind` union at this boundary. */}
+                <FormatBadge format={format as FormatKind} />
+                <span className={SUMMARY_VALUE}>×{count}</span>
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* Total size — formatted sum of every selected book's bytes. */}
+        <div className={SUMMARY_ROW}>
+          <span className={SUMMARY_LABEL}>Total size</span>
+          <span className={SUMMARY_VALUE}>{formatFileSize(totalBytes)}</span>
+        </div>
+
+        {/* Average rating — compact display stars + the one-decimal numeric value. */}
+        <div className={SUMMARY_ROW}>
+          <span className={SUMMARY_LABEL}>Avg rating</span>
+          <span className={SUMMARY_INLINE}>
+            <StarRating value={averageRating} size={12} />
+            <span className={SUMMARY_VALUE}>{formatRating(averageRating)}</span>
+          </span>
+        </div>
+
+        {/* Common tags — most-frequent tags across the selection + "+N" overflow. */}
+        <div className={SUMMARY_BLOCK}>
+          <span className={SUMMARY_LABEL}>Common tags</span>
+          <div className={SUMMARY_TAGS}>
+            {visibleSummaryTags.length > 0 ? (
+              visibleSummaryTags.map((tag) => (
+                <TagPill key={tag} label={tag} className="shrink-0" />
+              ))
+            ) : (
+              <span className={SUMMARY_VALUE}>None</span>
+            )}
+            {hiddenSummaryTagCount > 0 ? (
+              <span className={SUMMARY_TAG_OVERFLOW}>+{hiddenSummaryTagCount}</span>
+            ) : null}
+          </div>
+        </div>
+      </section>
+
       {/* ── Bulk actions: operate over the whole selection ──────────────────── */}
       <div className={ACTIONS} role="group" aria-label="Bulk actions">
-        {/* Convert (bulk): opens the Convert modal overlay; passing no bookId is
-            fine — the modal acts on the current selection. Route is unchanged. */}
+        {/* Convert (bulk): opens the Convert modal overlay against the FIRST
+            selected book (a deterministic target derived from the selection, not
+            the stale current book). The route is unchanged — it is an overlay. */}
         <Button
           variant="primary"
           label="Convert"
           className={ACTION_BTN}
-          onClick={() => openConvert()}
+          onClick={() => openConvert(targetBookId)}
         />
-        {/* Edit Metadata (bulk): opens the Metadata modal overlay. */}
+        {/* Edit Metadata (bulk): opens the Metadata modal overlay against the same
+            first-selected target, for the same reason as Convert above. */}
         <Button
           variant="secondary"
           label="Edit Metadata"
           className={ACTION_BTN}
-          onClick={() => openMetadata()}
+          onClick={() => openMetadata(targetBookId)}
         />
-        {/* Delete: intentional MOCK no-op — UI-only, never mutates the dataset. */}
+        {/* Delete (bulk): named MOCK handler — dismisses the selection (real
+            deletion is out of scope; see `handleDeleteSelected`). Never mutates
+            the shared catalog. */}
         <Button
           variant="danger"
           label="Delete"
           className={ACTION_BTN}
-          onClick={() => {}}
+          onClick={handleDeleteSelected}
         />
         {/* Clear Selection: real, safe action — empties the selection so the page
             drops back below the batch threshold and the detail panel reappears. */}

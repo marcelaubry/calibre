@@ -40,9 +40,11 @@
  *   • cover `3:82` → the 182×192 top region (a SEPARATE sibling from the info
  *     strip), generated tint + Inter-Bold-white title overlay — rendered by the
  *     `BookCoverPlaceholder` primitive at its `md` preset.
- *   • info strip  → small card title (`--text-card-title`, Inter 600 11/15) +
- *     a row pairing the author (`--text-meta-label`, Inter 400 10) on the left
- *     with the `FormatBadge` (`3:87`) on the right.
+ *   • info strip  → small card title (`--text-card-title`, Inter 600 11/15) over
+ *     a full-metadata band (R6): author ↔ `FormatBadge` (`3:87`), `StarRating` ↔
+ *     date-added, and a tags cluster (up to `MAX_VISIBLE_TAGS` chips + "+N") ↔
+ *     formatted size — every value a `--text-meta-label` (Inter 400 10) role
+ *     token, each row `min-w-0`-truncated so the narrow card never overflows.
  *   • selected    → a 2px `--border-accent` (rgba(123,97,255,0.6)) stroke PLUS
  *     a `CheckBadge` (`3:89`/`3:90`) inset in the top-right corner.
  *   • unselected  → the 1px `--border-white-07` hairline only, no badge.
@@ -132,6 +134,9 @@ import { GlassCard } from '@/components/primitives/GlassCard';
 import { BookCoverPlaceholder } from '@/components/primitives/BookCoverPlaceholder';
 import { FormatBadge } from '@/components/primitives/FormatBadge';
 import { CheckBadge } from '@/components/primitives/CheckBadge';
+import { StarRating } from '@/components/primitives/StarRating';
+import { TagPill } from '@/components/primitives/TagPill';
+import { formatDate, formatFileSize } from '@/lib/format';
 
 /**
  * Props for {@link BookCard}.
@@ -240,13 +245,39 @@ const META_ROW = 'flex items-center justify-between gap-2 min-w-0';
 const AUTHOR_CLASS = 'text-meta-label text-text-muted truncate min-w-0';
 
 /**
+ * Maximum tag chips shown in a card's metadata band before the remainder
+ * collapses into a muted "+N" indicator. The grid card is intentionally narrow
+ * (~158px of content inside the 182px card), so a SINGLE chip + "+N" keeps the
+ * tags row from overflowing its track — the same overflow strategy the PASSED
+ * `BookListRow` uses (there with 2, here with 1 for the tighter card).
+ */
+const MAX_VISIBLE_TAGS = 1;
+
+/**
+ * A trailing muted meta VALUE (the formatted date and the formatted size).
+ * `shrink-0` so the value is never clipped beside the left-hand content; the
+ * `--text-meta-label` (Inter 400 10px) role token in the muted text token.
+ */
+const META_VALUE_CLASS = 'shrink-0 text-meta-label text-text-muted';
+
+/**
+ * The tags cluster inside the metadata band: hugs its chips (`flex gap-1`),
+ * `min-w-0` + `overflow-hidden` so a long tag/chip is CLIPPED rather than forcing
+ * horizontal overflow of the narrow card (mirrors the `BookListRow` tags cell).
+ */
+const TAGS_WRAP = 'flex min-w-0 items-center gap-1 overflow-hidden';
+
+/** The muted "+N" hidden-tag overflow indicator; `shrink-0` so it never clips. */
+const TAG_OVERFLOW_CLASS = 'shrink-0 text-meta-label text-text-muted';
+
+/**
  * BookCard — one selectable cover card for the App 02 Cover Grid.
  *
- * Renders the book's generated cover, a title/author/format info strip, and —
- * when selected — a 2px accent stroke plus a `CheckBadge`. Clicking or pressing
- * Enter/Space toggles the book's membership in the shared selection (the route
- * to batch mode). All styling is token-backed and the card is fully keyboard
- * accessible.
+ * Renders the book's generated cover, a full-metadata info strip (title, author,
+ * format, rating, date-added, tags, and size — R6), and — when selected — a 2px
+ * accent stroke plus a `CheckBadge`. Clicking or pressing Enter/Space toggles the
+ * book's membership in the shared selection (the route to batch mode). All
+ * styling is token-backed and the card is fully keyboard accessible.
  *
  * @param props - {@link BookCardProps}
  * @returns The rendered selectable book card.
@@ -286,6 +317,12 @@ export function BookCard({ book }: BookCardProps) {
   // separately by `aria-pressed`, and the inner cover/badge are aria-hidden).
   const ariaLabel = book.author ? `${book.title} by ${book.author}` : book.title;
 
+  // Tags band: show up to MAX_VISIBLE_TAGS chips, then collapse the rest into a
+  // single muted "+N" indicator so the narrow card never overflows its track
+  // (same overflow strategy as the PASSED BookListRow).
+  const visibleTags = book.tags.slice(0, MAX_VISIBLE_TAGS);
+  const hiddenTagCount = book.tags.length - visibleTags.length;
+
   return (
     <GlassCard
       surface="card"
@@ -305,14 +342,40 @@ export function BookCard({ book }: BookCardProps) {
           clips it to the rounded card bounds on narrow tracks. */}
       <BookCoverPlaceholder book={book} size="md" className="shrink-0" />
 
-      {/* Info strip (lower band) — small title, then author ↔ format row. */}
+      {/* Info strip (lower band) — small title, then the full-metadata band:
+          author ↔ format, rating ↔ date-added, and tags ↔ size (R6 — every
+          surface a book appears on renders its full metadata). Each row uses the
+          justified `META_ROW` layout with `min-w-0` truncation so the narrow card
+          never forces horizontal overflow as the grid degrades 1440 → 1280. */}
       <div className={INFO_STRIP}>
         <span className={TITLE_CLASS}>{book.title}</span>
+
+        {/* Author ↔ format. `Book.format` is a plain string per the verbatim
+            contract; narrow it to the badge's `FormatKind` union at this boundary. */}
         <div className={META_ROW}>
           <span className={AUTHOR_CLASS}>{book.author}</span>
-          {/* `Book.format` is a plain string per the verbatim contract; narrow
-              it to the badge's `FormatKind` union at this boundary. */}
           <FormatBadge format={book.format as FormatKind} className="shrink-0" />
+        </div>
+
+        {/* Rating ↔ date-added. Compact amber display stars (size 12 for the
+            card) on the left; the formatted acquisition date on the right. */}
+        <div className={META_ROW}>
+          <StarRating value={book.rating} size={12} />
+          <span className={META_VALUE_CLASS}>{formatDate(book.date)}</span>
+        </div>
+
+        {/* Tags ↔ size. Up to MAX_VISIBLE_TAGS chips + a muted "+N" overflow on
+            the left; the formatted file size on the right. */}
+        <div className={META_ROW}>
+          <div className={TAGS_WRAP}>
+            {visibleTags.map((tag) => (
+              <TagPill key={tag} label={tag} className="shrink-0" />
+            ))}
+            {hiddenTagCount > 0 ? (
+              <span className={TAG_OVERFLOW_CLASS}>+{hiddenTagCount}</span>
+            ) : null}
+          </div>
+          <span className={META_VALUE_CLASS}>{formatFileSize(book.sizeBytes)}</span>
         </div>
       </div>
 

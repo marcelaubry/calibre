@@ -181,6 +181,8 @@ export const sizes = {
   coverMetadataW: '178px',    // --size-cover-metadata-w   · BookCoverPlaceholder `metadata` width (9:21)
   coverMetadataH: '238px',    // --size-cover-metadata-h   · BookCoverPlaceholder `metadata` height (9:21)
   toolbarSearchW: '220px',    // --size-toolbar-search-w   · TopToolbar search field width (2:34)
+  sidebarW: '216px',          // --size-sidebar-w          · App 01/02 Sidebar column width (2:36)
+  detailPanelW: '236px',      // --size-detail-panel-w     · App 01/02 detail/batch panel width (2:345)
   filetreeW: '200px',         // --size-filetree-w         · FileTree column width (5:53)
   previewBasis: '504px',      // --size-preview-basis      · PreviewPane flex-basis width (5:131)
   tocBasis: '220px',          // --size-toc-basis          · TableOfContents flex-basis width (4:23)
