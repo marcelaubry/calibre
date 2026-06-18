@@ -90,13 +90,25 @@ const inter = Inter({
 /**
  * Static page metadata. Next.js reads this export and injects the corresponding
  * `<head>` tags. Kept minimal and fully deterministic (no nondeterministic
- * values) so the server-rendered markup is stable. The favicon is auto-wired by
- * Next.js from `app/`/`public/` and is intentionally NOT declared here.
+ * values) so the server-rendered markup is stable.
+ *
+ * The favicon and the web-app manifest are declared EXPLICITLY here so Next
+ * injects `<link rel="icon" …>` and `<link rel="manifest" …>` pointing at the
+ * static `public/icon.svg` and `public/site.webmanifest` assets. This is what
+ * keeps the browser console clean: the design ships a single scalable SVG mark
+ * (there is intentionally no raster `favicon.ico`), and declaring the icon link
+ * stops the browser from issuing its default `GET /favicon.ico` request, which
+ * would otherwise 404 (Next does NOT auto-map `public/icon.svg` to that path).
  */
 export const metadata: Metadata = {
   title: 'Calibre — Modern Library',
   description:
     'A modern UI redesign prototype of the Calibre e-book manager (UI-only).',
+  // Point the icon link at the on-brand SVG mark in `public/` (served at
+  // `/icon.svg`). A declared icon suppresses the default `/favicon.ico` request.
+  icons: { icon: '/icon.svg' },
+  // Wire the existing PWA manifest (served at `/site.webmanifest`).
+  manifest: '/site.webmanifest',
 };
 
 /**

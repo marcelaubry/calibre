@@ -111,7 +111,7 @@
  * arbitrary hex — they represent the reading theme each tile previews, and the
  * brief explicitly permits them for the swatch fills and sample inks).
  * Typography SIZE values resolve to the
- * `--text-*` tokens via `text-[length:var(...)]`. There are NO raw hex / rgba
+ * `--text-*` tokens via `text-[length:var(--text-meta-label)]`. There are NO raw hex / rgba
  * literals anywhere in this file. The tile footprint resolves to the named
  * geometry tokens `--size-theme-swatch-w` / `--size-theme-swatch-h` (the
  * CONFIRMED Figma 154×98 dimensions), consumed via
