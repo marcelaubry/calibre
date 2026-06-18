@@ -166,12 +166,14 @@ function activateOnKey(handler: () => void): (event: KeyboardEvent<HTMLDivElemen
  * The panel surface: full-height, vertical-scrolling flex column on the
  * `surface-2` tone (set via the `GlassCard surface` prop, not here). The WIDTH
  * uses min-width + flex-basis (≈372px) and is allowed to shrink — never a fixed
- * `w-[372px]` — so the viewer row holds 1440 → 1280 without horizontal overflow
- * while `ReadingArea` (flex-1) absorbs the difference. A single white-7% LEFT
- * hairline separates it from the reading surface.
+ * width — so the viewer row holds 1440 → 1280 without horizontal overflow
+ * while `ReadingArea` (flex-1) absorbs the difference. Both lengths resolve to
+ * `@theme` tokens (R3): the 320px floor via `--size-reader-tools-min-w` and the
+ * 372px basis via `--size-reader-tools-basis`. A single white-7% LEFT hairline
+ * separates it from the reading surface.
  */
 const PANEL_CONTAINER =
-  'flex h-full min-w-[20rem] shrink basis-[23.25rem] flex-col overflow-y-auto ' +
+  'flex h-full min-w-[var(--size-reader-tools-min-w)] shrink basis-[var(--size-reader-tools-basis)] flex-col overflow-y-auto ' +
   'border-l border-[var(--border-white-07)] px-4';
 
 /** A section: vertical stack with an inter-element gap and top/bottom padding. */

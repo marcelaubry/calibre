@@ -70,11 +70,14 @@
  * Every action is the bespoke `Button` primitive — never a hand-rolled
  * `<button>`. The eight editing actions use `variant="toolbar"` (the
  * primitive's standardized 84px-min × 38px, 7px-radius, glyph-then-label
- * shape). The toolbar buttons therefore adopt the system's standardized
- * footprint and `--color-text-muted` label color rather than Figma's
- * per-instance hug widths and `--color-text-secondary` label color — a
- * deliberate design-system standardization: the `Button` primitive is shared
- * with the App 01 `TopToolbar` and must not be forked here.
+ * shape). The toolbar buttons adopt the system's standardized FOOTPRINT (the
+ * 84px-min hug) rather than Figma's per-instance widths — a deliberate
+ * design-system standardization. Their LABEL COLOR, however, now matches Figma
+ * `5:8` EXACTLY via the primitive's backward-compatible
+ * `toolbarLabelTone="secondary"` prop (`--color-text-secondary` #94A3B8); the
+ * shared `Button` is NOT forked — the prop defaults to `'muted'`, so the App 01
+ * `TopToolbar` (`2:24`) and App 03 `ReaderToolbar` (`4:8`) are unchanged. See
+ * the BLITZY [DESIGN_SYSTEM_GAP — RESOLVED] note at the call site.
  *
  * ZERO-HARDCODED-TOKEN RULE (AAP §0.4.5)
  * --------------------------------------------------------------------------
@@ -159,29 +162,24 @@ export function EditorToolbar(): JSX.Element {
   // codepoints (see the file header for the corrections vs. the contract's
   // illustrative sample).
   /*
-   * BLITZY [DESIGN_SYSTEM_GAP]: The eight `variant="toolbar"` labels render at
-   * the shared `Button` primitive's standardized label color
-   * `--color-text-muted`; Figma node `5:8` specifies `--color-text-secondary`
-   * for these labels. The color is baked into the primitive's toolbar variant
-   * (applied to an internal label span), so it cannot be corrected from this
-   * call site: a `className` on the Button root is same-property /
-   * same-specificity and does not win, and DS3-f forbids targeting a
-   * primitive's internal classes. The `Button` primitive is also consumed by
-   * the App 01 `TopToolbar`, so it must not be forked or mutated from this
-   * consumer file. Chose the system-standard variant (DS3 component mapping)
-   * and flag the gap per DS5-f ("flag — do not override internals").
-   * RESOLUTION OWNER: the primitives task — introduce a toolbar-label token /
-   * Button prop that maps to `--color-text-secondary` (and verify App 01 is not
-   * regressed) to close this gap globally.
+   * BLITZY [DESIGN_SYSTEM_GAP — RESOLVED]: Figma node `5:8` specifies
+   * `--color-text-secondary` (#94A3B8) for these eight `variant="toolbar"`
+   * labels, which differs from the App 01 `TopToolbar` labels (Figma `2:24` =
+   * `--color-text-muted` #64748B). The shared `Button` primitive now exposes a
+   * backward-compatible `toolbarLabelTone` prop (default `'muted'`, so App 01
+   * and the App 03 `ReaderToolbar` — which omit it — stay byte-identical); this
+   * editor toolbar passes `toolbarLabelTone="secondary"` so its labels match
+   * `5:8` EXACTLY while App 01 is not regressed. The fix lives IN the primitive
+   * (a first-class prop), not a call-site internal-class override (DS3-f), so it
+   * is the proper global resolution rather than a local patch.
    */
   /*
-   * BLITZY [A11Y]: Consequence of the gap above — `--color-text-muted` on
-   * `--color-surface-1` computes to ~3.84:1, below the WCAG AA 4.5:1 minimum
-   * for normal text, whereas the Figma intent `--color-text-secondary`
-   * computes to ~7.13:1 (passes AA). Per the CRITICAL Directive, the rendered
-   * output is left exactly as the shared primitive constrains it (no silent
-   * call-site auto-correction) and the issue is flagged for designer /
-   * primitives-owner review rather than masked here.
+   * BLITZY [A11Y]: With `toolbarLabelTone="secondary"` the labels render at
+   * `--color-text-secondary` (#94A3B8) on the `--color-surface-1` toolbar,
+   * computing to ~7.13:1 — above the WCAG AA 4.5:1 normal-text minimum (the
+   * previously-inherited `--color-text-muted` computed ~3.84:1). This both
+   * honors the Figma `5:8` intent and clears AA, so no contrast trade-off
+   * remains for this screen.
    */
   const actions: ToolbarAction[] = [
     { label: 'Save', icon: '💾', variant: 'primary', onClick: () => router.push('/') },
@@ -201,6 +199,7 @@ export function EditorToolbar(): JSX.Element {
         <Button
           key={action.label}
           variant={action.variant ?? 'toolbar'}
+          toolbarLabelTone="secondary"
           label={action.label}
           icon={<span aria-hidden="true">{action.icon}</span>}
           onClick={action.onClick}

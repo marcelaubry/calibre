@@ -55,15 +55,15 @@
  *
  * WIDTH IS FLEXIBLE, NOT A FIXED 220px
  * --------------------------------------------------------------------------
- * The design panel is 220px wide, but a rigid `w-[220px]` would force
+ * The design panel is 220px wide, but a rigid fixed width would force
  * horizontal overflow as the viewport narrows. Instead the panel takes a flex
- * BASIS of 220px (`basis-[13.75rem]`) with a 192px min-width floor
- * (`min-w-[12rem]`) and is allowed to `shrink`, so the page's flex row keeps the
- * reading area (`flex-1`) absorbing the slack and the 1440→1280 baseline stays
- * horizontal-overflow-free (AAP §0.9 "Responsive + clean console"). These are
- * LAYOUT lengths (flex basis / min-width), not color/radius/type tokens, so the
- * zero-hardcoded-token rule does not apply to them (AAP §0.4.5 permits
- * flex/min-width for panel width).
+ * BASIS of 220px via the `--size-toc-basis` token
+ * (`basis-[var(--size-toc-basis)]`) with a 192px min-width floor via
+ * `--size-toc-min-w` (`min-w-[var(--size-toc-min-w)]`) and is allowed to
+ * `shrink`, so the page's flex row keeps the reading area (`flex-1`) absorbing
+ * the slack and the 1440→1280 baseline stays horizontal-overflow-free (AAP §0.9
+ * "Responsive + clean console"). The basis/min-width VALUES resolve to `@theme`
+ * tokens (R3), not hardcoded lengths.
  *
  * BLITZY [FIGMA-TOOL]: `analyze_figma_node(4:23)` was unavailable at build time
  * (persistent upstream service error). Values are sourced from the AAP §0.3
@@ -90,17 +90,18 @@
  * …) and the panel-width flex lengths noted above, none of which carry
  * design-token color information.
  *
- * COMPOSITION: the only design-system import is the `GlassCard` surface
- * primitive; the list and rows are standard semantic HTML. No new design-system
- * component and no third-party UI library is introduced (AAP §0.4 / prompt).
+ * COMPOSITION: the design-system imports are the `GlassCard` surface primitive
+ * and the `NavRowButton` row primitive (each chapter row composes NavRowButton
+ * per R4 — never a raw `<button>`); the `<ul>`/`<li>` list scaffold is standard
+ * semantic HTML. No third-party UI library is introduced (AAP §0.4 / prompt).
  *
  * ACCESSIBILITY (UI3 — invisible, always applied)
  * --------------------------------------------------------------------------
  * • The panel is a navigation landmark: `GlassCard` carries `role="navigation"`
  *   and is named by the visible heading via `aria-labelledby` (no desync).
  * • The chapter list is a real `<ul>`/`<li>`; every chapter is a real,
- *   keyboard-operable `<button type="button">` (Space/Enter for free) — never a
- *   `div`-with-onClick.
+ *   keyboard-operable button via the `NavRowButton` primitive (which renders a
+ *   `<button type="button">`, Space/Enter for free) — never a `div`-with-onClick.
  * • The current chapter's button carries `aria-current="true"` so assistive tech
  *   announces the reading position, not color alone (color is never the sole
  *   indicator).
@@ -127,6 +128,7 @@
 import { type JSX } from 'react';
 import { useReader } from '@/state/ReaderProvider';
 import { GlassCard } from '@/components/primitives/GlassCard';
+import { NavRowButton } from '@/components/primitives/NavRowButton';
 
 /**
  * Props for {@link TableOfContents}.
@@ -161,13 +163,14 @@ function cx(...parts: Array<string | false | undefined>): string {
  * Root surface layout passed to `GlassCard` (which supplies the `surface-2`
  * fill, the white@7% hairline, the `radius-card`, and the backdrop blur):
  * a full-height vertical flex column whose width is the design's 220px as a
- * flex BASIS (`basis-[13.75rem]`) with a 192px floor (`min-w-[12rem]`) and a
+ * flex BASIS (`basis-[var(--size-toc-basis)]`) with a 192px floor
+ * (`min-w-[var(--size-toc-min-w)]`) and a
  * leading `shrink` so the sibling reading area absorbs all flex slack
  * (1440→1280 with zero horizontal overflow). `min-h-0` lets the inner list be
  * the scroll container; `overflow-hidden` clips the rounded corners.
  */
 const ROOT =
-  'flex h-full min-h-0 shrink basis-[13.75rem] min-w-[12rem] flex-col overflow-hidden';
+  'flex h-full min-h-0 shrink basis-[var(--size-toc-basis)] min-w-[var(--size-toc-min-w)] flex-col overflow-hidden';
 
 /**
  * Header band: never shrinks, a bottom white@7% hairline divider, and balanced
@@ -187,18 +190,16 @@ const HEADING = 'truncate text-detail-title text-text-primary';
 const LIST = 'flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-2 py-2';
 
 /**
- * Variant-invariant chapter `<button>` classes: a full-width, left-aligned,
- * single-line truncating row (`block w-full truncate`) with an 8px corner radius
- * (`rounded-control`) for the active/hover fill shape, comfortable padding, the
- * 12px/400 body type (`text-body`), and the shared focus-ring + motion-safe color
- * transition. The per-state class adds color (+ the active fill).
+ * Per-context chapter-row classes layered onto the {@link NavRowButton}
+ * primitive (R4). NavRowButton supplies the row SEMANTICS and the variant-
+ * invariant base (`w-full text-left cursor-pointer select-none`, the token
+ * `:focus-visible` ring, and the `motion-safe` color transition); this string
+ * adds only the TOC-specific layout/type: a single-line truncating block
+ * (`block truncate`) with an 8px corner radius (`rounded-control`) for the
+ * active/hover fill shape, comfortable padding, and the 12px/400 body type
+ * (`text-body`). The per-state class below adds color (+ the active fill).
  */
-const ROW_BASE =
-  'block w-full truncate rounded-control px-3 py-2 text-left text-body ' +
-  'cursor-pointer select-none ' +
-  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset ' +
-  'focus-visible:ring-[var(--border-accent)] ' +
-  'motion-safe:transition-colors motion-safe:duration-200 motion-safe:ease-out';
+const ROW_BASE = 'block truncate rounded-control px-3 py-2 text-body';
 
 /**
  * Active (current) chapter: the "current chapter purple" treatment (AAP §0.7.4)
@@ -254,15 +255,14 @@ export function TableOfContents({ className }: TableOfContentsProps = {}): JSX.E
           const isActive = index === currentChapterIndex;
           return (
             <li key={chapter.id}>
-              <button
-                type="button"
+              <NavRowButton
+                active={isActive}
                 onClick={() => goToChapter(index)}
-                aria-current={isActive ? 'true' : undefined}
                 title={chapter.title}
                 className={cx(ROW_BASE, isActive ? ROW_ACTIVE : ROW_INACTIVE)}
               >
                 {chapter.title}
-              </button>
+              </NavRowButton>
             </li>
           );
         })}

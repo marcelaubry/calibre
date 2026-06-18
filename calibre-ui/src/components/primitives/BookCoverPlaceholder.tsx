@@ -13,7 +13,7 @@
  *   • App 01 — the library table's small per-row cover thumb (the `sm` size).
  *   • App 02 — the cover-grid card cover area (Figma node `3:82`, the `md` size).
  *   • App 01 — the right detail-panel cover (Figma node `2:347`, the `lg` size).
- *   • App 07 — the Metadata Editor modal's large cover (the `lg` size).
+ *   • App 07 — the Metadata Editor modal's large cover (the `metadata` size).
  * Screen code must NEVER hand-roll a cover or embed an image — it always
  * composes this primitive so the tint, title overlay, radius, and proportions
  * stay identical (and provably non-infringing) everywhere a cover appears.
@@ -62,6 +62,9 @@
  *   • `lg` detail cover → 196×264 px (aspect 0.742 ≈ 3:4), radius ~10px, FLAT
  *     per-book tint. (On node `2:347` the title/author are SEPARATE siblings
  *     rendered below the cover, not on it.)
+ *   • `metadata` modal cover → 178×238 px (aspect 0.748 ≈ 3:4), radius ~10px,
+ *     FLAT per-book tint — the App 07 Metadata Editor's large left-column cover
+ *     (node `9:21`; title/author/fields are SEPARATE siblings, not on it).
  * Selection decorations (the 2px purple card border and the violet check badge)
  * are CARD-LEVEL state owned by `BookCard`/`CheckBadge`, NOT this primitive.
  *
@@ -86,11 +89,13 @@
  *   matching the sibling `generateCoverDataUri`, which wraps the title onto up to
  *   three lines): short titles still occupy a single bottom line, while long
  *   titles such as "The Left Hand of Darkness" render in full across up to three
- *   lines instead of being hard-truncated to "The Left Hand of Da…". The title is
- *   HIDDEN below `SHOW_TITLE_MIN_WIDTH` so the tiny `sm` table thumb stays a plain
- *   tinted tile (matching Figma `2:2`) instead of showing an illegible/overflowing
- *   14px title. The author line is omitted (Figma shows no author on the cover;
- *   the prompt makes it optional).
+ *   lines instead of being hard-truncated to "The Left Hand of Da…". Title
+ *   visibility is decided per preset by `SHOW_TITLE_BY_PRESET` (`sm` → hidden;
+ *   `md`/`lg`/`metadata` → shown), with a `SHOW_TITLE_MIN_WIDTH` width threshold
+ *   for bespoke `{ width, height }` sizes, so the tiny `sm` table thumb stays a
+ *   plain tinted tile (matching Figma `2:2`) instead of showing an
+ *   illegible/overflowing 14px title. The author line is omitted (Figma shows no
+ *   author on the cover; the prompt makes it optional).
  *
  * ZERO-HARDCODED-VALUES RULE (AAP §0.4.5) + TOKEN BOUNDARY
  * --------------------------------------------------------------------------
@@ -101,8 +106,9 @@
  *   bare values in the gradient string are the CSS keyword `linear-gradient`
  *   and the angle `135deg`, both permitted non-color literals.
  * • Corner radius: a NAMED token utility per size — `rounded-badge` (3px, sm),
- *   `rounded-t-control` (8px top-only, md), `rounded-card` (10px, lg) — matching
- *   the CONFIRMED Figma per-context radii exactly (see {@link RADIUS_BY_PRESET}).
+ *   `rounded-t-control` (8px top-only, md), `rounded-card` (10px, lg AND
+ *   metadata) — matching the CONFIRMED Figma per-context radii exactly (see
+ *   {@link RADIUS_BY_PRESET}).
  * • Title color: the `--color-text-primary` token via the `text-text-primary`
  *   utility (= `palette.text` = #F1F5FF by construction).
  *   BLITZY [COLOR]: Figma node `3:82` renders the cover title in pure #FFFFFF;
@@ -115,14 +121,19 @@
  * • Title type: the `text-cover-title` role utility (Inter 700 14px/18px in one
  *   utility — its companion `--text-cover-title--font-weight: 700` supplies the
  *   bold, so no separate `font-bold` is needed).
- * • Dimensions: CONFIRMED Figma pixel sizes applied via inline `style`
- *   (non-color geometry literals — the same sanctioned mechanism `StarRating`
- *   uses for `style={{ fontSize: size }}`); spacing insets use Tailwind's
- *   standard scale (`px-4`, `pb-6`). No raw hex/rgba color literal appears here.
+ * • Dimensions: NAMED `--size-cover-{sm,md,lg,metadata}-{w,h}` geometry tokens,
+ *   consumed as `var()` STRINGS via inline `style` (the CONFIRMED Figma px values
+ *   20×26 / 182×192 / 196×264 / 178×238 live in the `@theme` token layer, NOT
+ *   inline — AAP §0.4.5). A bespoke `{ width, height }` prop still passes raw px
+ *   through `style` for one-off contexts (the same sanctioned inline-`style`
+ *   mechanism `StarRating` uses for `style={{ fontSize: size }}`). Spacing insets
+ *   use Tailwind's standard scale (`px-4`, `pb-6`). No raw hex/rgba color literal
+ *   appears here.
  *
  * USAGE
  * --------------------------------------------------------------------------
- *   <BookCoverPlaceholder book={book} size="lg" />            // detail / metadata
+ *   <BookCoverPlaceholder book={book} size="lg" />            // detail panel
+ *   <BookCoverPlaceholder book={book} size="metadata" />      // metadata modal
  *   <BookCoverPlaceholder book={book} size="md" />            // grid card
  *   <BookCoverPlaceholder book={book} size="sm" />            // table row thumb
  *   <BookCoverPlaceholder book={book} size={{ width: 96, height: 130 }} />
@@ -145,10 +156,11 @@ import { getCoverPalette, type CoverPalette } from '@/lib/covers';
 
 /**
  * The named cover-size presets. Each maps to a CONFIRMED Figma pixel geometry
- * for the context in which the cover appears (see the file header's FIGMA
- * SOURCE OF TRUTH). Callers may also pass an explicit `{ width, height }`.
+ * (encoded as named `--size-cover-*` tokens, see the file header's FIGMA SOURCE
+ * OF TRUTH) for the context in which the cover appears. Callers may also pass an
+ * explicit `{ width, height }` for a bespoke one-off context.
  */
-export type CoverSize = 'sm' | 'md' | 'lg';
+export type CoverSize = 'sm' | 'md' | 'lg' | 'metadata';
 
 /**
  * Props for {@link BookCoverPlaceholder}.
@@ -164,8 +176,9 @@ export interface BookCoverPlaceholderProps {
   book: Book;
   /**
    * Cover size. A named preset (`'sm'` 20×26 table thumb, `'md'` 182×192 grid
-   * card, `'lg'` 196×264 detail/metadata) OR explicit `{ width, height }` pixel
-   * dimensions for a bespoke context.
+   * card, `'lg'` 196×264 detail cover, `'metadata'` 178×238 Metadata-modal cover)
+   * — each backed by `--size-cover-*` tokens — OR explicit `{ width, height }`
+   * pixel dimensions for a bespoke context.
    * @default 'lg'
    */
   size?: CoverSize | { width: number; height: number };
@@ -176,24 +189,35 @@ export interface BookCoverPlaceholderProps {
   className?: string;
 }
 
-/** Resolved pixel dimensions for a cover. */
+/**
+ * Resolved CSS dimensions for a cover. Preset sizes resolve to token `var()`
+ * STRINGS (e.g. `'var(--size-cover-md-w)'`); a bespoke `{ width, height }` prop
+ * passes raw px NUMBERS through. Both are valid `style.width`/`style.height`
+ * values (React's `CSSProperties` accepts `string | number`).
+ */
 interface CoverDimensions {
-  width: number;
-  height: number;
+  width: string | number;
+  height: string | number;
 }
 
 /**
- * CONFIRMED Figma pixel geometry per named preset (measured on the authoritative
- * renders of screens `2:2` and `3:2`):
+ * CONFIRMED Figma pixel geometry per named preset, encoded as `--size-cover-*`
+ * `@theme` tokens (the px VALUES live in `globals.css`/`tokens.ts`, NOT here —
+ * AAP §0.4.5 zero-hardcoded-geometry rule) and consumed as `var()` strings:
  *   • `sm` 20×26  — per-row table cover thumb (screen `2:2`, center table).
  *   • `md` 182×192 — grid-card cover AREA (node `3:82`; the card is 182×256, the
  *     info strip below is a separate sibling).
- *   • `lg` 196×264 — detail-panel / metadata cover (node `2:347`).
+ *   • `lg` 196×264 — detail-panel cover (node `2:347`).
+ *   • `metadata` 178×238 — Metadata Editor modal cover (App 07, node `9:21`).
  */
 const SIZE_PRESETS: Record<CoverSize, CoverDimensions> = {
-  sm: { width: 20, height: 26 },
-  md: { width: 182, height: 192 },
-  lg: { width: 196, height: 264 },
+  sm: { width: 'var(--size-cover-sm-w)', height: 'var(--size-cover-sm-h)' },
+  md: { width: 'var(--size-cover-md-w)', height: 'var(--size-cover-md-h)' },
+  lg: { width: 'var(--size-cover-lg-w)', height: 'var(--size-cover-lg-h)' },
+  metadata: {
+    width: 'var(--size-cover-metadata-w)',
+    height: 'var(--size-cover-metadata-h)',
+  },
 };
 
 /**
@@ -202,29 +226,48 @@ const SIZE_PRESETS: Record<CoverSize, CoverDimensions> = {
  *   • `sm` ~3px, ALL four corners → `rounded-badge` (standalone table thumb).
  *   • `md` ~8px, TOP corners ONLY → `rounded-t-control` (bottom squared).
  *   • `lg` ~10px, ALL four corners → `rounded-card` (standalone detail cover).
+ *   • `metadata` ~10px, ALL four corners → `rounded-card` (standalone modal cover).
  *
  * BLITZY [RADIUS]: `md` rounds the TOP corners only (square bottom) to match
  *   Figma node `3:82`, where the grid-card cover area is the TOP region of the
  *   182×256 card and its bottom edge sits FLUSH against the info-strip sibling
  *   (owned by `BookCard`) — so the cover's bottom corners read as squared. The
  *   radius VALUE/token is the same (`--radius-control` 8px); only the corner SET
- *   differs by context. `sm`/`lg` are used standalone (no strip below), so they
- *   round all four corners exactly as Figma nodes (the 20×26 thumb and the
- *   196×264 detail cover `2:347`) show.
+ *   differs by context. `sm`/`lg`/`metadata` are used standalone (no strip
+ *   below), so they round all four corners exactly as Figma nodes (the 20×26
+ *   thumb, the 196×264 detail cover `2:347`, and the 178×238 metadata cover
+ *   `9:21`) show.
  */
 const RADIUS_BY_PRESET: Record<CoverSize, string> = {
   sm: 'rounded-badge',
   md: 'rounded-t-control',
   lg: 'rounded-card',
+  metadata: 'rounded-card',
 };
 
 /** Radius token for bespoke `{ width, height }` sizes — the canonical card radius. */
 const CUSTOM_RADIUS_CLASS = 'rounded-card';
 
 /**
- * Minimum cover width (px) at which the title overlay is shown. Below this the
- * cover renders as a plain tinted tile (matching Figma's `sm` 20×26 table thumb,
- * which carries no title) — a 14px title cannot render legibly in so small a box.
+ * Title-overlay visibility PER NAMED PRESET. Because preset dimensions are now
+ * token `var()` STRINGS (not numerically comparable at runtime), each preset
+ * declares title visibility explicitly. This reproduces the prior width-based
+ * behavior exactly: `sm` (20×26 table thumb) stays a plain tinted tile with NO
+ * title — a 14px title cannot render legibly in so small a box — while `md`,
+ * `lg`, and `metadata` show the title overlay.
+ */
+const SHOW_TITLE_BY_PRESET: Record<CoverSize, boolean> = {
+  sm: false,
+  md: true,
+  lg: true,
+  metadata: true,
+};
+
+/**
+ * Minimum cover width (px) at which the title overlay is shown for a BESPOKE
+ * `{ width, height }` size (the only case with a numeric width to compare).
+ * Below this a custom tile renders title-less like the `sm` thumb; the value
+ * matches the original preset threshold so custom sizes behave identically.
  */
 const SHOW_TITLE_MIN_WIDTH = 100;
 
@@ -273,24 +316,31 @@ const TITLE_INSET = 'px-4 pb-6';
 const TITLE_CLASSES = 'w-full line-clamp-3 text-cover-title text-text-primary';
 
 /**
- * Resolve a `size` prop into concrete pixel dimensions plus the radius-token
- * utility to apply. Preset names map to {@link SIZE_PRESETS} / {@link
- * RADIUS_BY_PRESET}; explicit `{ width, height }` objects pass through with the
- * canonical card radius.
+ * Resolve a `size` prop into concrete CSS dimensions, the radius-token utility,
+ * and the title-overlay visibility. Preset names map to {@link SIZE_PRESETS} /
+ * {@link RADIUS_BY_PRESET} / {@link SHOW_TITLE_BY_PRESET} (dimensions resolve to
+ * `--size-cover-*` token `var()` strings); explicit `{ width, height }` objects
+ * pass raw px through with the canonical card radius and a width-threshold
+ * title check ({@link SHOW_TITLE_MIN_WIDTH}).
  *
  * @param size - a preset name or explicit `{ width, height }`.
- * @returns the resolved `{ dimensions, radiusClass }`.
+ * @returns the resolved `{ dimensions, radiusClass, showTitle }`.
  */
 function resolveSize(
   size: CoverSize | { width: number; height: number },
-): { dimensions: CoverDimensions; radiusClass: string } {
+): { dimensions: CoverDimensions; radiusClass: string; showTitle: boolean } {
   if (typeof size === 'object') {
     return {
       dimensions: { width: size.width, height: size.height },
       radiusClass: CUSTOM_RADIUS_CLASS,
+      showTitle: size.width >= SHOW_TITLE_MIN_WIDTH,
     };
   }
-  return { dimensions: SIZE_PRESETS[size], radiusClass: RADIUS_BY_PRESET[size] };
+  return {
+    dimensions: SIZE_PRESETS[size],
+    radiusClass: RADIUS_BY_PRESET[size],
+    showTitle: SHOW_TITLE_BY_PRESET[size],
+  };
 }
 
 /**
@@ -318,11 +368,11 @@ export function BookCoverPlaceholder({
   // equals the `--color-text-primary` token applied to the title via utility.
   const palette: CoverPalette = getCoverPalette(book);
 
-  const { dimensions, radiusClass } = resolveSize(size);
-
-  // Show the title only when the cover is wide enough to render it legibly; the
-  // tiny `sm` thumb stays a plain tinted tile (matches Figma — see file header).
-  const showTitle = dimensions.width >= SHOW_TITLE_MIN_WIDTH;
+  // Resolve CSS dimensions (token `var()` strings for presets, raw px for
+  // bespoke sizes), the per-context radius token, and whether the title overlay
+  // shows. The tiny `sm` thumb stays a plain tinted tile (matches Figma — see
+  // the file header) while `md`/`lg`/`metadata` carry the title.
+  const { dimensions, radiusClass, showTitle } = resolveSize(size);
 
   // Merge base + per-size radius token + (only when a title is shown) the title
   // inset + caller className (caller LAST → wins on conflicts; Tailwind source

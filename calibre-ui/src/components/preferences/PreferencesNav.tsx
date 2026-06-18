@@ -78,13 +78,16 @@
  * 12px Regular / SemiBold category labels.
  *
  * BLITZY [COMPONENT] (filter field): the "Filter preferences…" input is part of
- * Figma node `8:15` and is reproduced for fidelity. The design system's
- * `InputField` primitive matches its look, but `InputField` is NOT in this
- * file's allowed dependency set (only `GlassCard` is), so — exactly as the brief
- * sanctions for the category rows — it is rendered as a native, token-styled
- * `<input>`. The field is a CONTROLLED, SSR-safe filter over the LOCAL category
- * list; at rest (empty query) all eight categories render, reproducing the Figma
- * default state precisely.
+ * Figma node `8:15` and is reproduced for fidelity. Per R4 (compose from
+ * primitives, never raw controls) it is rendered with the design system's
+ * `InputField` primitive (`variant="text"`), which already encodes the CONFIRMED
+ * field look — card fill, white@9% hairline, `rounded-control`, the muted
+ * placeholder token, and the Figma-reconciled focus (accent@10% fill +
+ * accent@50% border). The caller passes only `className="mx-2"` to inset the
+ * field 16px from each nav edge (nav `px-2` + the `mx-2` wrapper margin). The
+ * field is a CONTROLLED, SSR-safe filter over the LOCAL category list; at rest
+ * (empty query) all eight categories render, reproducing the Figma default
+ * state precisely.
  *
  * BLITZY [RADIUS]: the active sub-item pill is r5 in Figma; no 5px radius token
  * exists and the two nearest tokens — `--radius-badge` (3px) and
@@ -118,19 +121,23 @@
  * the same surface tokens `GlassCard` would apply. `GlassCard` renders a
  * non-semantic `<div>` with a frosted `backdrop-blur` (meant for translucent
  * content cards), neither of which suits an opaque navigation landmark — so the
- * brief's "(Optional) GlassCard" wrap is deliberately not used. No internal
- * import is required: the file's only allowed dependency (`GlassCard`) is
- * optional and intentionally unused.
+ * brief's "(Optional) GlassCard" wrap is deliberately not used (that optional
+ * `GlassCard` dependency stays unused). The column DOES compose two primitives
+ * for its interactive controls — `InputField` (the filter) and `NavRowButton`
+ * (every category / sub-item row) — per R4.
  *
  * ACCESSIBILITY (UI3 — invisible, always applied)
  * --------------------------------------------------------------------------
  * • A semantic `<nav aria-label="Preferences categories">` landmark wraps a
- *   `<ul>`/`<li>` list; every category and sub-item is a real, keyboard-operable
- *   `<button type="button">` (Space/Enter for free).
- * • The currently-selected category / sub-item carries `aria-current="true"`.
+ *   `<ul>`/`<li>` list; every category and sub-item is the `NavRowButton`
+ *   primitive — a real, keyboard-operable `<button type="button">` (Space/Enter
+ *   for free) that this column composes rather than hand-rolling (R4).
+ * • The currently-selected category / sub-item passes `active`, which the
+ *   primitive surfaces as `aria-current="true"`.
  * • Leading category emoji are decorative (`aria-hidden`); the text label is the
  *   accessible name.
- * • The filter field has an `aria-label` (no visible label in the design).
+ * • The filter field is an `InputField` primitive with an `aria-label` (no
+ *   visible label in the design).
  * • A token-backed `:focus-visible` ring (`--border-accent`) is shown for
  *   keyboard users only — invisible at rest (DS2-e). Color transitions run only
  *   under `motion-safe` (prefers-reduced-motion).
@@ -144,6 +151,9 @@
  */
 
 import { useState, type JSX } from 'react';
+
+import { InputField } from '@/components/primitives/InputField';
+import { NavRowButton } from '@/components/primitives/NavRowButton';
 
 /**
  * A single preference-category entry in the navigation.
@@ -222,20 +232,6 @@ const NAV_CONTAINER =
   'bg-surface-2 border-r border-[var(--border-white-06)] px-2 py-3';
 
 /**
- * Filter field (native token-styled `<input>`, Figma `8:17`/`8:18`): card fill,
- * white@9% hairline, 8px radius, 36px tall (`h-9`), ~10px left padding
- * (`px-2.5`), inset 16px from each nav edge (nav `px-2` + `mx-2`). Near-white
- * value text with the muted placeholder token; token-backed focus ring.
- */
-const FILTER_INPUT =
-  'mx-2 h-9 rounded-control bg-card px-2.5 ' +
-  'border border-[var(--border-white-09)] ' +
-  'text-button-secondary font-normal text-text-primary placeholder:text-text-placeholder ' +
-  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset ' +
-  'focus-visible:ring-[var(--border-accent)] ' +
-  'motion-safe:transition-colors motion-safe:duration-200 motion-safe:ease-out';
-
-/**
  * The category `<ul>`: a flush vertical stack (no inter-row gap) whose exact
  * 40px row pitch comes entirely from each row's fixed `h-10` height — matching
  * the Figma uniform 40px category pitch (row tops 66/106/266/… node `8:15`) with
@@ -244,18 +240,19 @@ const FILTER_INPUT =
 const CATEGORY_LIST = 'flex flex-col gap-0';
 
 /**
- * Variant-invariant category `<button>` classes: full-width left-aligned row,
- * icon→label gap, 8px corner radius (for the active fill shape), a FIXED 40px
- * row height (`h-10`, the CONFIRMED Figma 40px pitch) with the icon+label
- * vertically centered, and the shared focus-ring + motion-safe color transition.
- * The per-state class supplies typography + color (+ fill for a leaf active row).
+ * Per-context category-row LAYOUT classes, merged onto the `NavRowButton`
+ * primitive (which owns the shared row SEMANTICS — `w-full text-left
+ * cursor-pointer select-none`, the token-backed `:focus-visible` ring, the
+ * motion-safe color transition, and `aria-current` driven by `active`). This
+ * string supplies only what is unique to a category row: the icon→label flex
+ * layout (`flex items-center gap-2`), the 8px corner radius for the active fill
+ * shape (`rounded-control`), horizontal padding (`px-2`), and a FIXED 40px row
+ * height (`h-10`, the CONFIRMED Figma 40px pitch) with the icon+label vertically
+ * centered. The per-state class adds typography + color (+ the fill for a leaf
+ * active row). Because `NavRowButton` already contributes the stripped fragments,
+ * the rendered row is byte-identical to the prior hand-rolled `<button>`.
  */
-const CATEGORY_BUTTON_BASE =
-  'flex w-full items-center gap-2 rounded-control px-2 h-10 text-left ' +
-  'cursor-pointer select-none ' +
-  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset ' +
-  'focus-visible:ring-[var(--border-accent)] ' +
-  'motion-safe:transition-colors motion-safe:duration-200 motion-safe:ease-out';
+const CATEGORY_BUTTON_BASE = 'flex items-center gap-2 rounded-control px-2 h-10';
 
 /** Inactive category: slate label, Inter 400 / 12px, brightens on hover. */
 const CATEGORY_INACTIVE = 'text-body text-text-secondary hover:text-text-primary';
@@ -300,22 +297,25 @@ const GROUP_ACTIVE = 'bg-accent/10';
 const SUBLIST = '-mt-1 flex flex-col gap-1 ps-5 pe-2';
 
 /**
- * Variant-invariant sub-item `<button>` classes: full-width left-aligned, a
- * FIXED 24px pill height (`h-6`, the CONFIRMED Figma pill height) with the label
- * vertically centered, 7px radius pill shape (DS4 snap of Figma r5 — no 5px
- * token exists; 3px/7px are equidistant, 7px chosen for the soft-control look),
- * ~16px text indent inside the inset list (`ps-4` ⇒ label x≈44). Typography:
- * the 11px SIZE comes from the `text-button-secondary` token; `font-normal`
- * forces Inter 400 to exactly match the CONFIRMED Figma sub-item weight (the
- * token's own 500 is overridden so there is no weight deviation). Shared focus
- * ring + motion-safe transition. Per-state class supplies color (+ active fill).
+ * Per-context sub-item-row LAYOUT classes, merged onto the `NavRowButton`
+ * primitive (which owns the shared row SEMANTICS — `w-full text-left
+ * cursor-pointer select-none`, the token-backed `:focus-visible` ring, the
+ * motion-safe color transition, and `aria-current` driven by `active`). This
+ * string supplies only what is unique to a sub-item pill: the centered flex
+ * layout, a FIXED 24px pill height (`h-6`, the CONFIRMED Figma pill height) with
+ * the label vertically centered, the 7px radius pill shape (DS4 snap of Figma r5
+ * — no 5px token exists; 3px/7px are equidistant, 7px chosen for the
+ * soft-control look), the ~16px text indent inside the inset list (`ps-4` ⇒
+ * label x≈44), and the typography: the 11px SIZE from the `text-button-secondary`
+ * token with `font-normal` forcing Inter 400 to match the CONFIRMED Figma
+ * sub-item weight exactly (the token's own 500 is overridden, so there is no
+ * weight deviation). The per-state class supplies color (+ the active fill).
+ * Because `NavRowButton` contributes the stripped fragments, the rendered pill
+ * is byte-identical to the prior hand-rolled `<button>`.
  */
 const SUBITEM_BASE =
-  'flex w-full items-center h-6 rounded-toolbar ps-4 pe-2 text-left ' +
-  'text-button-secondary font-normal cursor-pointer select-none ' +
-  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset ' +
-  'focus-visible:ring-[var(--border-accent)] ' +
-  'motion-safe:transition-colors motion-safe:duration-200 motion-safe:ease-out';
+  'flex items-center h-6 rounded-toolbar ps-4 pe-2 ' +
+  'text-button-secondary font-normal';
 
 /** Inactive sub-item: muted slate label, brightens to secondary on hover. */
 const SUBITEM_INACTIVE = 'text-text-muted hover:text-text-secondary';
@@ -356,15 +356,15 @@ export default function PreferencesNav(): JSX.Element {
 
   return (
     <nav aria-label="Preferences categories" className={NAV_CONTAINER}>
-      <input
-        type="text"
+      <InputField
+        variant="text"
         value={filter}
-        onChange={(event) => setFilter(event.target.value)}
+        onChange={setFilter}
         placeholder="Filter preferences..."
         aria-label="Filter preferences"
         autoComplete="off"
         spellCheck={false}
-        className={FILTER_INPUT}
+        className="mx-2"
       />
 
       {visibleCategories.length > 0 ? (
@@ -379,10 +379,9 @@ export default function PreferencesNav(): JSX.Element {
               return (
                 <li key={cat.id}>
                   <div className={cx(GROUP_BASE, isActive && GROUP_ACTIVE)}>
-                    <button
-                      type="button"
+                    <NavRowButton
+                      active={isActive}
                       onClick={() => setActiveCategory(cat.id)}
-                      aria-current={isActive ? 'true' : undefined}
                       className={cx(
                         CATEGORY_BUTTON_BASE,
                         isActive ? CATEGORY_ACTIVE_LABEL : CATEGORY_INACTIVE,
@@ -394,27 +393,26 @@ export default function PreferencesNav(): JSX.Element {
                         </span>
                       ) : null}
                       <span>{cat.label}</span>
-                    </button>
+                    </NavRowButton>
 
                     <ul className={SUBLIST}>
                       {subItems.map((sub) => {
                         const isSubActive = isActive && activeSubItem === sub;
                         return (
                           <li key={sub}>
-                            <button
-                              type="button"
+                            <NavRowButton
+                              active={isSubActive}
                               onClick={() => {
                                 setActiveCategory(cat.id);
                                 setActiveSubItem(sub);
                               }}
-                              aria-current={isSubActive ? 'true' : undefined}
                               className={cx(
                                 SUBITEM_BASE,
                                 isSubActive ? SUBITEM_ACTIVE : SUBITEM_INACTIVE,
                               )}
                             >
                               {sub}
-                            </button>
+                            </NavRowButton>
                           </li>
                         );
                       })}
@@ -427,10 +425,9 @@ export default function PreferencesNav(): JSX.Element {
             // Leaf category (no sub-items): the active fill sits on the row.
             return (
               <li key={cat.id}>
-                <button
-                  type="button"
+                <NavRowButton
+                  active={isActive}
                   onClick={() => setActiveCategory(cat.id)}
-                  aria-current={isActive ? 'true' : undefined}
                   className={cx(
                     CATEGORY_BUTTON_BASE,
                     isActive ? CATEGORY_ACTIVE_ROW : CATEGORY_INACTIVE,
@@ -442,7 +439,7 @@ export default function PreferencesNav(): JSX.Element {
                     </span>
                   ) : null}
                   <span>{cat.label}</span>
-                </button>
+                </NavRowButton>
               </li>
             );
           })}

@@ -61,8 +61,9 @@
  * record, which takes precedence over subagent output) and the EPUB's own mock
  * `stylesheet.css` (which defines the intended book typography):
  *   • Pane → 504×788, cream `#F5F0E8` → the `bg-preview-cream` utility. Rendered
- *     responsive: `flex min-w-0 basis-[504px] shrink … overflow-y-auto` so it
- *     honors 504px at the 1440 baseline yet shrinks cleanly to the 1280 minimum
+ *     responsive: `flex min-w-0 basis-[var(--size-preview-basis)] shrink …
+ *     overflow-y-auto` so it honors the 504px `--size-preview-basis` token width
+ *     at the 1440 baseline yet shrinks cleanly to the 1280 minimum
  *     with ZERO horizontal overflow (the center code view + this pane share the
  *     residual width); vertical scroll is internal.
  *   • Left divider (vs the center code view) → `border-l
@@ -82,11 +83,15 @@
  * `text-[color:var(--color-bg-app)]` (`#0C0E1A`). The cream page deliberately
  * renders DARK-on-cream — an intentional exception to the dark dashboard theme
  * — but the ink still resolves to an EXISTING token (`--color-bg-app`); no new
- * hex is introduced. Every other class is a typography/geometry SCALE utility
- * (`font-serif`, `text-justify`, `leading-7`, `break-words`, `hyphens-auto`,
- * `px-10`, `py-8`, `text-2xl`, `font-bold`, `indent-[1.2em]`, …) — these carry
- * no color information and are explicitly permitted. The only bare literal is
- * `0` (`indent-0`), which is allowed.
+ * hex is introduced. The two design-specific geometry values resolve to `@theme`
+ * tokens: the pane width via `--size-preview-basis` (504px, consumed as
+ * `basis-[var(--size-preview-basis)]`) and the paragraph first-line indent via
+ * `--space-preview-indent` (1.2em, consumed as
+ * `indent-[var(--space-preview-indent)]`). Every other class is a Tailwind
+ * standard-scale typography/geometry utility (`font-serif`, `text-justify`,
+ * `leading-7`, `break-words`, `hyphens-auto`, `px-10`, `py-8`, `text-2xl`,
+ * `font-bold`, …) — these carry no color information and are explicitly
+ * permitted. The only bare literal is `0` (`indent-0`), which is allowed.
  *
  * UI-ONLY / MOCK
  * --------------------------------------------------------------------------
@@ -180,7 +185,7 @@ function extractBodyHtml(code: string): string {
 const BOOK_TYPOGRAPHY =
   '[&_h1]:mb-6 [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:leading-tight ' +
   '[&_h2]:mt-6 [&_h2]:mb-4 [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:leading-snug ' +
-  '[&_p]:indent-[1.2em] [&_p:first-of-type]:indent-0 ' +
+  '[&_p]:indent-[var(--space-preview-indent)] [&_p:first-of-type]:indent-0 ' +
   '[&_blockquote]:my-4 [&_blockquote]:mx-6 [&_blockquote]:italic';
 
 /**
@@ -218,7 +223,7 @@ export function PreviewPane(): JSX.Element {
   return (
     <section
       aria-label="Live preview"
-      className="flex min-w-0 basis-[504px] shrink flex-col overflow-y-auto border-l border-[var(--border-white-07)] bg-preview-cream"
+      className="flex min-w-0 basis-[var(--size-preview-basis)] shrink flex-col overflow-y-auto border-l border-[var(--border-white-07)] bg-preview-cream"
     >
       {bodyHtml ? (
         // Reader page: serif, justified, generous leading + reading-page

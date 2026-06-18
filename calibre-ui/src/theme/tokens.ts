@@ -150,10 +150,11 @@ export const shadows = {
 } as const;
 
 // ---------------------------------------------------------------------------
-// Sizes — 13 named component-geometry tokens (widths / heights / icon / ring)
+// Sizes — 33 named component-geometry tokens (widths / heights / icon / ring)
 // Mirror of the `--size-*` / `--ring-*` `@theme` vars in globals.css. Promoted
 // from confirmed Figma pixel geometry so component TSX carries no bare px
-// literal (AAP §0.4.5). Values are byte-consistent with globals.css.
+// literal (AAP §0.4.5). Values are byte-consistent with globals.css. rem-authored
+// design lengths are expressed in px (exact at the app's 16px root).
 // ---------------------------------------------------------------------------
 export const sizes = {
   windowDot: '11px',          // --size-window-dot         · WindowTitleBar traffic-light dot
@@ -168,23 +169,49 @@ export const sizes = {
   modalConvertH: '740px',     // --size-modal-convert-h    · Convert dialog height (6:9)
   modalMetadataW: '860px',    // --size-modal-metadata-w   · Metadata dialog width (9:9)
   modalMetadataH: '800px',    // --size-modal-metadata-h   · Metadata dialog height (9:9)
+  // Leaf-screen geometry (CP2 token-fidelity / R3):
+  themeSwatchW: '154px',      // --size-theme-swatch-w     · App 06 ThemeSwatch tile width (8:82)
+  themeSwatchH: '98px',       // --size-theme-swatch-h     · App 06 ThemeSwatch tile height (8:82)
+  coverSmW: '20px',           // --size-cover-sm-w         · BookCoverPlaceholder `sm` width (2:2)
+  coverSmH: '26px',           // --size-cover-sm-h         · BookCoverPlaceholder `sm` height (2:2)
+  coverMdW: '182px',          // --size-cover-md-w         · BookCoverPlaceholder `md` width (3:82)
+  coverMdH: '192px',          // --size-cover-md-h         · BookCoverPlaceholder `md` height (3:82)
+  coverLgW: '196px',          // --size-cover-lg-w         · BookCoverPlaceholder `lg` width (2:347)
+  coverLgH: '264px',          // --size-cover-lg-h         · BookCoverPlaceholder `lg` height (2:347)
+  coverMetadataW: '178px',    // --size-cover-metadata-w   · BookCoverPlaceholder `metadata` width (9:21)
+  coverMetadataH: '238px',    // --size-cover-metadata-h   · BookCoverPlaceholder `metadata` height (9:21)
+  toolbarSearchW: '220px',    // --size-toolbar-search-w   · TopToolbar search field width (2:34)
+  filetreeW: '200px',         // --size-filetree-w         · FileTree column width (5:53)
+  previewBasis: '504px',      // --size-preview-basis      · PreviewPane flex-basis width (5:131)
+  tocBasis: '220px',          // --size-toc-basis          · TableOfContents flex-basis width (4:23)
+  tocMinW: '192px',           // --size-toc-min-w          · TableOfContents min-width floor (4:23)
+  readerToolsBasis: '372px',  // --size-reader-tools-basis · ReaderToolsPanel flex-basis width (4:56)
+  readerToolsMinW: '320px',   // --size-reader-tools-min-w · ReaderToolsPanel min-width floor (4:56)
+  readingProgressH: '3px',    // --size-reading-progress-h · ReadingArea progress-bar height (4:43)
+  readingMeasure: '680px',    // --size-reading-measure    · ReadingArea prose max-width (4:43)
+  editorLineH: '26px',        // --size-editor-line-h      · CodeEditor code/gutter row pitch (5:74)
   focusRingWidth: '3px',      // --ring-focus-width        · Slider thumb focus halo width
 } as const;
 
 // ---------------------------------------------------------------------------
-// Spacing — 8 named component spacing/offset tokens
-// Mirror of the `--space-*` `@theme` vars in globals.css (gaps, insets, and the
-// Toggle knob translation distance). Values are byte-consistent with globals.css.
+// Spacing — 11 named component spacing/offset tokens
+// Mirror of the `--space-*` `@theme` vars in globals.css (gaps, insets, the
+// Toggle knob translation distance, and the file-tree/preview indents). Values
+// are byte-consistent with globals.css.
 // ---------------------------------------------------------------------------
 export const spacing = {
-  toolbarButtonGap: '5px',   // --space-toolbar-button-gap  · Button toolbar glyph→label gap
-  chipY: '5px',              // --space-chip-y              · TagPill vertical padding
-  toggleKnobInsetX: '4px',   // --space-toggle-knob-inset-x · Toggle knob left inset
-  toggleKnobInsetY: '3px',   // --space-toggle-knob-inset-y · Toggle knob top inset
-  toggleKnobTravel: '18px',  // --space-toggle-knob-travel  · Toggle knob horizontal travel
-  windowTitleNudge: '3px',   // --space-window-title-nudge  · WindowTitleBar title vertical nudge
-  conversionLogGap: '3px',   // --space-conversion-log-gap  · ConversionLog per-line gap
-  conversionLogPb: '5px',    // --space-conversion-log-pb   · ConversionLog bottom inset
+  toolbarButtonGap: '5px',     // --space-toolbar-button-gap   · Button toolbar glyph→label gap
+  chipY: '5px',                // --space-chip-y               · TagPill vertical padding
+  toggleKnobInsetX: '4px',     // --space-toggle-knob-inset-x  · Toggle knob left inset
+  toggleKnobInsetY: '3px',     // --space-toggle-knob-inset-y  · Toggle knob top inset
+  toggleKnobTravel: '18px',    // --space-toggle-knob-travel   · Toggle knob horizontal travel
+  windowTitleNudge: '3px',     // --space-window-title-nudge   · WindowTitleBar title vertical nudge
+  conversionLogGap: '3px',     // --space-conversion-log-gap   · ConversionLog per-line gap
+  conversionLogPb: '5px',      // --space-conversion-log-pb    · ConversionLog bottom inset
+  // Leaf-screen spacing (CP2 token-fidelity / R3):
+  filetreeIndentBase: '8px',   // --space-filetree-indent-base · FileTree base inline-start padding (5:53)
+  filetreeIndentStep: '12px',  // --space-filetree-indent-step · FileTree per-depth indent step (5:53)
+  previewIndent: '1.2em',      // --space-preview-indent       · PreviewPane paragraph text-indent (5:131)
 } as const;
 
 // ---------------------------------------------------------------------------

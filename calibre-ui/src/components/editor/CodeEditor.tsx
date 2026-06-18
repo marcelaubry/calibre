@@ -74,11 +74,12 @@
  * Every color resolves to an `@theme` token: `bg-code-bg` (panel surface),
  * `text-text-muted` (gutter numbers), `text-star` (amber notice), and
  * `border-[var(--border-white-07)]` (gutter hairline). There is NO hex/rgba
- * color literal and NO inline color `style` anywhere in this file. The only
- * bare literals are Tailwind layout-geometry utilities (`flex`, `text-sm`,
- * `text-xs`, `leading-[26px]`, `p-4`, `pl-12`, …) and permitted keywords
- * (`transparent`) — line-height/spacing are layout geometry, never tokenized
- * color/border/radius values. The panel width is
+ * color literal and NO inline color `style` anywhere in this file. The
+ * code/gutter row pitch (line-height) is the named `--size-editor-line-h` token
+ * (26px), consumed via `leading-[var(--size-editor-line-h)]`. The only remaining
+ * bare literals are Tailwind's standard-scale layout utilities (`flex`,
+ * `text-sm`, `text-xs`, `p-4`, `pl-12`, …) and permitted keywords
+ * (`transparent`). The panel width is
  * NOT fixed to `w-[736px]`: it is `h-full w-full min-w-0` and the page layout
  * allocates the 1440-baseline 736px column, so the panel degrades cleanly to the
  * 1280px minimum (the page shrinks the column; this panel scrolls internally).
@@ -86,25 +87,28 @@
  * GUTTER / LINE ALIGNMENT (the most common defect — guarded here)
  * --------------------------------------------------------------------------
  * Row-for-row alignment is governed by LINE-HEIGHT, not font-size: the gutter
- * and the code share an IDENTICAL `leading-[26px]` row pitch and `py-4` top
- * inset, so number N lines up with code line N even though the gutter numerals
+ * and the code share an IDENTICAL `leading-[var(--size-editor-line-h)]` row
+ * pitch and `py-4` top inset, so number N lines up with code line N even though
+ * the gutter numerals
  * are intentionally smaller (`text-xs`/12px) than the code (`text-sm`/14px) —
  * see the BLITZY [FIGMA] note below. Shiki's `<pre class="shiki">` carries its
  * own UA margin, padding, background, and the `monospace`-keyword font-size
  * quirk, so the code-area wrapper normalizes it with arbitrary variants —
  * `[&_pre.shiki]` margin/padding → 0, background → transparent (revealing the
  * single `bg-code-bg` surface), and font/size/leading forced to the code
- * metrics — guaranteeing each `.line` is exactly one `leading-[26px]` (26px)
- * row that coincides with its gutter number.
+ * metrics — guaranteeing each `.line` is exactly one
+ * `leading-[var(--size-editor-line-h)]` (26px) row that coincides with its
+ * gutter number.
  *
  * BLITZY [FIGMA]: `analyze_figma_node(5:74)` + `compare_screenshot_with_figma`
  * (screen `5:2`) measured the code/gutter row pitch at 26px (not 24px) and the
  * gutter numerals ~1–3px smaller than the code. Per the CRITICAL Figma-precedence
  * directive these measured values override the implementation guidance's
- * `leading-6`/equal-size suggestion, so the row pitch is `leading-[26px]`
- * (a layout-geometry utility, not a token-locked color/radius) and the gutter
- * uses `text-xs` while the code stays `text-sm`. Alignment is preserved because
- * both share the same `leading-[26px]` + `py-4`.
+ * `leading-6`/equal-size suggestion, so the row pitch is encoded as the
+ * `--size-editor-line-h` token (26px) and consumed via
+ * `leading-[var(--size-editor-line-h)]`, while the gutter uses `text-xs` and the
+ * code stays `text-sm`. Alignment is preserved because both share the same
+ * `leading-[var(--size-editor-line-h)]` + `py-4`.
  *
  * DESIGN-PARITY REFERENCE ONLY (NO code reuse)
  * --------------------------------------------------------------------------
@@ -207,13 +211,14 @@ export interface CodeEditorProps {
  * align with code rows we strip the margin/padding, make the background
  * transparent (so the single `bg-code-bg` panel surface shows through), and
  * force the pre + its `<code>` to the code metrics `font-mono text-sm
- * leading-[26px]` — so every `.line` is exactly one 26px row that coincides with
- * its gutter number (the gutter shares the same `leading-[26px]` row pitch).
+ * leading-[var(--size-editor-line-h)]` — so every `.line` is exactly one 26px
+ * row that coincides with its gutter number (the gutter shares the same
+ * `leading-[var(--size-editor-line-h)]` row pitch).
  */
 const SHIKI_NORMALIZE =
   '[&_pre.shiki]:!m-0 [&_pre.shiki]:!p-0 [&_pre.shiki]:!bg-transparent ' +
-  '[&_pre.shiki]:!font-mono [&_pre.shiki]:!text-sm [&_pre.shiki]:!leading-[26px] ' +
-  '[&_.shiki_code]:!font-mono [&_.shiki_code]:!text-sm [&_.shiki_code]:!leading-[26px]';
+  '[&_pre.shiki]:!font-mono [&_pre.shiki]:!text-sm [&_pre.shiki]:!leading-[var(--size-editor-line-h)] ' +
+  '[&_.shiki_code]:!font-mono [&_.shiki_code]:!text-sm [&_.shiki_code]:!leading-[var(--size-editor-line-h)]';
 
 /**
  * CodeEditor — the App 04 EPUB Editor's syntax-highlighted code view (`5:74`).
@@ -265,14 +270,14 @@ export async function CodeEditor({
       <div className="flex min-h-0 flex-1 flex-row overflow-y-auto">
         {/* Line-number gutter. `aria-hidden` — the numbers are a decorative
             visual aid; the code content itself carries the real line structure.
-            Shares the `leading-[26px]` row pitch + `py-4` top inset with the code
+            Shares the `leading-[var(--size-editor-line-h)]` row pitch + `py-4` top inset with the code
             area so number N aligns with line N; numerals are `text-xs` (smaller
             than the `text-sm` code) per the Figma measurement (alignment depends
             on line-height, not font-size). The token hairline delineates the
             gutter in lieu of Figma's untokenizable near-identical lighter fill. */}
         <div
           aria-hidden="true"
-          className="flex-none select-none border-r border-[var(--border-white-07)] px-3 py-4 text-right font-mono text-xs leading-[26px] text-text-muted"
+          className="flex-none select-none border-r border-[var(--border-white-07)] px-3 py-4 text-right font-mono text-xs leading-[var(--size-editor-line-h)] text-text-muted"
         >
           {lineNumbers.map((n) => (
             <div key={n}>{n}</div>
@@ -284,7 +289,7 @@ export async function CodeEditor({
             child actually shrink. `SHIKI_NORMALIZE` aligns the injected pre to
             the gutter and reveals the single `bg-code-bg` surface. */}
         <div
-          className={`min-w-0 flex-1 overflow-x-auto p-4 font-mono text-sm leading-[26px] ${SHIKI_NORMALIZE}`}
+          className={`min-w-0 flex-1 overflow-x-auto p-4 font-mono text-sm leading-[var(--size-editor-line-h)] ${SHIKI_NORMALIZE}`}
           dangerouslySetInnerHTML={{ __html: html }}
         />
       </div>

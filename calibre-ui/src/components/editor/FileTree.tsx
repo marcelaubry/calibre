@@ -58,8 +58,13 @@
  * literals: `bg-surface-2` (#13162E column surface), the right hairline via
  * `border-[var(--border-white-07)]`, `bg-accent/10` + `text-text-primary` (the
  * active row), `text-text-secondary` (inactive rows and folders), and
- * `text-text-muted` (the "Files" header and the size column). Geometry — the
- * fixed 200px width and the 12px indent step — uses px / the Tailwind scale.
+ * `text-text-muted` (the "Files" header and the size column). Geometry resolves
+ * to `@theme` tokens too: the fixed column width via `--size-filetree-w` (200px,
+ * consumed as `w-[var(--size-filetree-w)]`), the staircase indent via a `calc()`
+ * of `--space-filetree-indent-base` (8px) + depth × `--space-filetree-indent-step`
+ * (12px), and the small label type via the `text-meta-label` / `text-meta-value`
+ * role utilities. The interactive rows compose the `NavRowButton` primitive (R4),
+ * never a raw `<button>`.
  *
  * @see ./FileTabs.tsx — `useEditorWorkspace` Context hub (shared active state).
  * @see ../../data/editorFiles.ts — the mock OEBPS file set rendered here.
@@ -74,14 +79,7 @@ import type { EditorFile } from '@/types';
 import { editorFiles } from '@/data/editorFiles';
 import { formatFileSize } from '@/lib/format';
 import { useEditorWorkspace } from '@/components/editor/FileTabs';
-
-/**
- * Base inline-start padding (px) applied to EVERY row, and the additional
- * inline-start padding (px) added per tree-depth level. Together they produce
- * the staircase indent: depth 0 → 8px, depth 1 → 20px, depth 2 → 32px.
- */
-const INDENT_BASE_PX = 8;
-const INDENT_STEP_PX = 12;
+import { NavRowButton } from '@/components/primitives/NavRowButton';
 
 /**
  * Tree depth of an OEBPS path, used to compute a row's indentation.
@@ -127,24 +125,33 @@ interface FileTreeNodeProps {
  */
 function FileTreeNode({ file, active, onSelect }: FileTreeNodeProps): JSX.Element {
   const isFolder = file.kind === 'folder';
-  const indent = INDENT_BASE_PX + depthOf(file.path) * INDENT_STEP_PX;
 
+  // Staircase indent built from tokens (depth 0 → 8px, depth 1 → 20px, depth
+  // 2 → 32px): a `calc()` of the base inline-start padding plus the per-depth
+  // step, so the geometry lives in `@theme` (`--space-filetree-indent-base` /
+  // `--space-filetree-indent-step`) rather than as hardcoded px. `depth` is a
+  // unitless multiplier of the step token.
+  const depth = depthOf(file.path);
+  const paddingInlineStart = `calc(var(--space-filetree-indent-base) + ${depth} * var(--space-filetree-indent-step))`;
+
+  // Compose the shared NavRowButton primitive (R4): it owns the row SEMANTICS —
+  // a real, keyboard-operable `<button type="button">`, `aria-current` from
+  // `active`, the disabled guard (so a folder row, rendered `disabled`, never
+  // fires `onSelect`), the token-backed focus-visible ring, and `w-full
+  // text-left cursor-pointer select-none`. This consumer supplies only the
+  // per-context LAYOUT/typography/active-fill via `className` plus the indent
+  // `style`, so the rendered row stays 1:1 with Figma node `5:53`.
   return (
-    <button
-      type="button"
+    <NavRowButton
+      active={active}
       disabled={isFolder}
-      onClick={() => {
-        if (!isFolder) {
-          onSelect(file.path);
-        }
-      }}
-      aria-current={active ? 'true' : undefined}
+      onClick={() => onSelect(file.path)}
+      style={{ paddingInlineStart }}
       className={[
-        'flex w-full items-center gap-2 rounded-control py-1 pe-2 text-left text-xs',
+        'flex items-center gap-2 rounded-control py-1 pe-2 text-xs',
         active ? 'bg-accent/10 text-text-primary' : 'text-text-secondary',
-        isFolder ? 'cursor-default font-medium' : 'cursor-pointer hover:text-text-primary',
+        isFolder ? 'font-medium' : 'hover:text-text-primary',
       ].join(' ')}
-      style={{ paddingInlineStart: `${indent}px` }}
     >
       <span aria-hidden="true" className="shrink-0">
         {isFolder ? '📁' : glyphForLanguage(file.language)}
@@ -153,11 +160,11 @@ function FileTreeNode({ file, active, onSelect }: FileTreeNodeProps): JSX.Elemen
         {file.name}
       </span>
       {!isFolder && (
-        <span className="shrink-0 text-[10px] text-text-muted">
+        <span className="shrink-0 text-meta-label text-text-muted">
           {formatFileSize(file.sizeBytes)}
         </span>
       )}
-    </button>
+    </NavRowButton>
   );
 }
 
@@ -180,9 +187,9 @@ export function FileTree(): JSX.Element {
   return (
     <nav
       aria-label="EPUB file tree"
-      className="flex h-full w-[200px] min-w-[200px] flex-none flex-col gap-0.5 overflow-y-auto border-r border-[var(--border-white-07)] bg-surface-2 p-2"
+      className="flex h-full w-[var(--size-filetree-w)] min-w-[var(--size-filetree-w)] flex-none flex-col gap-0.5 overflow-y-auto border-r border-[var(--border-white-07)] bg-surface-2 p-2"
     >
-      <p className="px-2 pb-1 text-[10px] font-medium uppercase tracking-wide text-text-muted">
+      <p className="px-2 pb-1 text-meta-value uppercase tracking-wide text-text-muted">
         Files
       </p>
       {editorFiles.map((file) => (

@@ -50,8 +50,13 @@
  *   2. The toolbar layout is HORIZONTAL (glyph left of label), NOT a vertical
  *      stack. Figma 2:22 places the glyph at x=10 and the label at x=30 on the
  *      same row; the rendered toolbar confirms glyph-then-label horizontally.
- *   3. The toolbar label color is `text-text-muted` (#64748B), per the Figma
- *      structural fill on node 2:24.
+ *   3. The toolbar label color is per-consumer via the `toolbarLabelTone` prop:
+ *      the DEFAULT `'muted'` = `text-text-muted` (#64748B), the CONFIRMED Figma
+ *      fill on App 01 node 2:24; the App 04 Editor toolbar (node `5:8`) opts
+ *      into `'secondary'` = `text-text-secondary` (#94A3B8). Both are CONFIRMED
+ *      Figma fills, so this single primitive serves App 01 (and the App 03
+ *      ReaderToolbar) AND App 04 without regressing any of them — see the
+ *      BLITZY [DESIGN_SYSTEM_GAP — RESOLVED] note on `toolbarLabelTone` below.
  *
  * ZERO-HARDCODED-TOKEN RULE (AAP §0.4.5)
  * --------------------------------------------------------------------------
@@ -127,6 +132,22 @@ export interface ButtonProps
    */
   variant?: ButtonVariant;
   /**
+   * (TOOLBAR variant only) Selects the label text color, reconciling the two
+   * CONFIRMED Figma toolbar-label fills so one primitive serves both toolbars:
+   *   • `'muted'`     → `--color-text-muted` (#64748B) — the App 01 TopToolbar
+   *     labels (Figma node `2:24`). This is the DEFAULT, so every existing
+   *     toolbar consumer that omits the prop (TopToolbar `2:2`, ReaderToolbar
+   *     `4:8`) renders byte-identically — no regression.
+   *   • `'secondary'` → `--color-text-secondary` (#94A3B8) — the App 04 EPUB
+   *     Editor toolbar labels (Figma node `5:8`), a higher-contrast tone the
+   *     editor toolbar opts into.
+   * Ignored for the non-toolbar variants (their label color is fixed by the
+   * variant). See the BLITZY [DESIGN_SYSTEM_GAP — RESOLVED] note below and the
+   * matching note in `EditorToolbar.tsx`.
+   * @default 'muted'
+   */
+  toolbarLabelTone?: 'muted' | 'secondary';
+  /**
    * Optional leading icon — an emoji / unicode glyph or small node (AAP icons
    * are TEXT glyphs, never asset files). Rendered before the label, and
    * `aria-hidden` because the `label` already names the control.
@@ -181,9 +202,12 @@ const BASE_CLASSES =
  *                 `border-danger/30`, `text-danger` (#F87171),
  *                 `rounded-control`, `text-button-secondary`. Height ≈32px.
  *                 `hover:bg-danger/20`.
- *   • toolbar   — transparent idle, `text-text-muted` (#64748B label),
- *                 `rounded-toolbar` (7px), fixed 84×38 footprint via the named
- *                 tokens `min-w-[var(--size-toolbar-button-w)]` (84px) +
+ *   • toolbar   — transparent idle, container default `text-text-muted`
+ *                 (#64748B) which the label inherits UNLESS `toolbarLabelTone`
+ *                 overrides it on the label span (see that prop + the
+ *                 `labelClassName` note), `rounded-toolbar` (7px), fixed 84×38
+ *                 footprint via the named tokens
+ *                 `min-w-[var(--size-toolbar-button-w)]` (84px) +
  *                 `min-h-[var(--size-button-h)]` (38px), with a
  *                 `gap-[var(--space-toolbar-button-gap)]` (5px) glyph→label gap.
  *                 `hover:bg-[var(--border-white-06)]`. The typography scale is
@@ -224,6 +248,7 @@ const VARIANT_CLASSES: Record<ButtonVariant, string> = {
 export function Button({
   label,
   variant = 'secondary',
+  toolbarLabelTone = 'muted',
   icon,
   disabled = false,
   onClick,
@@ -262,7 +287,26 @@ export function Button({
   // The toolbar applies its 9px type scale to the LABEL (so the 15px glyph is
   // unaffected); other variants carry their type scale on the button itself, so
   // the label span needs no class and simply inherits.
-  const labelClassName = isToolbar ? 'text-toolbar-label' : undefined;
+  //
+  // The label COLOR is the per-consumer `toolbarLabelTone`: the default
+  // `'muted'` adds NO color class, so the label inherits the container's
+  // `text-text-muted` (#64748B, App 01 `2:24`) — byte-identical to the prior
+  // single-tone behavior; `'secondary'` sets `text-text-secondary` (#94A3B8,
+  // App 04 `5:8`) DIRECTLY on the span, which wins over the inherited container
+  // color for the label text only (the emoji glyph is color-immune, so it is
+  // unaffected either way).
+  //
+  // BLITZY [A11Y]: both tones are CONFIRMED Figma fills, so neither screen is
+  // silently altered (Figma precedence, UI3/UF3). On `--color-surface-1` the
+  // default `'muted'` computes ~3.84:1 (below the WCAG AA 4.5:1 normal-text
+  // minimum) and is retained EXACTLY because it is the authoritative `2:24`
+  // value; the `'secondary'` tone the editor toolbar selects computes ~7.13:1
+  // (passes AA) AND matches `5:8`, so it both honors Figma and clears AA.
+  const labelClassName = isToolbar
+    ? toolbarLabelTone === 'secondary'
+      ? 'text-toolbar-label text-text-secondary'
+      : 'text-toolbar-label'
+    : undefined;
 
   return (
     <button

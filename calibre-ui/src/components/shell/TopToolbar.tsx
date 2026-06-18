@@ -102,9 +102,10 @@
  * color) live INSIDE the `Button` / `InputField` primitives and are not
  * re-specified here. The only bare utilities are Tailwind's standard layout /
  * spacing scale (`flex`, `h-12`, `w-full`, `items-center`, `px-3.5`, `gap-1`,
- * `flex-1`, `shrink-0`, `min-w-0`) plus the search width (`w-[220px]`, the exact
- * Figma field width and the `InputField` author's sanctioned sizing hook); none
- * of these carry color information.
+ * `flex-1`, `shrink-0`, `min-w-0`) plus the token-backed search width
+ * (`w-[var(--size-toolbar-search-w)]`, the exact Figma field width encoded as a
+ * `@theme` token and consumed via the `InputField` author's sanctioned sizing
+ * hook); none of these carry color information.
  *
  * RESPONSIVE (1440 → 1280, zero horizontal overflow — AAP §0.9)
  * --------------------------------------------------------------------------
@@ -328,7 +329,8 @@ export function TopToolbar({ className }: TopToolbarProps): JSX.Element {
 
       {/* Right-aligned library search. `variant="search"` carries every visual
           (card fill, white-09 border, control radius, placeholder color, 32px
-          height, leading 🔍 glyph). The wrapper width is the exact Figma 220px;
+          height, leading 🔍 glyph). The wrapper width is the exact Figma value
+          via the `--size-toolbar-search-w` token (`w-[var(--size-toolbar-search-w)]`);
           `min-w-0` lets it shrink in any narrow edge case. Controlled + inert.
           `name` is forwarded (via the primitive's `...rest`) onto the underlying
           `<input>` so the field is a properly-named form control — this silences
@@ -342,7 +344,7 @@ export function TopToolbar({ className }: TopToolbarProps): JSX.Element {
         onChange={setSearch}
         placeholder={SEARCH_PLACEHOLDER}
         aria-label={SEARCH_ARIA_LABEL}
-        className="w-[220px] min-w-0"
+        className="w-[var(--size-toolbar-search-w)] min-w-0"
       />
     </div>
   );

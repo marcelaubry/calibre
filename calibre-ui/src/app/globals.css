@@ -220,6 +220,36 @@
   --size-modal-metadata-w: 860px;        /* Metadata dialog width (9:9) */
   --size-modal-metadata-h: 800px;        /* Metadata dialog height (9:9) */
 
+  /* ---- Component geometry — leaf-screen sizes (CP2 token-fidelity) ------
+   * CONFIRMED Figma pixel geometry for the leaf/primitive components, promoted
+   * to named tokens so component TSX carries zero arbitrary px/rem bracket
+   * literals or inline px geometry (AAP §0.4.5 "zero hardcoded values"; R3).
+   * Each is consumed via an arbitrary `var()` utility, e.g.
+   * `w-[var(--size-toolbar-search-w)]`. Mirrored byte-for-byte in
+   * `src/theme/tokens.ts` (`sizes` group). rem-authored design lengths are
+   * expressed in px here (exact at the app's 16px root: 13.75rem=220px,
+   * 12rem=192px, 23.25rem=372px, 20rem=320px). */
+  --size-theme-swatch-w: 154px;          /* App 06 ThemeSwatch tile width (8:82) */
+  --size-theme-swatch-h: 98px;           /* App 06 ThemeSwatch tile height (8:82) */
+  --size-cover-sm-w: 20px;               /* BookCoverPlaceholder `sm` table thumb width (2:2) */
+  --size-cover-sm-h: 26px;               /* BookCoverPlaceholder `sm` table thumb height (2:2) */
+  --size-cover-md-w: 182px;              /* BookCoverPlaceholder `md` grid-cover width (3:82) */
+  --size-cover-md-h: 192px;              /* BookCoverPlaceholder `md` grid-cover height (3:82) */
+  --size-cover-lg-w: 196px;              /* BookCoverPlaceholder `lg` detail-cover width (2:347) */
+  --size-cover-lg-h: 264px;              /* BookCoverPlaceholder `lg` detail-cover height (2:347) */
+  --size-cover-metadata-w: 178px;        /* BookCoverPlaceholder `metadata` cover width (9:21) */
+  --size-cover-metadata-h: 238px;        /* BookCoverPlaceholder `metadata` cover height (9:21) */
+  --size-toolbar-search-w: 220px;        /* App 01/02 TopToolbar search field width (2:34) */
+  --size-filetree-w: 200px;              /* App 04 FileTree column width (5:53) */
+  --size-preview-basis: 504px;           /* App 04 PreviewPane flex-basis width (5:131) */
+  --size-toc-basis: 220px;               /* App 03 TableOfContents flex-basis width (4:23) */
+  --size-toc-min-w: 192px;               /* App 03 TableOfContents min-width floor (4:23) */
+  --size-reader-tools-basis: 372px;      /* App 03 ReaderToolsPanel flex-basis width (4:56) */
+  --size-reader-tools-min-w: 320px;      /* App 03 ReaderToolsPanel min-width floor (4:56) */
+  --size-reading-progress-h: 3px;        /* App 03 ReadingArea top progress-bar height (4:43) */
+  --size-reading-measure: 680px;         /* App 03 ReadingArea readable prose max-width (4:43) */
+  --size-editor-line-h: 26px;            /* App 04 CodeEditor code/gutter row pitch / line-height (5:74) */
+
   /* ---- Component geometry — spacing & offsets (8) ----------------------
    * Sub-grid spacings/insets/translations promoted to named tokens. Consumed via
    * arbitrary utilities, e.g. `gap-[var(--space-toolbar-button-gap)]`,
@@ -233,6 +263,15 @@
   --space-window-title-nudge: 3px;       /* WindowTitleBar centered-title vertical nudge */
   --space-conversion-log-gap: 3px;       /* ConversionLog per-line vertical gap */
   --space-conversion-log-pb: 5px;        /* ConversionLog scroll-area bottom inset */
+
+  /* ---- Component geometry — leaf-screen spacing (CP2 token-fidelity) ----
+   * Sub-grid indents/insets promoted to named tokens so component TSX carries
+   * no arbitrary spacing literal (R3). Consumed via arbitrary utilities, e.g.
+   * `indent-[var(--space-preview-indent)]`, or a `calc()` of the two file-tree
+   * indent tokens. Mirrored in `tokens.ts` (`spacing` group). */
+  --space-filetree-indent-base: 8px;     /* App 04 FileTree base inline-start padding (5:53) */
+  --space-filetree-indent-step: 12px;    /* App 04 FileTree per-depth indent increment (5:53) */
+  --space-preview-indent: 1.2em;         /* App 04 PreviewPane paragraph text-indent (5:131) */
 
   /* ---- Rings (1) — focus-halo widths ----------------------------------
    * Consumed via arbitrary box-shadow utilities, e.g.

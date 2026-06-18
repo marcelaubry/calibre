@@ -79,9 +79,13 @@
  * `text-text-muted` (empty state). There is NO hex/rgba color literal and NO
  * inline color `style`. The ONLY dynamic, non-token values are the runtime
  * `progressPercent` width percentage and the `fontScale` multiplier — both
- * explicitly permitted. The remaining bare values (`h-[3px]`, `h-px`,
- * `max-w-[680px]`, `px-8`, `py-12`, `mb-6`, `mb-5`, `px-0.5`) are
- * layout-geometry utilities, never tokenized color/typography values.
+ * explicitly permitted. The two design-specific geometry values resolve to
+ * `@theme` tokens (R3): the progress-bar height via `--size-reading-progress-h`
+ * (3px, `h-[var(--size-reading-progress-h)]`) and the readable prose measure via
+ * `--size-reading-measure` (680px, `max-w-[var(--size-reading-measure)]`). The
+ * remaining bare values (`h-px`, `px-8`, `py-12`, `mb-6`, `mb-5`, `px-0.5`) are
+ * Tailwind standard-scale layout utilities, never tokenized color/typography
+ * values.
  *
  * RESPONSIVE WIDTH (1440 → 1280, zero horizontal overflow)
  * --------------------------------------------------------------------------
@@ -89,8 +93,9 @@
  * the width the viewer page leaves between the 220px Table of Contents and the
  * 372px Reader Tools panel (848px at the 1440 baseline; ~688px at the 1280
  * minimum). `min-w-0` lets the flex child actually shrink, and the inner prose
- * column is capped at a readable `max-w-[680px]` measure (centered with
- * `mx-auto`), so the surface degrades cleanly with no horizontal scroll. The
+ * column is capped at a readable `max-w-[var(--size-reading-measure)]` measure
+ * (centered with `mx-auto`), so the surface degrades cleanly with no horizontal
+ * scroll. The
  * progress bar + divider form a pinned `flex-none` header band; the body region
  * scrolls vertically (`overflow-y-auto`) beneath it.
  *
@@ -201,7 +206,7 @@ export function ReadingArea({ className }: ReadingAreaProps = {}) {
           aria-valuemin={0}
           aria-valuemax={100}
           aria-label="Reading progress"
-          className="h-[3px] w-full bg-[var(--border-white-07)]"
+          className="h-[var(--size-reading-progress-h)] w-full bg-[var(--border-white-07)]"
         >
           <div
             className="h-full bg-gradient-accent"
@@ -218,12 +223,12 @@ export function ReadingArea({ className }: ReadingAreaProps = {}) {
       {/* Scrollable reading body. `min-h-0` lets this flex child shrink so its
           own `overflow-y-auto` engages instead of pushing the page. */}
       <div className="min-h-0 flex-1 overflow-y-auto">
-        {/* Centered, readable-measure prose column. `max-w-[680px]` caps the
-            measure (~74ch at 15px) and `mx-auto` centers it within the surface,
-            giving the generous side gutters of the design; `px-8` keeps edge
-            padding when the surface narrows toward 1280, and `py-12` provides
-            vertical breathing room. */}
-        <article className="mx-auto w-full max-w-[680px] px-8 py-12">
+        {/* Centered, readable-measure prose column. `max-w-[var(--size-reading-measure)]`
+            (the 680px `--size-reading-measure` token) caps the measure (~74ch at
+            15px) and `mx-auto` centers it within the surface, giving the generous
+            side gutters of the design; `px-8` keeps edge padding when the surface
+            narrows toward 1280, and `py-12` provides vertical breathing room. */}
+        <article className="mx-auto w-full max-w-[var(--size-reading-measure)] px-8 py-12">
           {/* Chapter title — the reading section heading. `text-detail-title`
               (Inter 600, 15px/22px) over the body's 400 weight gives clear
               hierarchy; `<h2>` sits beneath the app/book-level `<h1>` owned by

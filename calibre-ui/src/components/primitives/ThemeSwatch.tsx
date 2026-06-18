@@ -112,12 +112,15 @@
  * brief explicitly permits them for the swatch fills and sample inks).
  * Typography SIZE values resolve to the
  * `--text-*` tokens via `text-[length:var(...)]`. There are NO raw hex / rgba
- * literals anywhere in this file. The only bare literals are LAYOUT / geometry
- * values that carry no color information — the tile footprint (`w-[154px]
- * h-[98px]`, the CONFIRMED Figma dimensions, overridable via `className`), the
- * standard-scale paddings (`pt-5` = 20px, `pb-2.5` = 10px) and the badge inset
- * (`top-1.5 right-1.5` = 6px) — all permitted layout per the design-system
- * convention (0, px lengths, and the standard spacing scale are layout).
+ * literals anywhere in this file. The tile footprint resolves to the named
+ * geometry tokens `--size-theme-swatch-w` / `--size-theme-swatch-h` (the
+ * CONFIRMED Figma 154×98 dimensions), consumed via
+ * `w-[var(--size-theme-swatch-w)] h-[var(--size-theme-swatch-h)]` (overridable
+ * via `className`), so no arbitrary px literal remains (R3). The only bare
+ * literals are standard-scale LAYOUT values that carry no design-token
+ * information — the paddings (`pt-5` = 20px, `pb-2.5` = 10px) and the badge
+ * inset (`top-1.5 right-1.5` = 6px) — all permitted per the design-system
+ * convention (0, and the standard spacing scale, are layout).
  *
  * RENDERING MODEL
  * --------------------------------------------------------------------------
@@ -236,12 +239,14 @@ const THEME_PREVIEW: Record<
  * renders. `relative` anchors the absolutely-positioned check badge; the flex
  * column places the "Aa" at the top and the label near the bottom
  * (`justify-between` + `pt-5`/`pb-2.5` reproduce the Figma vertical rhythm).
- * `w-[154px] h-[98px]` is the CONFIRMED Figma tile footprint (overridable via
- * `className`); `shrink-0` keeps it from collapsing inside a flex row;
+ * The CONFIRMED Figma tile footprint (154×98) resolves to the
+ * `--size-theme-swatch-w` / `--size-theme-swatch-h` tokens via
+ * `w-[var(--size-theme-swatch-w)] h-[var(--size-theme-swatch-h)]` (overridable
+ * via `className`); `shrink-0` keeps it from collapsing inside a flex row;
  * `select-none` keeps the decorative sample from being text-selected.
  */
 const TILE_BASE =
-  'relative flex h-[98px] w-[154px] shrink-0 flex-col items-center justify-between ' +
+  'relative flex h-[var(--size-theme-swatch-h)] w-[var(--size-theme-swatch-w)] shrink-0 flex-col items-center justify-between ' +
   'rounded-card pt-5 pb-2.5 select-none';
 
 /**

@@ -54,9 +54,10 @@
  *     within ±1px), ~17px top (`pt-4` = 16px), top-aligned, NO panel fill
  *     (inherits the modal `--color-surface-2`).
  *   • Cover `9:21` 178×238 (≈3:4), radius ~10px, centered — rendered via the
- *     `BookCoverPlaceholder` primitive at an explicit `{ width, height }`
- *     (the named `lg` preset is 196×264, which would overflow the 178px
- *     content box; the AAP sanctions an explicit size matching the Figma cover).
+ *     `BookCoverPlaceholder` primitive at its named `metadata` preset (backed by
+ *     the `--size-cover-metadata-w` / `--size-cover-metadata-h` tokens = 178×238,
+ *     `rounded-card`); the `lg` preset is 196×264, which would overflow the 178px
+ *     content box, so this dedicated preset matches the Figma cover exactly (R3).
  *   • Cover-action buttons — "Change Cover" full-width, then "Download" +
  *     "Generate" as an even two-up row (each `flex-1`), all `secondary`.
  *   • Rating label "Rating" above 20px amber stars. The label is rendered
@@ -180,14 +181,6 @@ export interface MetadataCoverColumnProps {
 }
 
 /**
- * Explicit Figma pixel dimensions for the large cover (node `9:21`, 178×238).
- * Passed to `BookCoverPlaceholder` as a bespoke `{ width, height }` size — the
- * named `lg` preset (196×264) would overflow the 178px content box. Declared at
- * module scope so the same object identity is reused across renders.
- */
-const COVER_SIZE = { width: 178, height: 238 } as const;
-
-/**
  * Star glyph size (px) for the editable rating — Figma node `9:31` renders the
  * Metadata Editor stars at 20px (vs the 14px detail-panel default).
  */
@@ -268,7 +261,7 @@ export function MetadataCoverColumn({
   return (
     <div className="flex w-55 shrink-0 flex-col px-5 pt-4">
       {/* (1) Large generated cover — centered; never real cover art (AAP §0.9). */}
-      <BookCoverPlaceholder book={book} size={COVER_SIZE} className="mx-auto" />
+      <BookCoverPlaceholder book={book} size="metadata" className="mx-auto" />
 
       {/* (2) Cover-action buttons — Change Cover full-width, then a Download /
           Generate two-up row. All `secondary`; all UI-only no-ops. The intra-
