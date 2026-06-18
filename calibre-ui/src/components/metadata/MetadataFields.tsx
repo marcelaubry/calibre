@@ -473,6 +473,14 @@ export function MetadataFields({
   const titleSortId = `${baseId}-title-sort`;
   const authorSortId = `${baseId}-author-sort`;
   const seriesId = `${baseId}-series`;
+  // The Series-index field has no visible <label> of its own ("Series" heads the
+  // row), so it is named via `aria-label`. It still needs a stable `id` so the
+  // rendered control carries an id/name attribute (resolves the Chrome
+  // "A form field element should have an id or name attribute" advisory). This
+  // is an invisible accessibility/autofill improvement only — it does not alter
+  // the accessible name (the `aria-label` continues to provide it) and has zero
+  // visual impact, so it leaves the Figma `9:67` rendering untouched.
+  const seriesIndexId = `${baseId}-series-index`;
   const publisherId = `${baseId}-publisher`;
   const publicationDateId = `${baseId}-publication-date`;
   const languageId = `${baseId}-language`;
@@ -585,6 +593,7 @@ export function MetadataFields({
               Index
             </span>
             <InputField
+              id={seriesIndexId}
               variant="number"
               value={seriesIndex}
               onChange={onSeriesIndexChange}

@@ -169,13 +169,38 @@ const PROCESSING_TOGGLE_LABELS = [
 
 /**
  * Outer panel container: a full-width vertical stack. Transparent (the panel
- * sits flush on the dialog surface — BLITZY [COLOR]); `gap-5` separates the
+ * sits flush on the dialog surface — BLITZY [COLOR]); `gap-u12` separates the
  * three control groups, reinforced by the hairline {@link DIVIDER_CLASSES}.
+ *
+ * The inter-group gap is the `gap-u12` (12px) step rather than a looser value:
+ * the fixed 880×740 Figma `6:9` frame (AAP §0.3.1 Workflow 4 / §0.7.4) DEPICTS
+ * the header + format row + option tabs + this Look & Feel panel + the terminal
+ * conversion log + the footer all WITHIN the 740px frame, so the panel must fit
+ * its slice of that fixed height with NO internal scroll. The original loose
+ * spacing was "mapped to the nearest Tailwind step" while the live structural
+ * API was unavailable (see file header), so the authoritative 740px frame
+ * height governs: tightening the intra-panel rhythm to `gap-u12` (a named token)
+ * keeps every section — including the depicted conversion log and footer —
+ * inside the frame without scroll, while the hairline {@link DIVIDER_CLASSES}
+ * preserves clear visual separation between the three control groups.
  */
-const PANEL_BASE = 'flex w-full flex-col gap-u20';
+const PANEL_BASE = 'flex w-full flex-col gap-u12';
 
-/** Vertical stack holding the three labelled numeric fields; `gap-4` between them. */
-const NUMERIC_STACK = 'flex flex-col gap-u16';
+/**
+ * Horizontal ROW holding the three labelled numeric fields side by side
+ * (Margins · Base font size · Line height). Reconciled against the FIXED
+ * 880×740 Figma `6:9` frame: per AAP §0.3.1 (Workflow 4) / §0.7.4 the dialog
+ * DEPICTS the header + format row + option tabs + this Look & Feel panel + the
+ * terminal conversion log + the footer all WITHIN the 740px frame, so the three
+ * compact numeric controls sit on ONE row rather than stacked vertically. A
+ * vertical stack made the dialog body 182px taller than its fixed height,
+ * pushing the conversion log (a depicted element) below the fold and forcing an
+ * internal scroll the design never shows. `flex-wrap` lets the controls wrap on
+ * a narrow viewport so the panel never forces HORIZONTAL overflow at the 1280px
+ * responsive floor; `items-start` top-aligns the label/field columns so an
+ * uneven label never misaligns its field; `gap-u24` separates the controls.
+ */
+const NUMERIC_ROW = 'flex flex-row flex-wrap items-start gap-u24';
 
 /**
  * One labelled numeric control: the label sits ABOVE its field (the Figma
@@ -326,8 +351,11 @@ export function LookAndFeelPanel({ className }: LookAndFeelPanelProps): JSX.Elem
           each is the `InputField` `variant="number"` primitive with its bounds
           forwarded to the native control via `min` / `max` / `step`. The
           `htmlFor`/`id` pair gives each field its accessible name from the
-          visible label (gold-standard association — no `aria-label` override). */}
-      <div className={NUMERIC_STACK}>
+          visible label (gold-standard association — no `aria-label` override).
+          The three label+field columns sit side by side on ONE row (see
+          {@link NUMERIC_ROW}) so the panel + log + footer fit the fixed 740px
+          `6:9` frame without internal scroll. */}
+      <div className={NUMERIC_ROW}>
         <div className={CONTROL_STACK}>
           <label htmlFor={marginsId} className={LABEL_CLASSES}>
             Margins (pt)
