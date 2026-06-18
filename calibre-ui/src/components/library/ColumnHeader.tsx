@@ -41,15 +41,17 @@
  * --------------------------------------------------------------------------
  * The header and every data row are independent CSS grids; they only line up
  * because all THREE of these layout values are identical in both files:
- *   1. grid-template-columns — the {@link GRID_TEMPLATE} arbitrary-value class
- *      `minmax(0,3fr) minmax(0,2fr) minmax(0,1.2fr) minmax(0,1.2fr)
- *       minmax(0,1.5fr) minmax(0,1fr) minmax(0,1fr)`
- *      (Title 3 · Author 2 · Date 1.2 · Rating 1.2 · Tags 1.5 · Format 1 ·
- *      Size 1; ≈ 988px at the 1440 baseline). Every track is `minmax(0, …fr)`
- *      so columns shrink and content truncates rather than overflowing — the
- *      1440 → 1280 "zero horizontal overflow" gate (AAP §0.9).
+ *   1. grid-template-columns — the SHARED {@link LIST_GRID_TEMPLATE} string,
+ *      IMPORTED from `BookListRow` (the single source of truth) and applied as an
+ *      inline `style={{ gridTemplateColumns }}` on the container — never
+ *      re-declared here, so the two can never drift. Its tracks are
+ *      `minmax(0, 2.05fr) minmax(0, 1.5fr) minmax(0, 1.1fr) minmax(0, 0.9fr)
+ *       minmax(0, 2.1fr) minmax(0, 0.65fr) minmax(0, 0.78fr)`
+ *      (Title · Author · Date · Rating · Tags · Format · Size). Every track is
+ *      `minmax(0, …fr)` so columns shrink and content truncates rather than
+ *      overflowing — the 1440 → 1280 "zero horizontal overflow" gate (AAP §0.9).
  *   2. column gap — `gap-x-3` (12px).
- *   3. container horizontal padding — `px-4` (16px).
+ *   3. container horizontal padding — `px-3` (12px).
  * `BookListRow` reproduces this exact trio so the Title label sits over the row's
  * Title cell, the centered Rating label over the row's stars, and so on. The
  * Title column intentionally reserves the row's cover-thumbnail space; the
@@ -65,7 +67,7 @@
  * (`border-[var(--border-white-07)]`, `ring-[var(--border-accent)]`,
  * `rounded-[var(--radius-badge)]`). There are NO raw hex / rgba color literals.
  * The only bare values are layout / geometry on Tailwind's standard scale
- * (`grid`, `h-9`, `px-4`, `gap-x-3`, `gap-1`, `min-w-0`, `truncate`, and the
+ * (`grid`, `h-9`, `px-3`, `gap-x-3`, `gap-1`, `min-w-0`, `truncate`, and the
  * `fr`/`minmax` track list) — none of which carry color information.
  *
  * STYLING (Figma `2:73`, reconciled with the AAP §0.3.2 token manifest)
@@ -107,6 +109,12 @@
 
 import { type JSX, type KeyboardEvent } from 'react';
 import { useLibrary, type SortField } from '@/state/LibraryProvider';
+// The SHARED, canonical 7-column track template — the single source of truth for
+// the App 01 list grid. Imported (never re-declared) from `BookListRow` so the
+// header and every data row apply the BYTE-IDENTICAL `grid-template-columns`
+// string and can never drift out of alignment. (`BookListRow` does not import
+// `ColumnHeader`, so this dependency is acyclic.)
+import { LIST_GRID_TEMPLATE } from './BookListRow';
 
 /**
  * Props for {@link ColumnHeader}.
@@ -159,34 +167,30 @@ const COLUMNS: readonly ColumnDef[] = [
 ];
 
 /**
- * The SHARED grid-template-columns class — the single source of column geometry
- * for the App 01 list. `BookListRow` MUST use this identical track list (plus the
- * same `gap-x-3` + `px-4`) so header cells align with row cells. Tailwind v4
- * arbitrary value: `_` encodes the spaces between tracks. Every track is
- * `minmax(0, …fr)` so a column can shrink below its content width (content
- * truncates) — guaranteeing zero horizontal overflow from 1440 down to 1280.
- *
- * Proportions: Title 3 · Author 2 · Date Added 1.2 · Rating 1.2 · Tags 1.5 ·
- * Format 1 · Size 1 (total 10.9fr ≈ the 988px table width at the 1440 baseline).
- */
-const GRID_TEMPLATE =
-  'grid-cols-[minmax(0,3fr)_minmax(0,2fr)_minmax(0,1.2fr)_minmax(0,1.2fr)_minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1fr)]';
-
-/**
  * Header container (`role="row"`) classes — all token-backed.
  *
- * `sticky top-0 z-10` pins the header while rows scroll; `grid` +
- * {@link GRID_TEMPLATE} lays out the seven columns; `items-center` vertically
- * centers the labels in the `h-9` (36px) band; `gap-x-3` (12px) + `px-4` (16px)
- * are the shared column gap and side inset; `bg-surface-1` is the opaque chrome
+ * `sticky top-0 z-10` pins the header while rows scroll; `grid` lays out the
+ * seven columns (the `grid-template-columns` track list is the shared
+ * {@link LIST_GRID_TEMPLATE}, applied as an inline style on the container so it
+ * is byte-identical with every `BookListRow`); `items-center` vertically centers
+ * the labels in the `h-9` (36px) band; `gap-x-3` (12px) + `px-3` (12px) are the
+ * shared column gap and side inset that `BookListRow` also uses (so the header
+ * cells sit exactly over the row cells); `bg-surface-1` is the opaque chrome
  * surface; the `border-b border-[var(--border-white-07)]` hairline divides the
  * header from the body; `select-none` keeps repeated header clicks from
  * selecting the label text.
+ *
+ * ALIGNMENT CONTRACT — the header and every data row are independent CSS grids
+ * that line up only because all THREE layout values match `BookListRow`:
+ *   1. grid-template-columns — the shared {@link LIST_GRID_TEMPLATE} (applied via
+ *      `style={{ gridTemplateColumns }}` on the container below, NOT a class, so
+ *      both files consume the exact same imported string).
+ *   2. column gap — `gap-x-3` (12px).
+ *   3. container horizontal padding — `px-3` (12px).
  */
 const CONTAINER_BASE =
-  'sticky top-0 z-10 grid items-center h-9 gap-x-3 px-4 select-none ' +
-  'bg-surface-1 border-b border-[var(--border-white-07)] ' +
-  GRID_TEMPLATE;
+  'sticky top-0 z-10 grid items-center h-9 gap-x-3 px-3 select-none ' +
+  'bg-surface-1 border-b border-[var(--border-white-07)]';
 
 /**
  * Classes common to EVERY header cell — a flex box that lays the label (and the
@@ -282,8 +286,14 @@ export function ColumnHeader({ className }: ColumnHeaderProps): JSX.Element {
   // source order governs); `filter(Boolean)` drops a missing value.
   const containerClassName = [CONTAINER_BASE, className].filter(Boolean).join(' ');
 
+  // The SHARED 7-column track list is applied as an inline style (identical to
+  // `BookListRow`) so header cells align byte-for-byte with the row cells beneath.
   return (
-    <div role="row" className={containerClassName}>
+    <div
+      role="row"
+      className={containerClassName}
+      style={{ gridTemplateColumns: LIST_GRID_TEMPLATE }}
+    >
       {COLUMNS.map((col) => {
         const field = col.key;
         const align = col.align ?? 'start';
