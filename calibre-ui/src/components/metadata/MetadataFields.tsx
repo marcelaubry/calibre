@@ -29,12 +29,12 @@
  * BETWEEN the Language/Rating row and the Synopsis textarea, preserving the
  * Figma vertical order (fields → Tags → Identifiers → Synopsis).
  *
- * It is a LEAF composition component built from ONE design-system primitive —
- * {@link InputField} (all nine single-line fields) — plus a single token-styled
- * `<textarea>` for the Synopsis (the design system has no Textarea primitive,
- * and `<textarea>` is NOT a forbidden raw element — the forbidden set is raw
- * `<input>` / `<select>` / `<button>` / headings; AAP §0.4.5). It renders NO raw
- * `<input>`, `<select>`, `<button>`, or heading of its own.
+ * It is a LEAF composition component built from TWO design-system primitives —
+ * {@link InputField} (all nine single-line fields) and {@link Textarea} (the
+ * Synopsis). The Textarea primitive was added in the CP4 Figma-fidelity fix to
+ * close a design-system coverage gap — the Synopsis previously used a hand-rolled
+ * token-styled `<textarea>` — so the modal now renders NO raw `<input>`,
+ * `<textarea>`, `<select>`, `<button>`, or heading of its own (AAP §0.4.5).
  *
  * WHY `'use client'`
  * --------------------------------------------------------------------------
@@ -82,7 +82,7 @@
  * select-style language affordance is deferred — acceptable for a UI-only mock
  * that mirrors the static design exactly.
  *
- * BLITZY [STATE] (Rating is a non-interactive read-back; Title auto-focuses):
+ * BLITZY [STATE] (Rating is a non-interactive read-back; Title shows always-on glow):
  *   • RATING — analyze_figma_node on `9:79` CONFIRMED a bare row of amber
  *     (`#F59E0B`) "★★★★★" glyphs (Inter 24px), NOT a boxed input and NOT a
  *     dropdown; it sits directly on the surface. The editable `StarRating`
@@ -99,32 +99,32 @@
  *     here. Both star layers are `aria-hidden`; the wrapper is `role="img"` with
  *     an `aria-label` carrying the numeric rating, so screen readers hear the
  *     value rather than a run of glyphs.
- *   • TITLE — the Figma Title field (`9:53`) is drawn in its FOCUSED state: a
- *     translucent purple fill `rgba(123,97,255,0.1)` + a `rgba(123,97,255,0.5)`
- *     border + a bright `#F1F5FF` value, with NO box-shadow/glow. That is
- *     EXACTLY the {@link InputField} built-in `:focus` look
- *     (`focus:bg-accent/10` + `focus:border-accent/50`). So rather than baking
- *     an always-on accent ring (which would violate DS2-e "default state only at
- *     rest" and conflict the instant the user focuses another field), the Title
- *     is simply rendered first with `autoFocus` — on modal open it receives
- *     focus and shows the design's purple treatment, reverting cleanly to the
- *     resting look once the user moves on.
+ *   • TITLE — the Figma Title field (`9:53`) is drawn in its FOCUSED state with a
+ *     purple glow: a translucent purple fill `rgba(123,97,255,0.1)` + a
+ *     `rgba(123,97,255,0.5)` border + a soft accent halo, with a bright `#F1F5FF`
+ *     value. AAP §0.3.1 / §0.7.4 / §0.10.2 EXPLICITLY specify "Title … with purple
+ *     focus glow", so per D1 (an explicit AAP rule is authoritative) this is now
+ *     rendered as an ALWAYS-VISIBLE glow via the {@link InputField} `active` prop —
+ *     accent-tinted fill + accent border + the `--shadow-input-glow` halo,
+ *     persistent rather than only on `:focus`. The Title is additionally rendered
+ *     first with `autoFocus`, so it also holds keyboard focus on modal open. This
+ *     supersedes the earlier focus-only reconciliation: the CP4 finding flagged the
+ *     missing always-on glow, and the explicit AAP requirement outranks the prior
+ *     "default state only at rest" reading for this one designated field.
  *
  * BLITZY [DESIGN] (field labels): analyze_figma_node reports the right-column
- * labels (`9:52`, `9:55`, …) structurally as `#3A4060` (the text-placeholder
- * token), Inter SemiBold 600, 10px, authored uppercase. This component instead
- * renders them as `text-text-muted` (`#64748B`) + `text-meta-label` (Inter 400 /
- * 10px) + `uppercase`, IDENTICAL to the sibling `TagChipEditor` "Tags" and
- * `IdentifierRows` "Identifiers" section labels that sit in this same modal
- * column — so the whole column's labels are visually consistent. This matches
- * the file contract's explicit label directive ("--color-text-muted +
- * --text-meta-label typography"), preserves the app-wide convention that
- * `--color-text-placeholder` (`#3A4060`) is RESERVED for input placeholders, and
- * keeps the label legible (the raw `#3A4060` on the `#13162E` modal surface is
- * ≈1.55:1 — well below WCAG AA; `#64748B` is the deliberate readable correction
- * the contract and siblings adopt). The `uppercase` utility (text-transform
- * only — no color/size token) honors Figma's authoritative uppercase case while
- * the accessible DOM text stays Title-Case.
+ * labels (`9:52`, `9:55`, …) as `#3A4060` (the text-placeholder token), Inter
+ * SemiBold 600, 10px, authored uppercase. Per the CP4 Figma-fidelity finding and
+ * D1 precedence (Figma is authoritative for UI), this component now reproduces
+ * that EXACTLY — `text-text-placeholder` (`#3A4060`) + `text-field-label` (the
+ * dedicated Inter 600 / 10px label token) + `uppercase` — replacing the earlier
+ * readable `text-text-muted` (`#64748B`) / 400 reconciliation. The sibling
+ * `TagChipEditor` "Tags" and `IdentifierRows` "Identifiers" section labels adopt
+ * the SAME `#3A4060` / 600 treatment in this CP4 pass, so the whole modal column
+ * stays visually consistent. See the `LABEL_CLASSES` BLITZY [A11Y] note for the
+ * Figma-mandated contrast trade-off recorded for designer review. The `uppercase`
+ * utility (text-transform only — no color/size token) honors Figma's authoritative
+ * uppercase case while the accessible DOM text stays Title-Case.
  *
  * BLITZY [DATA] (Publication Date shows a display string): Figma `9:73` shows the
  * publication date already formatted ("Aug 1, 1965"), not a raw ISO string and
@@ -149,18 +149,16 @@
  * Every COLOR / RADIUS / TYPOGRAPHY value resolves to an `@theme` token from
  * `src/app/globals.css`. The single-line fields' surface / border / radius /
  * height / placeholder / typography all live INSIDE the `InputField` primitive,
- * so they declare none here. The Synopsis `<textarea>` and the Rating read-back
- * use only token-backed utilities — `bg-card`, `border-[var(--border-white-09)]`,
- * `rounded-control`, `text-text-primary`, `text-body`,
- * `placeholder:text-text-placeholder`, `text-text-muted`, `text-star`,
- * `focus:bg-accent/10`, `focus:border-accent/50`, `text-meta-label`. There are
- * NO raw hex / rgba color literals. The only bare utilities are LAYOUT /
- * appearance values that carry no color information — Tailwind's spacing / flex
- * scale (`flex`, `flex-col`, `w-full`, `gap-3`, `gap-1`, `flex-1`, `min-w-0`,
- * `w-30`, `shrink-0`, `items-start`), the `uppercase` / `whitespace-nowrap` /
- * `select-none` / `resize-none` text-appearance utilities, the `px-3`/`py-3`
- * paddings, and the dynamic `w-[var(--rating-fill)]` width fed by a computed
- * percentage — all permitted.
+ * and the Synopsis surface lives INSIDE the `Textarea` primitive, so neither
+ * declares any here. The token-backed utilities used DIRECTLY are the field labels
+ * (`text-text-placeholder` + `text-field-label`) and the Rating read-back
+ * (`text-text-muted` base track + `text-star` amber fill). There are NO raw hex /
+ * rgba color literals. The only bare utilities are LAYOUT / appearance values that
+ * carry no color information — Tailwind's spacing / flex scale (`flex`, `flex-col`,
+ * `w-full`, `gap-3`, `gap-1`, `flex-1`, `min-w-0`, `w-30`, `shrink-0`,
+ * `items-start`), the `uppercase` / `whitespace-nowrap` / `select-none`
+ * text-appearance utilities, and the dynamic `w-[var(--rating-fill)]` width fed by
+ * a computed percentage — all permitted.
  *
  * RESPONSIVE INTEGRITY (1440 → 1280, zero horizontal overflow — AAP §0.9)
  * --------------------------------------------------------------------------
@@ -182,12 +180,14 @@
  *   with the Series field.
  * • Field labels are non-interactive `<label>`s and the Rating label is a
  *   `<span>` — never headings, so the document outline stays clean.
- * • The Synopsis is a real, controlled `<textarea>` bound to its `<label>`.
+ * • The Synopsis is a real, controlled `<textarea>` (via the `Textarea`
+ *   primitive) bound to its `<label>`.
  * • The Rating read-back is `role="img"` with a descriptive `aria-label`; its
  *   star glyphs are `aria-hidden`. Color is never the sole signal — the numeric
  *   rating is in the accessible name.
  *
  * @see src/components/primitives/InputField.tsx — the controlled input primitive.
+ * @see src/components/primitives/Textarea.tsx — the controlled multi-line primitive (Synopsis).
  * @see src/components/metadata/TagChipEditor.tsx  — injected as `children` (Tags).
  * @see src/components/metadata/IdentifierRows.tsx — injected as `children` (IDs).
  * @see src/lib/format.ts — `formatRating` (rating accessible-name helper).
@@ -201,6 +201,7 @@ import type { CSSProperties, JSX, ReactNode } from 'react';
 import { useId } from 'react';
 
 import { InputField } from '@/components/primitives/InputField';
+import { Textarea } from '@/components/primitives/Textarea';
 import { formatRating } from '@/lib/format';
 
 /**
@@ -346,12 +347,22 @@ const COLUMN_CLASSES = 'flex min-w-0 flex-1 flex-col gap-1';
 const INDEX_COLUMN_CLASSES = 'flex w-30 shrink-0 flex-col gap-1';
 
 /**
- * The field label — token-backed muted small-caps, matching the sibling
- * `TagChipEditor`/`IdentifierRows` section labels (see file header BLITZY
- * [DESIGN]). `text-text-muted` (`#64748B`) + `text-meta-label` (Inter 400 / 10px)
- * + `uppercase`. Applied to `<label>` (fields) and `<span>` (the Rating label).
+ * The field label — the EXACT App 07 Figma label treatment (`9:52`, `9:55`, …):
+ * `text-text-placeholder` (`#3A4060`) + `text-field-label` (Inter SemiBold 600 /
+ * 10px) + `uppercase`. Per the CP4 Figma-fidelity finding (MetadataFields L354)
+ * and D1 precedence (Figma is authoritative for UI), the labels now match the
+ * design's authored `#3A4060` / 600-weight exactly, replacing the earlier
+ * readable `text-text-muted` / 400 reconciliation. Applied to `<label>` (fields)
+ * and `<span>` (the Rating label); the sibling `TagChipEditor` / `IdentifierRows`
+ * section labels adopt the SAME treatment so the whole modal column is consistent.
+ *
+ * BLITZY [A11Y]: `#3A4060` on the `#13162E` modal surface computes ≈1.55:1 —
+ * below WCAG AA for text. Per D1 the explicit Figma value is authoritative and is
+ * reproduced EXACTLY (never silently lightened); this flag records the gap for
+ * designer review. The labels are non-essential captions — every field also has a
+ * visible value and an accessible name — so meaning never rests on the label alone.
  */
-const LABEL_CLASSES = 'text-text-muted text-meta-label uppercase select-none';
+const LABEL_CLASSES = 'text-text-placeholder text-field-label uppercase select-none';
 
 /**
  * Caller-`className` for each `InputField`: `w-full` makes the primitive's
@@ -386,26 +397,11 @@ const RATING_FILL_CLASSES =
   'w-[var(--rating-fill)]';
 
 /**
- * The Synopsis `<textarea>` — the lone token-styled raw element (no Textarea
- * primitive exists; `<textarea>` is not forbidden). Mirrors the `InputField`
- * surface so it reads as the same control family: `bg-card` (#181C3C) fill, 1px
- * `border-[var(--border-white-09)]`, `rounded-control` (8px), `text-text-primary`
- * value, `text-body`/`leading-normal` (12px / 1.5 = 18px ≈ the Figma 11px/18px),
- * `placeholder:text-text-placeholder`, 12px (`px-3 py-3`) padding (Figma `9:118`
- * padding), `resize-none` (the Figma box shows no resize grip), and the same
- * `focus:bg-accent/10` + `focus:border-accent/50` focus treatment as the inputs.
- */
-const SYNOPSIS_TEXTAREA_CLASSES =
-  'block w-full bg-card border border-[var(--border-white-09)] rounded-control ' +
-  'text-text-primary text-body leading-normal placeholder:text-text-placeholder ' +
-  'px-3 py-3 resize-none ' +
-  'outline-none focus:bg-accent/10 focus:border-accent/50 ' +
-  'motion-safe:transition-colors';
-
-/**
- * Visible row count for the Synopsis textarea — 4 rows at the 18px line height
- * plus 12px top/bottom padding renders ≈96px, closely matching the CONFIRMED
- * Figma synopsis box height (90px, `9:118`).
+ * Visible row count for the Synopsis {@link Textarea} — 4 rows at the primitive's
+ * `leading-relaxed` line height plus its `py-2` padding renders ≈96px, closely
+ * matching the CONFIRMED Figma synopsis box height (90px, `9:118`). The surface
+ * (fill / border / radius / typography / focus) is owned by the Textarea
+ * primitive; this component supplies only the row count.
  */
 const SYNOPSIS_ROWS = 4;
 
@@ -498,9 +494,11 @@ export function MetadataFields({
       {/* FIELD GRID — Title → Author(s) → four two-up rows. The 4px (`gap-1`)
           stack over the 36px control yields the CONFIRMED ~56px Figma pitch. */}
       <div className={FIELD_GRID_CLASSES}>
-        {/* 1 · TITLE (full width, `9:53`). Rendered FIRST with `autoFocus` so on
-            modal open it shows InputField's built-in purple `:focus` — exactly
-            the Figma focused-Title look (no always-on ring; see BLITZY [STATE]). */}
+        {/* 1 · TITLE (full width, `9:53`). Drawn in the Figma "focused" state with
+            an ALWAYS-VISIBLE purple glow via InputField's `active` prop (persistent
+            accent-tinted fill + accent border + the `--shadow-input-glow` halo) —
+            AAP §0.3.1 / §0.7.4 / §0.10.2 "Title … with purple focus glow"; see
+            BLITZY [STATE]. `autoFocus` additionally hands it focus on modal open. */}
         <div className={FIELD_GROUP_CLASSES}>
           <label htmlFor={titleId} className={LABEL_CLASSES}>
             Title
@@ -511,6 +509,7 @@ export function MetadataFields({
             value={title}
             onChange={onTitleChange}
             placeholder={TITLE_PLACEHOLDER}
+            active
             autoFocus
             className={FIELD_WIDTH_CLASSES}
           />
@@ -668,19 +667,22 @@ export function MetadataFields({
           the root `gap-3` rhythm spaces them from the field grid and the Synopsis. */}
       {children}
 
-      {/* 7 · SYNOPSIS (full width, `9:118`). Token-styled controlled `<textarea>`
-          (the design system has no Textarea primitive; `<textarea>` is allowed). */}
+      {/* 7 · SYNOPSIS (full width, `9:118`). The `Textarea` design-system
+          primitive — the multi-line sibling of `InputField`, added in this CP4 fix
+          to close the coverage gap the finding flagged (Rules R4) so the modal
+          renders NO hand-rolled raw `<textarea>`. It owns the canonical field
+          surface; this caller supplies only the controlled value, value-first
+          `onChange`, placeholder, and the Figma row count. */}
       <div className={FIELD_GROUP_CLASSES}>
         <label htmlFor={synopsisId} className={LABEL_CLASSES}>
           Synopsis
         </label>
-        <textarea
+        <Textarea
           id={synopsisId}
           value={synopsis}
-          onChange={(event) => onSynopsisChange(event.target.value)}
+          onChange={onSynopsisChange}
           placeholder={SYNOPSIS_PLACEHOLDER}
           rows={SYNOPSIS_ROWS}
-          className={SYNOPSIS_TEXTAREA_CLASSES}
         />
       </div>
     </div>

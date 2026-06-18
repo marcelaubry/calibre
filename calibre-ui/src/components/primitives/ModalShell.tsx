@@ -42,7 +42,8 @@
  * Shared chrome CONFIRMED on both cards: a top header band (bg #10132A =
  * surface-1, nodes `6:10`/`9:10`) closed by a 1px rgba(255,255,255,0.07)
  * hairline (`6:11`/`9:11`); a 24×24 close affordance at top-right (`6:14`/`9:18`,
- * fill rgba(255,255,255,0.06)) rendered as the unicode "×" glyph (`6:15`/`9:19`);
+ * fill rgba(255,255,255,0.06), radius 6px) rendered as a per-variant unicode
+ * glyph — "×" on convert (`6:15`), lowercase "x" on metadata (`9:19`);
  * and a footer band opened by a 1px rgba(255,255,255,0.07) top hairline
  * (`6:97`/`9:120`) holding a right-aligned action row. The card's
  * `overflow-hidden` clips the header band's top corners to the 16px radius
@@ -53,19 +54,19 @@
  * to the consuming dialog, not this generic scaffold — the contract exposes only
  * `title`, so the shell deliberately does not render them.
  *
- * BLITZY [TYPOGRAPHY]: the Figma header title is Inter 600 16px on both cards,
- * but the design-system role token `--text-dialog-heading` is pinned to 20px
- * (AAP §0.3.2, "pinned 20px (AAP range ~18–22)"), and this primitive's contract
- * (and the zero-hardcoded-token rule below) mandates the `text-dialog-heading`
- * utility. Per the design-token mandate the shell uses `text-dialog-heading`
- * (20px) rather than a hardcoded `text-[16px]`. Flagged for designer review; if
- * a 16px dialog-title token is ever added, swap the one `TITLE` constant.
+ * BLITZY [TYPOGRAPHY]: the Figma header title is Inter 600 16px on both cards
+ * (`6:9`/`9:9`). CP4 Figma-fidelity fix: a dedicated `--text-modal-title` role
+ * (16px/600) was added to the token scale and the shell now uses the
+ * `text-modal-title` utility — the EXACT Figma size — rather than the larger
+ * 20px `text-dialog-heading` it previously approximated with. (Per finding
+ * §ModalShell L244.)
  *
- * BLITZY [COLOR]: the close "×" glyph fill is #94A3B8 on the convert card
- * (`6:15`) and #64748B on the metadata card (`9:19`). A single reusable shell
- * uses ONE close color; per the contract it is `text-text-muted` (#64748B,
- * exact on metadata, one muted step off on convert) with a `text-text-primary`
- * hover. No per-variant close-color branching is introduced.
+ * BLITZY [COLOR]: the close glyph fill is #94A3B8 on the convert card (`6:15`)
+ * and #64748B on the metadata card (`9:19`). CP4 Figma-fidelity fix: the shell
+ * now branches per-variant via {@link CLOSE_GLYPH_TONE} — convert uses
+ * `text-text-secondary` (#94A3B8, one step lighter), metadata uses
+ * `text-text-muted` (#64748B) — both with a `text-text-primary` hover. The glyph
+ * CHARACTER is likewise per-variant via {@link CLOSE_GLYPH} ("×" vs "x").
  *
  * ZERO-HARDCODED-TOKEN RULE (AAP §0.4.5)
  * --------------------------------------------------------------------------
@@ -237,11 +238,14 @@ const HEADER =
   'bg-surface-1 border-b border-[var(--border-white-07)] px-5 py-3.5';
 
 /**
- * Title typography: the `text-dialog-heading` role (Inter 600) in the primary
- * text token. `min-w-0 flex-1 truncate` lets a long title ellipsize instead of
- * shoving the close button off the card. (See BLITZY [TYPOGRAPHY] in the header.)
+ * Title typography: the `text-modal-title` role (Inter 600 16px) in the primary
+ * text token. This is the CONFIRMED Figma modal title size for both App05 (`6:9`)
+ * and App07 (`9:9`) — distinct from the larger 20px `text-dialog-heading` used
+ * by non-modal headings. `min-w-0 flex-1 truncate` lets a long title ellipsize
+ * instead of shoving the close button off the card. (CP4 Figma-fidelity fix:
+ * superseded the prior 20px `text-dialog-heading` per finding §ModalShell L244.)
  */
-const TITLE = 'min-w-0 flex-1 truncate text-dialog-heading text-text-primary';
+const TITLE = 'min-w-0 flex-1 truncate text-modal-title text-text-primary';
 
 /**
  * Close button (variant-invariant base): a 24×24 (`h-6 w-6`) rounded square with
@@ -250,24 +254,47 @@ const TITLE = 'min-w-0 flex-1 truncate text-dialog-heading text-text-primary';
  * pattern set by `Toggle`). The color change animates only when motion is
  * allowed (UI6). The per-variant border is appended from {@link CLOSE_BORDER}.
  *
- * BLITZY [RADIUS]: Figma specs the close chip at 6px (`6:14`/`9:18`); there is no
- * 6px radius token in the system (the scale is badge 3 / toolbar 7 / control 8 /
- * card 10 / dialog 16). Per the zero-hardcoded rule a `rounded-[6px]` literal is
- * disallowed, so this uses `rounded-control` (8px) — the semantically correct
- * token for an interactive control and within the design system's ±2px silent
- * radius-snapping tolerance (8 − 6 = 2). Documented rather than literalized.
+ * BLITZY [RADIUS]: Figma specs the close chip at 6px (`6:14`/`9:18`). CP4 Figma-
+ * fidelity fix: the shared `--radius-control-sm: 6px` small-control radius token
+ * was added to the scale (badge 3 / control-sm 6 / toolbar 7 / control 8 / card
+ * 10 / dialog 16) — also reused by the App 07 "+ Add ID" quiet box (`9:115`) — so
+ * this now uses the exact `rounded-control-sm` (6px) utility rather than the prior
+ * 8px `rounded-control` approximation (per finding §ModalShell L265).
  *
- * BLITZY [GLYPH]: the mark is the "×" U+00D7 MULTIPLICATION SIGN — an exact match
- * for the convert glyph (`6:15`). The metadata source (`9:19`) draws a lowercase
- * ASCII "x"; "×" is the standard, visually-symmetric close mark and satisfies the
- * agent_prompt's "unicode glyph" mandate, so a single glyph serves both variants.
+ * BLITZY [GLYPH]: the close mark is now CONFIRMED per-variant from Figma — the
+ * convert chip (`6:15`) draws the "×" U+00D7 MULTIPLICATION SIGN; the metadata
+ * chip (`9:19`) draws a lowercase ASCII "x". Both are supplied from
+ * {@link CLOSE_GLYPH}. The glyph TONE is also per-variant: the convert glyph is
+ * one muted step LIGHTER (`text-text-secondary` #94A3B8) than the metadata glyph
+ * (`text-text-muted` #64748B), supplied from {@link CLOSE_GLYPH_TONE}. Both tones
+ * brighten to `text-text-primary` on hover. (CP4 fix per finding §ModalShell L244.)
  */
 const CLOSE_BTN =
-  'grid h-6 w-6 shrink-0 place-items-center rounded-control ' +
-  'bg-[var(--border-white-06)] text-text-muted ' +
+  'grid h-6 w-6 shrink-0 place-items-center rounded-control-sm ' +
+  'bg-[var(--border-white-06)] ' +
   'hover:text-text-primary ' +
   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--border-accent)] ' +
   'motion-safe:transition-colors motion-safe:duration-150';
+
+/**
+ * Close-glyph TONE per variant — CONFIRMED Figma: the convert close glyph is one
+ * muted step LIGHTER than the metadata glyph. Both brighten to primary on hover
+ * (the hover rule lives in {@link CLOSE_BTN}). Token-only colors.
+ */
+const CLOSE_GLYPH_TONE: Record<ModalVariant, string> = {
+  convert: 'text-text-secondary', // #94A3B8 — one step lighter (Figma 6:15)
+  metadata: 'text-text-muted', //    #64748B — base muted (Figma 9:19)
+};
+
+/**
+ * Close-glyph CHARACTER per variant — CONFIRMED Figma: convert draws the "×"
+ * U+00D7 MULTIPLICATION SIGN (`6:15`); metadata draws a lowercase ASCII "x"
+ * (`9:19`). Both satisfy the agent_prompt's "unicode glyph" mandate.
+ */
+const CLOSE_GLYPH: Record<ModalVariant, string> = {
+  convert: '\u00D7', // "×" MULTIPLICATION SIGN (Figma 6:15)
+  metadata: 'x', //     lowercase ASCII x (Figma 9:19)
+};
 
 /**
  * Close-button border per variant — a CONFIRMED, deliberately variant-specific
@@ -417,7 +444,7 @@ export function ModalShell({
   // whitespace leaks into the className.
   const scrimClassName = `${SCRIM_BASE} ${SCRIM_BG[variant]}`;
   const dialogClassName = `${DIALOG_BASE} ${DIALOG_SIZE[variant]} ${DIALOG_SHADOW[variant]}`;
-  const closeButtonClassName = [CLOSE_BTN, CLOSE_BORDER[variant]]
+  const closeButtonClassName = [CLOSE_BTN, CLOSE_GLYPH_TONE[variant], CLOSE_BORDER[variant]]
     .filter(Boolean)
     .join(' ');
 
@@ -444,8 +471,9 @@ export function ModalShell({
             onClick={onClose}
             className={closeButtonClassName}
           >
-            {/* Decorative glyph; the button's aria-label is the accessible name. */}
-            <span aria-hidden="true">×</span>
+            {/* Decorative glyph (per-variant char); the button's aria-label is
+                the accessible name. */}
+            <span aria-hidden="true">{CLOSE_GLYPH[variant]}</span>
           </button>
         </header>
 

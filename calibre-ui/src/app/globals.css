@@ -101,6 +101,23 @@
   --color-format-pdf: #F87171;
   --color-danger: #F87171;
 
+  /* ---- Colors — semantic: FormatBadge opaque chip fills (3) -----------
+   * CONFIRMED Figma App02 fills (node 3:87): each format badge sits on an
+   * opaque dark chip rather than a translucent wash. Promoted to named tokens
+   * so FormatBadge carries zero hex literal (AAP §0.4.5; R3). The badge TEXT
+   * color stays on the bright `--color-format-*` tokens above. Mirrored
+   * byte-for-byte in `src/theme/tokens.ts` (`colors` group). */
+  --color-format-epub-bg: #1A2A1A;       /* EPUB chip fill (green-tinted dark) */
+  --color-format-mobi-bg: #1A1A2E;       /* MOBI chip fill (indigo-tinted dark) */
+  --color-format-pdf-bg: #2A1A1A;        /* PDF chip fill (red-tinted dark) */
+
+  /* ---- Colors — semantic: Sidebar TagPill fill (1) --------------------
+   * CONFIRMED Figma App01/App02 sidebar tag chips (2:36): a baked solid dark
+   * fill (NOT the translucent accent wash used by metadata pills). Promoted to
+   * a named token so TagPill's `sidebar` variant carries zero hex literal
+   * (AAP §0.4.5; R3). Mirrored byte-for-byte in `tokens.ts` (`colors` group). */
+  --color-tag-sidebar-bg: #1D2148;       /* Sidebar tag chip solid fill (2:36) */
+
   /* ---- Colors — semantic: App 04 code-editor syntax theme (5) --------- */
   --color-syntax-tag: #A78BFA;
   --color-syntax-attr: #38BDF8;
@@ -125,6 +142,7 @@
   /* ---- Border aliases — AAP §0.3.2 names for `var()` consumers ---------
    * Identical values to the `--color-line-*` set above; emitted so code that
    * references the AAP/tokens.ts names resolves to the same value. */
+  --border-white-04: rgba(255,255,255,0.04); /* App 07 "+ Add ID" quiet-box fill (9:115) */
   --border-white-06: rgba(255,255,255,0.06);
   --border-white-07: rgba(255,255,255,0.07);
   --border-white-09: rgba(255,255,255,0.09);
@@ -137,21 +155,32 @@
   /* Slider filled-track fill (Figma 8:100 — Preferences margins slider). Bottom-up
    * accent→accent-light ramp; consumed via the `bg-gradient-slider-track` utility. */
   --gradient-slider-track: linear-gradient(to top, var(--color-accent), var(--color-accent-light));
+  /* Active-tab underline fill (Figma App04 editor 5:34 / App05 convert 6:28 tab
+   * strips). A 2px VERTICAL accent→accent-light ramp rendered as a bottom child
+   * bar on the active tab; consumed via the `bg-gradient-tab-underline` utility.
+   * Replaces the prior flat-accent active border for exact Figma fidelity. */
+  --gradient-tab-underline: linear-gradient(0deg, var(--color-accent) 0%, var(--color-accent-light) 100%);
 
   /* ---- Scrims (2) — modal overlay backdrops, consumed via `var()` ------ */
   --scrim-convert: rgba(12,14,26,0.6);
   --scrim-metadata: rgba(0,0,0,0.55);
 
-  /* ---- Radii (5) — generates `rounded-*` ------------------------------ */
+  /* ---- Radii (6) — generates `rounded-*` ------------------------------ */
   --radius-badge: 3px;
   --radius-toolbar: 7px;
+  --radius-control-sm: 6px;              /* Shared 6px small-control radius: ModalShell close chip (6:15 / 9:19) + App 07 "+ Add ID" quiet box (9:115) */
   --radius-control: 8px;
   --radius-card: 10px;
   --radius-dialog: 16px;
 
-  /* ---- Shadows (2) — dialog elevation; generates `shadow-*` ------------ */
+  /* ---- Shadows (3) — dialog elevation + input glow; generates `shadow-*` */
   --shadow-convert: 0 24px 64px rgba(0,0,0,0.6);
   --shadow-metadata: 0 20px 60px rgba(0,0,0,0.65);
+  /* App 07 Metadata Title field's ALWAYS-VISIBLE purple glow (Figma 9:53; AAP
+   * §0.3.1 / §0.7.4 / §0.10.2 "Title … with purple focus glow"). A soft 3px
+   * accent ring + a 12px accent halo, consumed via `shadow-[var(--shadow-input-glow)]`
+   * by the `InputField` `active` prop. Accent #7B61FF = `--color-accent`. */
+  --shadow-input-glow: 0 0 0 3px rgba(123,97,255,0.25), 0 0 12px rgba(123,97,255,0.35);
 
   /* ---- Font family — binds Inter (via `--font-inter` from next/font) --- */
   --font-sans: var(--font-inter), Inter, system-ui, -apple-system, sans-serif;
@@ -164,6 +193,11 @@
 
   --text-dialog-heading: 20px;                 /* pinned 20px (AAP range ~18–22) */
   --text-dialog-heading--font-weight: 600;
+
+  /* Modal (App05/App07) title bar — CONFIRMED Figma Inter 600 16px (6:9 / 9:9).
+   * Distinct from the larger `--text-dialog-heading`; used only by ModalShell. */
+  --text-modal-title: 16px;
+  --text-modal-title--font-weight: 600;
 
   --text-detail-title: 15px;
   --text-detail-title--line-height: 22px;
@@ -185,6 +219,12 @@
 
   --text-meta-value: 10px;
   --text-meta-value--font-weight: 500;
+
+  /* Metadata-modal (App07) field/section labels — CONFIRMED Figma Inter 600
+   * 10px (node 9:80). Distinct from the lighter `--text-meta-label` (400);
+   * paired with `--color-text-placeholder` (#3A4060) for the exact label tone. */
+  --text-field-label: 10px;
+  --text-field-label--font-weight: 600;
 
   --text-button-primary: 12px;
   --text-button-primary--font-weight: 600;
@@ -211,6 +251,7 @@
   --size-scrollbar: 10px;                /* WebKit scrollbar width/height */
   --size-button-h: 38px;                 /* Primary/toolbar button height (toolbar 84×38) */
   --size-button-compact-h: 32px;         /* Secondary/danger compact button height */
+  --size-button-quiet-h: 28px;           /* Ghost/quiet button height (App 07 "+ Add ID" 9:115, 120×28) */
   --size-toolbar-button-w: 84px;         /* Toolbar button fixed min-width */
   --size-toolbar-icon: 15px;             /* Toolbar glyph size (use `text-[length:var(--size-toolbar-icon)]`) */
   --size-toggle-knob: 18px;              /* Toggle iOS knob diameter */
@@ -251,6 +292,15 @@
   --size-reading-progress-h: 3px;        /* App 03 ReadingArea top progress-bar height (4:43) */
   --size-reading-measure: 680px;         /* App 03 ReadingArea readable prose max-width (4:43) */
   --size-editor-line-h: 26px;            /* App 04 CodeEditor code/gutter row pitch / line-height (5:74) */
+
+  /* ---- Component geometry — CP4 Figma-fidelity sizes (4) ---------------
+   * CONFIRMED Figma pixel geometry promoted to named tokens for CP4 pixel-
+   * fidelity fixes (AAP §0.4.5 "zero hardcoded values"; R3). Mirrored
+   * byte-for-byte in `src/theme/tokens.ts` (`sizes` group). */
+  --size-card-h: 256px;                  /* App 02 BookCard fixed card footprint height (3:81, 182×256) */
+  --size-format-badge-w: 40px;           /* FormatBadge fixed chip width (3:87, ~40×16) */
+  --size-format-badge-h: 16px;           /* FormatBadge fixed chip height (3:87, ~40×16) */
+  --size-identifier-key-w: 90px;         /* App 07 IdentifierRows key-field width (9:9, ~90px) */
 
   /* ---- Component geometry — spacing & offsets (8) ----------------------
    * Sub-grid spacings/insets/translations promoted to named tokens. Consumed via
@@ -360,4 +410,8 @@
 
 @utility bg-gradient-slider-track {
   background-image: var(--gradient-slider-track);
+}
+
+@utility bg-gradient-tab-underline {
+  background-image: var(--gradient-tab-underline);
 }

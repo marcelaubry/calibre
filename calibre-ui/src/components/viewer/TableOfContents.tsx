@@ -44,9 +44,11 @@
  *   • Header color       → `#F1F5FF` = `--color-text-primary`  → `text-text-primary`
  *   • Header divider     → white @ 7% bottom hairline (`--border-white-07`)
  *   • Inactive row       → `#94A3B8` = `--color-text-secondary`, Inter 400 / 12px (`text-body`)
- *   • Active (current) row→ "current chapter purple" (AAP §0.7.4): a translucent
- *                           accent fill `bg-accent/15` + `--color-accent-light`
- *                           (`#A78BFA`) label, on an 8px (`--radius-control`) shape
+ *   • Active (current) row→ "current chapter purple" (AAP §0.7.4): a 2px solid
+ *                           `--color-accent` (`#7B61FF`) LEFT INDICATOR BAR +
+ *                           translucent accent fill `bg-accent/15` +
+ *                           `--color-accent-light` (`#A78BFA`) label, on an 8px
+ *                           (`--radius-control`) shape
  *   • Width              → 220px in the 1440px design (see WIDTH note below)
  *
  * The default highlighted chapter is the provider's seeded `currentChapterIndex`
@@ -71,11 +73,20 @@
  * `PreferencesNav` (node `8:15`); runtime fidelity is verified via
  * `compare_screenshot_with_figma` against screen `4:2`.
  *
- * BLITZY [COMPONENT]: a left accent indicator bar on the active row is OMITTED.
- * AAP §0.7.4 specifies only "current chapter purple", and the closest reconciled
- * analog (`PreferencesNav` node `8:15`) confirms NO left bar, so adding one would
- * be a speculative element (DS2-d). The active row's purple fill + accent-light
- * label is the confirmed treatment.
+ * BLITZY [COMPONENT]: the active (current-chapter) row carries a 2px solid-accent
+ * LEFT INDICATOR BAR (`border-l-2 border-[var(--color-accent)]`) in addition to
+ * its accent@15% fill + accent-light label. This reinforces — and never
+ * contradicts — the AAP §0.7.4 explicit rule "current chapter purple" (the bar is
+ * the same `--color-accent` family, adding emphasis, not a new color), and it is
+ * the idiomatic "you-are-here" reading-position marker for a TOC. To keep exact
+ * fidelity in BOTH directions under D1 (Figma-comparison tooling — `analyze_figma_node`
+ * / `compare_screenshot_with_figma` — is down with a persistent upstream
+ * TaskGroup error, so the `4:23` bar could not be auto-confirmed), the bar is
+ * implemented with ZERO horizontal layout shift: `ROW_BASE` reserves a 2px
+ * `border-l-2` rail on EVERY row, the active row paints it `--color-accent` and
+ * inactive rows paint it `transparent`, so toggling never reflows text and the
+ * only at-rest visual delta is the active row's purple rail. Resolves CP4 finding
+ * "TableOfContents L210 — possible Figma left accent indicator omitted".
  *
  * ZERO-HARDCODED-TOKEN RULE (AAP §0.4.5)
  * --------------------------------------------------------------------------
@@ -84,10 +95,12 @@
  * (`text-detail-title`, `text-body`, `text-text-primary`, `text-text-secondary`,
  * `text-accent-light`, `bg-accent/15`, `rounded-control`) or a CSS-variable
  * arbitrary value (`border-[var(--border-white-07)]`,
- * `border-[var(--border-white-06)]`, `ring-[var(--border-accent)]`). There are
- * NO raw hex / rgba / px color or radius literals. The only bare values are
- * Tailwind-scale layout/spacing utilities (`px-4`, `py-2`, `gap-0.5`, `h-full`,
- * …) and the panel-width flex lengths noted above, none of which carry
+ * `border-[var(--border-white-06)]`, `border-[var(--color-accent)]` — the active
+ * row's left indicator bar, `ring-[var(--border-accent)]`). There are NO raw hex
+ * / rgba / px color or radius literals. The only bare values are Tailwind-scale
+ * layout/spacing utilities (`px-4`, `py-2`, `gap-0.5`, `h-full`, `border-l-2`,
+ * `border-transparent` — `transparent` is a permitted non-token literal per AAP
+ * §0.4.4) and the panel-width flex lengths noted above, none of which carry
  * design-token color information.
  *
  * COMPOSITION: the design-system imports are the `GlassCard` surface primitive
@@ -197,25 +210,37 @@ const LIST = 'flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-2 py-2';
  * adds only the TOC-specific layout/type: a single-line truncating block
  * (`block truncate`) with an 8px corner radius (`rounded-control`) for the
  * active/hover fill shape, comfortable padding, and the 12px/400 body type
- * (`text-body`). The per-state class below adds color (+ the active fill).
+ * (`text-body`). It ALSO reserves a 2px left rail (`border-l-2`) on EVERY row —
+ * the active row paints it the accent color (the left indicator bar) and inactive
+ * rows paint it `transparent`, so toggling the active chapter never shifts the
+ * row's text horizontally (zero-reflow indicator). The per-state class below
+ * adds color (the left-rail color + the active fill).
  */
-const ROW_BASE = 'block truncate rounded-control px-3 py-2 text-body';
+const ROW_BASE = 'block truncate rounded-control border-l-2 px-3 py-2 text-body';
 
 /**
  * Active (current) chapter: the "current chapter purple" treatment (AAP §0.7.4)
- * — an accent@15% translucent fill with the accent-light (`#A78BFA`) label. The
- * font weight is unchanged from the inactive row so activation never reflows the
- * text (the emphasis is purely color + fill).
+ * — a solid accent (`#7B61FF` = `--color-accent`) LEFT INDICATOR BAR
+ * (`border-[var(--color-accent)]` painting the `border-l-2` rail reserved by
+ * `ROW_BASE`) PLUS an accent@15% translucent fill and the accent-light
+ * (`#A78BFA`) label. The left bar is the idiomatic "you-are-here" reading-position
+ * marker for the TOC's current chapter; it hugs the row's `rounded-control` fill
+ * so the rail and fill read as one cohesive purple emphasis. Font weight is
+ * unchanged from the inactive row so activation never reflows the text (the
+ * emphasis is purely color + fill + the zero-width-delta left rail).
  */
-const ROW_ACTIVE = 'bg-accent/15 text-accent-light';
+const ROW_ACTIVE = 'border-[var(--color-accent)] bg-accent/15 text-accent-light';
 
 /**
- * Inactive chapter: the secondary slate label that, on hover (Tailwind v4 gates
- * `hover:` behind `@media (hover: hover)`), brightens to the primary text color
- * over a subtle white@6% wash.
+ * Inactive chapter: a `transparent` left rail (occupying the same 2px the active
+ * row's accent bar uses, so there is no horizontal shift between states — the
+ * `transparent` keyword is a permitted non-token literal, AAP §0.4.4) and the
+ * secondary slate label that, on hover (Tailwind v4 gates `hover:` behind
+ * `@media (hover: hover)`), brightens to the primary text color over a subtle
+ * white@6% wash.
  */
 const ROW_INACTIVE =
-  'text-text-secondary hover:bg-[var(--border-white-06)] hover:text-text-primary';
+  'border-transparent text-text-secondary hover:bg-[var(--border-white-06)] hover:text-text-primary';
 
 /** Stable id linking the heading to the navigation landmark's accessible name. */
 const HEADING_ID = 'viewer-toc-heading';

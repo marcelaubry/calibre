@@ -16,7 +16,7 @@
  * actions ("Convert Format", "Edit Metadata", "Send to Device"), destructive
  * actions ("Delete"), and the top-toolbar items ("Add Books" … "Prefs"). Screen
  * code must NEVER render a raw `<button>`; it always goes through this primitive
- * so the four variants stay visually consistent and 100% token-backed.
+ * so the five variants stay visually consistent and 100% token-backed.
  *
  * WHY `'use client'`
  * --------------------------------------------------------------------------
@@ -41,6 +41,9 @@
  *                 radius 7px, transparent idle, HORIZONTAL glyph(15px) + label
  *                 (Inter 400/9px, #64748B), 5px gap. Pattern verified against
  *                 sibling toolbar buttons `2:19` (Send) and `2:25` (View).
+ *   • ghost     → `9:115` App 07 "+ Add ID" — quiet box, white-4% fill, 1px
+ *                 white-7% border, radius 6px, text #64748B, Inter 500/11px,
+ *                 h 28. The low-emphasis add affordance (see {@link VARIANT_CLASSES}).
  *
  * THREE FIGMA-DRIVEN REFINEMENTS (Figma precedence — CRITICAL Directive):
  *   1. The primary label color is `text-text-primary` (#F1F5FF, the exact
@@ -108,10 +111,12 @@
 import type { ButtonHTMLAttributes, JSX, ReactNode } from 'react';
 
 /**
- * The four visual roles a {@link Button} can take, each mapped 1:1 to a
- * CONFIRMED Figma node (see the file header).
+ * The five visual roles a {@link Button} can take, each mapped 1:1 to a
+ * CONFIRMED Figma node (see the file header). `ghost` is the quiet, low-emphasis
+ * add-affordance box added in the CP4 Figma-fidelity fix for App 07 "+ Add ID"
+ * (`9:115`) — see {@link VARIANT_CLASSES}.
  */
-export type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'toolbar';
+export type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'toolbar' | 'ghost';
 
 /**
  * Props for {@link Button}.
@@ -213,6 +218,17 @@ const BASE_CLASSES =
  *                 `hover:bg-[var(--border-white-06)]`. The typography scale is
  *                 applied to the LABEL span (not the button) so the 15px glyph
  *                 (`--size-toolbar-icon`) is not shrunk to the 9px label size.
+ *   • ghost     → App 07 "+ Add ID" `9:115` — the QUIET, low-emphasis add box.
+ *                 `bg-[var(--border-white-04)]` (rgba 0.04 fill), 1px
+ *                 `border-[var(--border-white-07)]`, `text-text-muted` (#64748B),
+ *                 `rounded-control-sm` (6px), `text-button-secondary` (11px/500),
+ *                 28px height via `min-h-[var(--size-button-quiet-h)]`, `px-3`.
+ *                 `hover:bg-[var(--border-white-06)]` lifts it one step. Added in
+ *                 the CP4 Figma-fidelity fix (finding §IdentifierRows L330): the
+ *                 prior `secondary` treatment (white-6/white-9/8px/#94A3B8) was a
+ *                 visibly heavier box than Figma's quiet neutral chip. The sibling
+ *                 "+ Add format" stays `secondary` (its Figma is a PURPLE box, a
+ *                 different reconciliation — see MetadataCoverColumn BLITZY [COLOR]).
  */
 const VARIANT_CLASSES: Record<ButtonVariant, string> = {
   primary:
@@ -229,6 +245,10 @@ const VARIANT_CLASSES: Record<ButtonVariant, string> = {
     'bg-transparent text-text-muted rounded-toolbar ' +
     'min-w-[var(--size-toolbar-button-w)] min-h-[var(--size-button-h)] ' +
     'gap-[var(--space-toolbar-button-gap)] hover:bg-[var(--border-white-06)]',
+  ghost:
+    'bg-[var(--border-white-04)] border border-[var(--border-white-07)] ' +
+    'text-text-muted rounded-control-sm text-button-secondary ' +
+    'min-h-[var(--size-button-quiet-h)] px-3 gap-2 hover:bg-[var(--border-white-06)]',
 };
 
 /**

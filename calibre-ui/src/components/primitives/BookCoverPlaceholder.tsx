@@ -206,13 +206,22 @@ interface CoverDimensions {
  * AAP §0.4.5 zero-hardcoded-geometry rule) and consumed as `var()` strings:
  *   • `sm` 20×26  — per-row table cover thumb (screen `2:2`, center table).
  *   • `md` 182×192 — grid-card cover AREA (node `3:82`; the card is 182×256, the
- *     info strip below is a separate sibling).
+ *     info strip below is a separate sibling). The WIDTH is FLUID (`100%`) so the
+ *     cover fills its `BookCard` column EXACTLY — at the 1440 baseline that column
+ *     is the `--size-cover-md-w` 182px Figma width (sized by `CoverGrid`'s
+ *     `minmax(0, var(--size-cover-md-w))` track), and below 1440 the cover shrinks
+ *     WITH the card (zero horizontal overflow at 1280) instead of clipping at a
+ *     fixed 182px. The HEIGHT stays the CONFIRMED `--size-cover-md-h` 192px token,
+ *     so cover (192px) + info strip (64px) = the exact 182×256 card (`3:81`). The
+ *     182px design value is still tokenized — it lives on the `CoverGrid` track.
  *   • `lg` 196×264 — detail-panel cover (node `2:347`).
  *   • `metadata` 178×238 — Metadata Editor modal cover (App 07, node `9:21`).
  */
 const SIZE_PRESETS: Record<CoverSize, CoverDimensions> = {
   sm: { width: 'var(--size-cover-sm-w)', height: 'var(--size-cover-sm-h)' },
-  md: { width: 'var(--size-cover-md-w)', height: 'var(--size-cover-md-h)' },
+  // `md` width is FLUID (fills the BookCard column = 182px at 1440 via the
+  // CoverGrid track; shrinks below without clipping). Height = 192px token.
+  md: { width: '100%', height: 'var(--size-cover-md-h)' },
   lg: { width: 'var(--size-cover-lg-w)', height: 'var(--size-cover-lg-h)' },
   metadata: {
     width: 'var(--size-cover-metadata-w)',

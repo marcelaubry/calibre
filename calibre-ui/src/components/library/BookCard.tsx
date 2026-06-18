@@ -163,29 +163,29 @@ export interface BookCardProps {
  *   • `motion-safe:transition …` — hover/selection transitions are gated behind
  *     `prefers-reduced-motion: no-preference` (UI6), 200ms ease-out.
  *
- * BLITZY [RESPONSIVE]: card height is CONTENT-DRIVEN (cover 192px + info strip),
- *   NOT a hard `aspect-[182/256]`. The file directive suggests encoding the
- *   182:256 ratio via `aspect-ratio`, but that is INCOMPATIBLE with the
- *   `BookCoverPlaceholder` primitive, which renders the `md` cover at a FIXED
- *   182×192 px (inline `width`/`height`, un-overridable without `!important`).
- *   A hard `aspect-[182/256]` + the required `overflow-hidden` makes the card's
- *   grid/flex `min-height: auto` resolve to 0 (CSS Sizing §4.1: auto-minimum is
- *   suppressed when `overflow` is not `visible`), so at 1280 the card LOCKS to
- *   the ratio height (~205px), the fixed 192px cover dominates, and the info
- *   strip (title/author/FormatBadge — a CONFIRMED part of Figma node 3:81)
- *   collapses to ~13px and disappears. Driving height from content instead keeps
- *   the cover at its Figma-exact 192px and the strip always fully visible, while
- *   PRESERVING the cover:strip proportions at EVERY width (192:64 ≈ 75%:25%,
- *   matching the Figma 182×256 split). At the 1440 baseline the card is ~178×250,
- *   i.e. ≈ the 182:256 ratio; only the overall card aspect relaxes as columns
- *   narrow toward 1280. Zero horizontal overflow still holds (`w-full` +
- *   `overflow-hidden` clips the intrinsically-182px cover). Chosen to satisfy the
- *   higher-priority requirements — all CONFIRMED content visible (DS2-f) and zero
- *   horizontal overflow at 1440 AND 1280 — over the literal aspect-ratio hint.
- *   Flagged for designer review.
+ * BLITZY [FIGMA] (CP4 finding §BookCard L187 / §CoverGrid L153): the card now has
+ *   the EXACT Figma 182×256 footprint (node `3:81`). The HEIGHT is FIXED at the
+ *   `--size-card-h` (256px) token — NOT content-driven and NOT a hard
+ *   `aspect-[182/256]`. The fixed height composes cleanly with the primitive's
+ *   `md` cover, which is now FLUID-WIDTH + a fixed 192px height (`--size-cover-md-h`,
+ *   `shrink-0`): cover (192px) + info strip (`flex-1` → fills the remaining 64px) =
+ *   exactly 256px. The card WIDTH is the grid column — exactly `--size-cover-md-w`
+ *   (182px) at the 1440 baseline (the `CoverGrid` `minmax(0, var(--size-cover-md-w))`
+ *   track), so the card is a pixel-exact 182×256 there.
+ *
+ *   Why FIXED height (not `aspect-ratio`): a hard `aspect-[182/256]` + the required
+ *   `overflow-hidden` makes the flex `min-height: auto` resolve to 0 (CSS Sizing
+ *   §4.1: auto-minimum is suppressed when `overflow` is not `visible`), so below
+ *   1440 the card would LOCK to the ratio height, the 192px cover would dominate,
+ *   and the info strip (title/author/FormatBadge — CONFIRMED in node `3:81`) would
+ *   collapse and disappear. An EXPLICIT `h-[var(--size-card-h)]` has no such
+ *   auto-minimum collapse: the height stays 256px at EVERY width while only the
+ *   WIDTH narrows with the column (height-stable, so the strip keeps its full 64px
+ *   and all CONFIRMED metadata stays visible). Zero horizontal overflow still holds
+ *   (`w-full` + fluid cover + `overflow-hidden`), satisfying responsive 1440→1280.
  */
 const CARD_BASE =
-  'relative flex w-full min-w-0 flex-col overflow-hidden ' +
+  'relative flex h-[var(--size-card-h)] w-full min-w-0 flex-col overflow-hidden ' +
   'cursor-pointer select-none outline-none ' +
   'motion-safe:transition motion-safe:duration-200 motion-safe:ease-out';
 
@@ -336,10 +336,13 @@ export function BookCard({ book }: BookCardProps) {
       className={cardClassName}
     >
       {/* Cover area (Figma 3:82) — generated placeholder, NEVER real art. The
-          `md` preset is the 182×192 grid-card cover (see the BLITZY [COMPONENT]
-          note in the file header). `shrink-0` keeps it at full height so its
-          bottom-anchored title is never squished; the card's `overflow-hidden`
-          clips it to the rounded card bounds on narrow tracks. */}
+          `md` preset is FLUID-WIDTH with a fixed 192px height: it fills the card
+          column EXACTLY (= the Figma 182px width at the 1440 baseline via the
+          `CoverGrid` track) and shrinks WITH the card below 1440. `shrink-0`
+          pins its 192px height (the main-axis size in this flex-COLUMN) so the
+          cover never compresses — guaranteeing cover (192px) + info strip (64px)
+          = the exact 256px card. The card's `overflow-hidden` clips it to the
+          rounded card bounds. */}
       <BookCoverPlaceholder book={book} size="md" className="shrink-0" />
 
       {/* Info strip (lower band) — small title, then the full-metadata band:

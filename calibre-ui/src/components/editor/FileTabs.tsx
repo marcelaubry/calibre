@@ -75,42 +75,56 @@
  *   • Open tabs: the resting frame shows `content.opf` (ACTIVE, leftmost) plus
  *     four more files. `EditorWorkspaceProvider` seeds exactly this set/order
  *     (mapped onto the real `editorFiles` paths) with `content.opf` active.
- *   • Active indicator: purple underline + bright label — both rendered by the
- *     `Tabs` primitive (active = `text-text-primary` + `border-b-2
- *     border-[var(--color-accent)]`; inactive = `text-text-muted`).
+ *   • Active indicator: the `Tabs` 'editor' variant renders the active tab with a
+ *     `bg-surface-1` (#10132A) CELL fill, a `text-text-primary` (#F1F5FF) Inter-500
+ *     label, and the 2px VERTICAL `#7B61FF→#A78BFA` gradient underline (an
+ *     out-of-flow bottom child bar — zero layout shift); inactive tabs are
+ *     `text-text-muted` (#64748B) with no fill and no underline.
  *
- * BLITZY [COMPONENT] / [A11Y] — flagged Figma deltas NOT expressible here
+ * BLITZY [COMPONENT] — App04-specific tab details rendered via the `Tabs`
+ * 'editor' variant (CP4 Figma-fidelity fix, finding §FileTabs L82-105)
  * --------------------------------------------------------------------------
- * The shared `Tabs` primitive's public contract is a `string[]` of labels; it
- * deliberately normalizes the Editor and Convert tab strips into ONE canonical
- * style. The following CONFIRMED Figma `5:29` details are therefore NOT
- * rendered by this screen component, because expressing them would require
- * either raw per-tab markup (forbidden — the strip MUST compose the primitive,
- * never hand-rolled `<button>`/`<div>` tabs) or editing the `Tabs` primitive
- * (out of scope here, and it would regress the Convert-dialog option tabs that
- * share it). They are flagged for the primitive owner; the shared fidelity beat
- * (purple underline + muted→primary label contrast + surface + hairline) is
- * preserved exactly:
- *   • per-tab close "×" affordance (`#3A4060`) — not rendered (no primitive
- *     slot). NOTE: the workspace API still exposes `closeFile`, consumed
- *     programmatically and by future close affordances.
- *   • active-tab cell fill `#10132A` (surface-1) — not rendered (the primitive
- *     signals "active" via the underline + `#F1F5FF` label, the AAP-normalized
- *     beat).
- *   • contiguous tabs / 16px left pad vs the primitive's 4px gap + 10px pad;
- *     and the flat `#7B61FF` underline vs the Figma `#7B61FF→#A78BFA` gradient
- *     (the primitive's own documented BLITZY [COLOR] reconciliation).
- *   • tab LABEL text comes from each file's `name` in the `@/data/editorFiles`
- *     DATA module (e.g. `chapter-001.xhtml`), which the Figma mock abbreviates
- *     (`ch01.html`); the data module is a dependency, not editable here.
+ * The shared `Tabs` primitive now carries an explicit `variant` (`'convert'` |
+ * `'editor'`); `FileTabs` composes it with `variant="editor" closable
+ * onClose={…}`, so every CONFIRMED Figma `5:29` detail that this strip
+ * previously could not express is now painted BY THE PRIMITIVE (still composed,
+ * never hand-rolled — the strip adds no raw per-tab markup, and the Convert
+ * option tabs keep their own `variant="convert"` look, no regression):
+ *   • per-tab CLOSE affordance — the primitive renders a real SIBLING <button>
+ *     per tab (the close "×" glyph, token-muted → primary on hover, with a
+ *     keyboard `:focus-visible` ring and an `aria-label="Close <name>"`). It is a
+ *     sibling of the `role="tab"` button (never nested — nested buttons are
+ *     invalid). Activating it invokes `onClose(name)`, which `FileTabs` maps back
+ *     to the file `path` and delegates to the workspace `closeFile(path)`.
+ *   • active-tab CELL fill `#10132A` (surface-1) — the 'editor' variant fills the
+ *     active tab with `bg-surface-1`, in addition to the gradient underline + the
+ *     `#F1F5FF` (primary) Inter-500 active label.
+ *   • CONTIGUOUS tabs — the 'editor' variant lays the tablist out with `gap-0`
+ *     (vs the Convert strip's 4px gap), reproducing the App04 contiguous cells.
+ *   • GRADIENT underline — both variants render the CONFIRMED Figma 2px VERTICAL
+ *     `#7B61FF→#A78BFA` gradient as an out-of-flow bottom child bar (the
+ *     `--gradient-tab-underline` token via `bg-gradient-tab-underline`); zero
+ *     layout shift. The prior flat-accent approximation is gone.
+ *   • ABBREVIATED labels — the 'editor' variant truncates each label to an
+ *     abbreviated width (`max-w-32 truncate`) with an ellipsis, so long file
+ *     names (e.g. `chapter-001.xhtml`, from the `@/data/editorFiles` DATA module)
+ *     render compactly like the Figma mock's `ch01.html`, while the FULL name
+ *     stays the tab's identity string (the data module is a dependency, unchanged).
+ *
+ * BLITZY [A11Y]: the close affordance is keyboard-reachable and screen-reader
+ * labelled (`aria-label="Close <name>"`); the tab strip preserves the WAI-ARIA
+ * Tabs pattern (roving tabindex on the `role="tab"` buttons only, arrow/Home/End
+ * navigation) supplied by the primitive — see ../primitives/Tabs.tsx.
  *
  * ZERO-HARDCODED-TOKEN RULE (AAP §0.4.5)
  * --------------------------------------------------------------------------
  * Every COLOR value resolves to an `@theme` token utility: `bg-surface-2`
  * (strip surface), `bg-code-bg` (code column surface), `text-text-muted`
- * (empty-state text), plus the accent underline + hairline supplied by the
- * `Tabs` primitive (`--color-accent`, `--border-white-07`). There are NO raw
- * hex/rgba color literals in this file. The only bare literals are LAYOUT /
+ * (empty-state text), plus the gradient underline (`--gradient-tab-underline`),
+ * the active-cell fill (`--color-surface-1`), the active label
+ * (`--color-text-primary`), and the white@7% hairline (`--border-white-07`) —
+ * all supplied by the `Tabs` 'editor' variant. There are NO raw hex/rgba color
+ * literals in this file. The only bare literals are LAYOUT /
  * geometry utilities that carry no color information (`flex`, `h-9` ≈ 36px,
  * `w-full`, `flex-none`, `items-stretch`, `overflow-x-auto`, `min-w-full`,
  * `min-w-0`, `flex-1`, `flex-col`, `items-center`, `justify-center`,
@@ -347,29 +361,34 @@ export function useEditorWorkspace(): EditorWorkspaceValue {
 /**
  * `FileTabs` — the App 04 open-file tab strip (Figma node `5:29`, 1440×36).
  *
- * Renders one tab per OPEN file by composing the shared `Tabs` primitive (never
- * hand-rolled tab markup): the primitive draws the active purple underline, the
- * muted→primary label contrast, and the white@7% bottom hairline. This wrapper
- * adds only the Figma-confirmed surface (`bg-surface-2`), the 36px height
- * (`h-9`), full width (`w-full`), and horizontal-scroll safety
+ * Renders one tab per OPEN file by composing the shared `Tabs` primitive with
+ * `variant="editor" closable onClose={…}` (never hand-rolled tab markup). The
+ * 'editor' variant draws every CONFIRMED Figma `5:29` detail: the active-tab
+ * `bg-surface-1` CELL fill + `#F1F5FF` Inter-500 label, the 2px `#7B61FF→#A78BFA`
+ * GRADIENT underline, CONTIGUOUS (`gap-0`) cells, ABBREVIATED (`truncate`)
+ * labels, the per-tab CLOSE affordance, and the white@7% bottom hairline. This
+ * wrapper adds only the Figma-confirmed surface (`bg-surface-2`), the 36px
+ * height (`h-9`), full width (`w-full`), and horizontal-scroll safety
  * (`overflow-x-auto`) so the page never overflows down to 1280px even if many
  * files are open.
  *
  * Tab identity is the file `path` (stable), but the tab LABEL is the file
  * `name`; the `@/data/editorFiles` names are unique, so label↔path mapping is
- * unambiguous. Selecting a tab activates its file via `setActiveFile(path)`.
+ * unambiguous. Selecting a tab activates its file via `setActiveFile(path)`;
+ * activating a tab's close affordance closes it via `closeFile(path)` (both map
+ * the primitive's label callback back to the path).
  *
  * The wrapper intentionally carries NO `border-b`: the bottom hairline is
  * supplied once by the `Tabs` primitive's tablist (a block-level flex row whose
  * border spans the full strip width). Adding a wrapper border would double it.
- * See the file header's BLITZY [COMPONENT] notes for the close-"×" /
- * active-cell-fill / gap / gradient deltas that the shared primitive normalizes
- * away.
+ * See the file header's BLITZY [COMPONENT] note for how the 'editor' variant now
+ * renders the close / active-cell-fill / gap / gradient / abbreviated-label
+ * details that the strip previously could not express.
  *
  * @returns The rendered tab strip.
  */
 export function FileTabs(): JSX.Element {
-  const { openPaths, fileEntries, activeFile, setActiveFile } =
+  const { openPaths, fileEntries, activeFile, setActiveFile, closeFile } =
     useEditorWorkspace();
 
   // Resolve open paths to their EditorFile objects (drop any that no longer
@@ -389,12 +408,27 @@ export function FileTabs(): JSX.Element {
     }
   };
 
+  // Close a tab: map the activated tab LABEL (file name) back to its file PATH
+  // and delegate to the workspace `closeFile(path)`. The `Tabs` 'editor' variant
+  // renders the per-tab close affordance as a SIBLING <button> (never nested in
+  // the role="tab"); this is the handler it invokes (the App04 close-"×" detail,
+  // Figma `5:29`, that the strip previously could not express).
+  const handleClose = (label: string): void => {
+    const file = openFiles.find((f) => f.name === label);
+    if (file) {
+      closeFile(file.path);
+    }
+  };
+
   return (
     <div className="flex h-9 w-full flex-none items-stretch overflow-x-auto bg-surface-2">
       <Tabs
         tabs={tabLabels}
         active={activeFile?.name ?? tabLabels[0] ?? ''}
         onSelect={handleSelect}
+        variant="editor"
+        closable
+        onClose={handleClose}
         className="min-w-full"
       />
     </div>

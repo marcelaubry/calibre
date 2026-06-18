@@ -86,20 +86,18 @@
  * taken from the contract, and the visible values map to `@theme` tokens below.
  *
  * BLITZY [DESIGN] (the "Tags" label): analyze_figma_node reports label `9:80` as
- * `#3A4060`, Inter SemiBold 600, 10px, authored uppercase. Two deliberate,
- * convention-aligned reconciliations are made:
- *   • COLOR + WEIGHT → `text-text-muted` (`#64748B`) + `text-meta-label`
- *     (Inter 400 / 10px). This matches BOTH the file contract's explicit
- *     directive AND the established codebase convention, where `text-text-muted`
- *     is the app-wide muted-LABEL token (WindowTitleBar, ConversionLog,
- *     ModalShell, Tabs, Button, PreferencesNav) and `--color-text-placeholder`
- *     (`#3A4060`) is RESERVED for input placeholders. Using the placeholder
- *     token for a label would break that convention; the weight delta (600→400)
- *     is imperceptible at 10px and matches the sibling meta-label usages.
- *   • CASE → the `uppercase` utility (text-transform only — carries no
- *     color/size token) honors Figma's authoritative uppercase field-label case
- *     on a dimension the contract leaves open, while the accessible DOM text
- *     stays "Tags".
+ * `#3A4060`, Inter SemiBold 600, 10px, authored uppercase. Per the CP4 Figma-
+ * fidelity finding (the coordinated `MetadataFields` / `IdentifierRows` label
+ * change) and D1 precedence (Figma is authoritative for UI), the label now
+ * reproduces that EXACTLY — `text-text-placeholder` (`#3A4060`) + `text-field-label`
+ * (Inter 600 / 10px) + `uppercase` — replacing the earlier readable
+ * `text-text-muted` / `text-meta-label` (400) reconciliation. The sibling
+ * `MetadataFields` field labels and `IdentifierRows` "Identifiers" label adopt the
+ * SAME `#3A4060` / 600 treatment in this CP4 pass, so the whole modal column stays
+ * consistent. The `#3A4060`-on-`#13162E` contrast trade-off is recorded in the
+ * `LABEL_CLASSES` BLITZY [A11Y] note. The `uppercase` utility (text-transform only
+ * — no color/size token) honors Figma's authoritative uppercase case while the
+ * accessible DOM text stays "Tags".
  *
  * BLITZY [DESIGN] (the field box): the wrapping chip row carries the Figma
  * container `9:81` surface — `bg-card` (`#181C3C`) + 1px `--border-white-09`
@@ -117,8 +115,8 @@
  * ZERO-HARDCODED-TOKEN RULE (AAP §0.4.5)
  * --------------------------------------------------------------------------
  * Every COLOR / TYPOGRAPHY value resolves to an `@theme` token from
- * `src/app/globals.css`: the label is `text-text-muted` (`--color-text-muted`)
- * + `text-meta-label` (`--text-meta-label`). The pill paint and the input
+ * `src/app/globals.css`: the label is `text-text-placeholder` (`--color-text-placeholder`)
+ * + `text-field-label` (`--text-field-label`). The pill paint and the input
  * surface/border/radius/placeholder colors live INSIDE their primitives, so
  * this file declares no color/radius/typography literals at all. The only bare
  * utilities here are LAYOUT/appearance values that carry no color information —
@@ -199,12 +197,22 @@ export interface TagChipEditorProps {
 const CONTAINER_CLASSES = 'flex w-full flex-col gap-1';
 
 /**
- * The "Tags" section label — token-backed muted small-caps. `text-text-muted`
- * (`#64748B`) is the app-wide muted-label color token; `text-meta-label`
- * (Inter 400 / 10px) is the meta-label type role; `uppercase` matches Figma's
- * uppercase field-label case (see the BLITZY [DESIGN] note in the file header).
+ * The "Tags" section label — the EXACT App 07 Figma treatment (`9:80`):
+ * `text-text-placeholder` (`#3A4060`) + `text-field-label` (Inter SemiBold 600 /
+ * 10px) + `uppercase`. Per the CP4 Figma-fidelity finding (the coordinated
+ * `MetadataFields` / `IdentifierRows` label change) and D1 precedence (Figma is
+ * authoritative for UI), this replaces the earlier readable `text-text-muted` /
+ * `text-meta-label` (400) reconciliation, and is now IDENTICAL to the sibling
+ * `MetadataFields` field labels and `IdentifierRows` "Identifiers" label so the
+ * whole modal column is consistent. Rendered on a `<span>`, never a heading.
+ *
+ * BLITZY [A11Y]: `#3A4060` on the `#13162E` modal surface computes ≈1.55:1 —
+ * below WCAG AA for text. Per D1 the explicit Figma value is reproduced EXACTLY
+ * (never silently lightened); this flag records the gap for designer review. The
+ * label is a non-essential caption (the chips below carry their own names), so
+ * meaning never rests on the label color alone.
  */
-const LABEL_CLASSES = 'text-text-muted text-meta-label uppercase';
+const LABEL_CLASSES = 'text-text-placeholder text-field-label uppercase';
 
 /**
  * The wrapping chip row, styled as the Figma "Tags" field box (node `9:81`).

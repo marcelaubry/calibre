@@ -86,6 +86,12 @@ export const colors = {
   formatMobi: '#FBBF24', // canonical MOBI token (amber); not the per-screen #A78BFA text styling
   formatPdf: '#F87171',
   danger: '#F87171',
+  // semantic — FormatBadge opaque chip fills (Figma 3:87); badge TEXT stays on the bright format* tokens above
+  formatEpubBg: '#1A2A1A',
+  formatMobiBg: '#1A1A2E',
+  formatPdfBg: '#2A1A1A',
+  // semantic — Sidebar TagPill solid fill (Figma 2:36); distinct from the metadata accent wash
+  tagSidebarBg: '#1D2148',
   // semantic — App 04 code-editor syntax theme
   syntaxTag: '#A78BFA',
   syntaxAttr: '#38BDF8',
@@ -99,7 +105,7 @@ export const colors = {
 } as const;
 
 // ---------------------------------------------------------------------------
-// Gradients — 3 named tokens (distinct: `accent` ≠ `cta` ≠ `sliderTrack`)
+// Gradients — 4 named tokens (distinct: `accent` ≠ `cta` ≠ `sliderTrack` ≠ `tabUnderline`)
 // ---------------------------------------------------------------------------
 export const gradients = {
   // accent gradient (e.g. CheckBadge fill) — ends in accent-light #A78BFA
@@ -109,12 +115,17 @@ export const gradients = {
   // Slider filled-track fill (App 06 margins slider) — bottom-up accent→accent-light
   // ramp. Mirrors `--gradient-slider-track`; consumed via `bg-gradient-slider-track`.
   sliderTrack: 'linear-gradient(to top, var(--color-accent), var(--color-accent-light))',
+  // Active-tab underline (App04 editor 5:34 / App05 convert 6:28) — 2px vertical
+  // accent→accent-light ramp. Mirrors `--gradient-tab-underline`; consumed via
+  // the `bg-gradient-tab-underline` utility on the active tab's bottom child bar.
+  tabUnderline: 'linear-gradient(0deg, var(--color-accent) 0%, var(--color-accent-light) 100%)',
 } as const;
 
 // ---------------------------------------------------------------------------
-// Borders — 5 named tokens (preserve `0.06`/`0.07`/`0.09`/`0.10` exactly)
+// Borders — 6 named tokens (preserve `0.04`/`0.06`/`0.07`/`0.09`/`0.10` exactly)
 // ---------------------------------------------------------------------------
 export const borders = {
+  white04: 'rgba(255,255,255,0.04)', // App 07 "+ Add ID" quiet-box fill (9:115)
   white06: 'rgba(255,255,255,0.06)',
   white07: 'rgba(255,255,255,0.07)',
   white09: 'rgba(255,255,255,0.09)',
@@ -131,11 +142,14 @@ export const scrims = {
 } as const;
 
 // ---------------------------------------------------------------------------
-// Radii — 5 named tokens
+// Radii — 6 named tokens
 // ---------------------------------------------------------------------------
 export const radii = {
   badge: '3px',
   toolbar: '7px',
+  // Shared 6px small-control radius: ModalShell close chip (6:15 / 9:19) +
+  // App 07 "+ Add ID" quiet box (9:115).
+  controlSm: '6px',
   control: '8px',
   card: '10px',
   dialog: '16px',
@@ -147,10 +161,13 @@ export const radii = {
 export const shadows = {
   convert: '0 24px 64px rgba(0,0,0,0.6)',
   metadata: '0 20px 60px rgba(0,0,0,0.65)',
+  // --shadow-input-glow · App 07 Metadata Title always-visible purple glow
+  // (Figma 9:53; AAP §0.3.1/§0.7.4/§0.10.2). Accent #7B61FF = --color-accent.
+  inputGlow: '0 0 0 3px rgba(123,97,255,0.25), 0 0 12px rgba(123,97,255,0.35)',
 } as const;
 
 // ---------------------------------------------------------------------------
-// Sizes — 33 named component-geometry tokens (widths / heights / icon / ring)
+// Sizes — 37 named component-geometry tokens (widths / heights / icon / ring)
 // Mirror of the `--size-*` / `--ring-*` `@theme` vars in globals.css. Promoted
 // from confirmed Figma pixel geometry so component TSX carries no bare px
 // literal (AAP §0.4.5). Values are byte-consistent with globals.css. rem-authored
@@ -161,6 +178,7 @@ export const sizes = {
   scrollbar: '10px',          // --size-scrollbar          · WebKit scrollbar width/height
   buttonH: '38px',            // --size-button-h           · primary/toolbar button height
   buttonCompactH: '32px',     // --size-button-compact-h   · secondary/danger compact height
+  buttonQuietH: '28px',       // --size-button-quiet-h     · ghost/quiet button height (App 07 "+ Add ID" 9:115)
   toolbarButtonW: '84px',     // --size-toolbar-button-w   · toolbar button fixed min-width
   toolbarIcon: '15px',        // --size-toolbar-icon       · toolbar glyph size
   toggleKnob: '18px',         // --size-toggle-knob        · Toggle iOS knob diameter
@@ -192,6 +210,11 @@ export const sizes = {
   readingProgressH: '3px',    // --size-reading-progress-h · ReadingArea progress-bar height (4:43)
   readingMeasure: '680px',    // --size-reading-measure    · ReadingArea prose max-width (4:43)
   editorLineH: '26px',        // --size-editor-line-h      · CodeEditor code/gutter row pitch (5:74)
+  // CP4 Figma-fidelity geometry (R3):
+  cardH: '256px',             // --size-card-h             · App 02 BookCard fixed card height (3:81)
+  formatBadgeW: '40px',       // --size-format-badge-w     · FormatBadge fixed chip width (3:87)
+  formatBadgeH: '16px',       // --size-format-badge-h     · FormatBadge fixed chip height (3:87)
+  identifierKeyW: '90px',     // --size-identifier-key-w   · App 07 IdentifierRows key-field width (9:9)
   focusRingWidth: '3px',      // --ring-focus-width        · Slider thumb focus halo width
 } as const;
 
@@ -217,7 +240,7 @@ export const spacing = {
 } as const;
 
 // ---------------------------------------------------------------------------
-// Typography — global Inter font-family + 13 per-role text scales
+// Typography — global Inter font-family + 15 per-role text scales
 // ---------------------------------------------------------------------------
 
 /**
@@ -237,12 +260,18 @@ export const typography = {
   // `dialogHeading` fontSize: manifest gives a ~18–22px range; pinned to 20px.
   // MUST remain identical to the `--text-dialog-heading` value in globals.css.
   dialogHeading: { fontWeight: 600, fontSize: '20px' },
+  // `modalTitle` — App05/App07 modal title bar (Figma 6:9 / 9:9), Inter 600 16px.
+  // MUST remain identical to the `--text-modal-title` value in globals.css.
+  modalTitle: { fontWeight: 600, fontSize: '16px' },
   detailTitle: { fontWeight: 600, fontSize: '15px', lineHeight: '22px' },
   coverTitle: { fontWeight: 700, fontSize: '14px', lineHeight: '18px' },
   cardTitle: { fontWeight: 600, fontSize: '11px', lineHeight: '15px' },
   body: { fontWeight: 400, fontSize: '12px' },
   metaLabel: { fontWeight: 400, fontSize: '10px' },
   metaValue: { fontWeight: 500, fontSize: '10px' },
+  // `fieldLabel` — App07 metadata field/section labels (Figma 9:80), Inter 600 10px.
+  // MUST remain identical to the `--text-field-label` value in globals.css.
+  fieldLabel: { fontWeight: 600, fontSize: '10px' },
   buttonPrimary: { fontWeight: 600, fontSize: '12px' },
   buttonSecondary: { fontWeight: 500, fontSize: '11px' },
   badge: { fontWeight: 500, fontSize: '8px' },

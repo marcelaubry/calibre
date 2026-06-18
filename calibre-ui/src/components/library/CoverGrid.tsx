@@ -38,21 +38,21 @@
  *
  * RESPONSIVE GRID — ZERO HORIZONTAL OVERFLOW (AAP §0.1 / §0.7.4 / §0.9)
  * --------------------------------------------------------------------------
- * The card matrix is a fixed 5-column CSS grid (`grid-cols-5`) matching the
- * Figma 5×3 layout exactly. Responsiveness comes from the COLUMNS, not from
- * fixed-px widths: each track is `1fr` and each `BookCard` is `w-full`, so the
- * five columns simply share whatever width the center region has and shrink
- * together as the viewport narrows from the 1440 baseline to the 1280 minimum.
- * The grid wrapper is `w-full min-w-0` and the scroll container is
- * `min-w-0 overflow-x-hidden`, so the grid can never force the page wider than
+ * The card matrix is a 5-column CSS grid whose tracks are CAPPED at the exact
+ * Figma 182px card width (`minmax(0, var(--size-cover-md-w))`), matching the
+ * Figma 5×3 layout exactly. At the 1440 baseline each card is therefore a
+ * pixel-perfect 182px (the cap), and responsiveness comes from the `minmax(0, …)`
+ * floor: below 1440 the tracks SHRINK uniformly toward the 1280 minimum instead
+ * of overflowing. The grid wrapper is `w-full min-w-0` and the scroll container
+ * is `min-w-0 overflow-x-hidden`, so the grid can never force the page wider than
  * its column (an item/grid whose `min-width` is 0 and whose overflow is clipped
  * cannot push horizontal page overflow). The center region is the only
  * vertically-scrolling area (`overflow-y-auto`); horizontal scrolling is
- * disabled outright (`overflow-x-hidden`). At the 1440 baseline the ~988px
- * center region yields ~178px-wide cards (≈ the Figma 182px card width); at
- * 1280 the cards shrink uniformly with zero horizontal overflow. (Cards are
- * gracefully ≤ the `BookCard` cover's intrinsic 182px across this range, so the
- * cover fully covers each card — see `BookCard`'s own [RESPONSIVE] note.)
+ * disabled outright (`overflow-x-hidden`). At the 1440 baseline the 988px center
+ * region yields EXACTLY 182px-wide cards (the Figma card width); at 1280 the
+ * cards shrink uniformly (~150px) with zero horizontal overflow. The `BookCard`
+ * cover is fluid-width (fills its column), so it covers each card at every width
+ * — see `BookCard`'s own BLITZY [FIGMA] note.
  *
  * FIGMA SOURCE OF TRUTH (file `JduUzjVHNhZivm5A0pAiCD`, page `0:1`)
  * --------------------------------------------------------------------------
@@ -62,26 +62,30 @@
  * cards on the app background) come from the AAP §0.3.1 / §0.3.3 reconciled
  * Figma analysis.
  *
- * BLITZY [FIGMA]: the inter-card gutter and the grid's outer padding are set
- *   from Tailwind's tokenized spacing scale (`gap-4` = 16px, `p-4` = 16px),
- *   chosen to fit the ~988px center region (5×182 + 4×16 gutters + 2×16 padding
- *   ≈ 988) and to keep each card ≤ the 182px cover width so covers fully cover.
- *   The exact Figma gutter could not be re-measured at build time because
- *   `analyze_figma_node` was returning an infrastructure error, so these two
- *   spacing values follow the AAP-confirmed 5×3 geometry + the tokenized scale
- *   rather than a freshly measured pixel value. The COLUMN COUNT (5), ROW
- *   COUNT (3), card size, and canvas color are AAP-confirmed and exact.
- *   Alternative: nudge to `gap-3.5`/`gap-5` if a later measurement differs.
+ * BLITZY [FIGMA]: the card WIDTH is now the exact Figma 182px token
+ *   (`--size-cover-md-w`, applied as the track cap), and the gutter + outer
+ *   padding are tokenized spacing-scale utilities (`gap-4` = 16px, `px-1.5` = 6px
+ *   horizontal) tuned so the matrix fits the 988px center region EXACTLY at 1440:
+ *   5×182 + 4×16 gutters + 2×6 padding = 986 ≤ 988 ⇒ tracks hit their 182px cap.
+ *   The exact Figma inter-card gutter could not be re-measured at build time
+ *   because `analyze_figma_node` returns an infrastructure error, so the 16px
+ *   gutter follows the AAP-confirmed 5×3 geometry + the tokenized scale; the
+ *   CARD WIDTH (182px), COLUMN COUNT (5), ROW COUNT (3), and canvas color are
+ *   all AAP-confirmed and exact. Alternative: nudge `gap-4`→`gap-3.5`/`gap-5` if
+ *   a later measurement of the gutter differs (the 182px card width is fixed).
  *
  * ZERO-HARDCODED-VALUES RULE (AAP §0.4.5)
  * --------------------------------------------------------------------------
  * Every color value resolves to an `@theme` token via a Tailwind v4 utility
  * (`bg-bg-app`, `text-text-muted`, `text-body`). The only bare utilities are
- * Tailwind's standard layout / spacing scale (`grid`, `grid-cols-5`, `gap-4`,
- * `p-4`, `flex`, `items-center`, `justify-center`, `h-full`, `w-full`,
- * `min-w-0`, `flex-1`, `overflow-y-auto`, `overflow-x-hidden`, `text-center`)
- * and layout keywords — none of which carry design-token color/geometry
- * information. No raw hex / rgba / px literal appears here.
+ * Tailwind's standard layout / spacing scale (`grid`, `gap-4`, `px-1.5`, `py-4`,
+ * `flex`, `items-center`, `justify-center`, `h-full`, `w-full`, `min-w-0`,
+ * `flex-1`, `overflow-y-auto`, `overflow-x-hidden`, `text-center`) plus layout
+ * keywords. The single arbitrary value — the grid track template
+ * `grid-cols-[repeat(5,minmax(0,var(--size-cover-md-w)))]` — carries NO raw
+ * geometry: its only dimensional value is the `--size-cover-md-w` @theme TOKEN
+ * (`repeat`/`minmax`/`0` are layout primitives). No raw hex / rgba / px literal
+ * appears here.
  *
  * COMPOSITION (design-system components only — AAP §0.4.5 / §0.3.3)
  * --------------------------------------------------------------------------
@@ -134,23 +138,41 @@ import { BookCard } from './BookCard';
  *   • `bg-bg-app` — the `--color-bg-app` (#0C0E1A) canvas the cards sit on; the
  *     container itself carries NO card chrome (each `BookCard` is its own
  *     `GlassCard`).
- *   • `p-4` — token padding (16px) around the card matrix (see the file
- *     header's BLITZY [FIGMA] note on the spacing choice).
+ *   • `px-1.5 py-4` — token padding: a tight 6px horizontal inset (so the five
+ *     182px tracks + four 16px gutters fit the 988px center region EXACTLY at
+ *     1440) and the standard 16px vertical padding above/below the matrix (see
+ *     the BLITZY [FIGMA] note on {@link GRID_CLASSES} for the full width math).
  */
 const CONTAINER_CLASSES =
-  'flex-1 min-w-0 overflow-y-auto overflow-x-hidden bg-bg-app p-4';
+  'flex-1 min-w-0 overflow-y-auto overflow-x-hidden bg-bg-app px-1.5 py-4';
 
 /**
- * Card-matrix classes — the fixed 5-column CSS grid.
+ * Card-matrix classes — the 5-column CSS grid, pixel-exact at the 1440 baseline.
  *
- *   • `grid grid-cols-5` — exactly five equal (`1fr`) columns, matching the
- *     Figma 5×3 layout. Fixed columns (not `auto-fill`) reproduce the design
- *     precisely; responsiveness comes from the `1fr` tracks + `w-full` cards.
- *   • `gap-4` — token gutter (16px) applied to BOTH row and column gaps.
- *   • `w-full min-w-0` — fill the container width and stay fully shrinkable so
- *     the tracks collapse cleanly toward 1280 with zero horizontal overflow.
+ * BLITZY [FIGMA] (CP4 finding §CoverGrid L153): the prior `grid-cols-5` used five
+ *   equal `1fr` tracks that stretched to fill the region, yielding ~178px cards —
+ *   below the Figma 182px (node `3:81`). The tracks are now sized to the EXACT
+ *   Figma card width so each card is a pixel-perfect 182×256 at 1440:
+ *
+ *   • `grid-cols-[repeat(5,minmax(0,var(--size-cover-md-w)))]` — five tracks each
+ *     CAPPED at the `--size-cover-md-w` 182px token (the Figma card width), with a
+ *     `minmax(0, …)` floor of 0 so the tracks SHRINK (never overflow) below 1440.
+ *     The 182px design value stays tokenized (zero hardcoded literal, R3/§0.4.5).
+ *   • `justify-center` — centers the five-card track block within the region, so
+ *     the ≤2px of slack at 1440 splits symmetrically (matching the centered Figma
+ *     grid) instead of pooling on one side.
+ *   • `gap-4` — the 16px token gutter on BOTH axes.
+ *   • `w-full min-w-0` — fill the container and stay fully shrinkable.
+ *
+ *   WIDTH MATH @1440: center region = 1440 − 216 (sidebar) − 236 (detail panel) =
+ *   988px; minus the container `px-1.5` (12px) = 976px; the matrix needs 5×182 +
+ *   4×16 = 974px ≤ 976px ⇒ tracks reach their 182px cap ⇒ cards are EXACTLY 182px.
+ *   @1280: region = 828px → 816px content → (816 − 64 gaps)/5 ≈ 150px tracks (below
+ *   the 182 cap) ⇒ NO horizontal overflow. Monotonic between the two breakpoints.
  */
-const GRID_CLASSES = 'grid grid-cols-5 gap-4 w-full min-w-0';
+const GRID_CLASSES =
+  'grid grid-cols-[repeat(5,minmax(0,var(--size-cover-md-w)))] justify-center ' +
+  'gap-4 w-full min-w-0';
 
 /**
  * Empty-state wrapper — centers the message both axes within the (definite-
@@ -216,10 +238,11 @@ export function CoverGrid({ className }: CoverGridProps = {}): JSX.Element {
           <p className={EMPTY_MESSAGE_CLASSES}>{EMPTY_MESSAGE}</p>
         </div>
       ) : (
-        // Fixed 5-column card matrix. Each BookCard is a DIRECT grid child (it
-        // already exposes itself as an accessible toggle button), so it lands
-        // straight into a grid cell and fills the `1fr` track via its own
-        // `w-full`. The `book.id` key is stable and unique per the Book contract.
+        // 5-column card matrix (tracks capped at the Figma 182px width). Each
+        // BookCard is a DIRECT grid child (it already exposes itself as an
+        // accessible toggle button), so it lands straight into a grid cell and
+        // fills its (≤182px) track via its own `w-full`. The `book.id` key is
+        // stable and unique per the Book contract.
         <div className={GRID_CLASSES}>
           {filteredBooks.map((book) => (
             <BookCard key={book.id} book={book} />

@@ -19,9 +19,9 @@
  *
  * It is a LEAF composition component built ENTIRELY from two design-system
  * primitives — {@link InputField} (the controlled key / value text inputs) and
- * {@link Button} (the per-row danger remove control and the secondary "+ Add ID"
- * action). It renders NO raw `<input>`, `<button>`, or heading element of its own
- * (AAP §0.4.5 — compose from primitives only).
+ * {@link Button} (the per-row `danger` remove control and the quiet `ghost`
+ * "+ Add ID" action). It renders NO raw `<input>`, `<button>`, or heading element
+ * of its own (AAP §0.4.5 — compose from primitives only).
  *
  * UI-ONLY / MOCK (AAP §0.1.2 · §0.9)
  * --------------------------------------------------------------------------
@@ -107,32 +107,34 @@
  * variant — the semantically correct treatment for a delete action.
  *
  * BLITZY [DESIGN] (the "Identifiers" label): analyze_figma_node reports label
- * `9:102` as `#3A4060`, Inter SemiBold 600, 10px, authored uppercase. Two
- * deliberate, convention-aligned reconciliations are made (identical to the
- * sibling `TagChipEditor`'s "Tags" label):
- *   • COLOR + WEIGHT → `text-text-muted` (`#64748B`) + `text-meta-label`
- *     (Inter 400 / 10px). This matches BOTH the file contract's explicit
- *     directive ("--color-text-muted + --text-meta-label" for the label) AND the
- *     established codebase convention, where `text-text-muted` is the app-wide
- *     muted-LABEL token and `--color-text-placeholder` (`#3A4060`) is RESERVED
- *     for input placeholders; using the placeholder token for a label would
- *     break that convention. The weight delta (600→400) is imperceptible at
- *     10px and matches every sibling meta-label usage.
- *   • CASE → the `uppercase` utility (text-transform only — carries no
- *     color/size token) honors Figma's authoritative uppercase field-label case
- *     on a dimension the contract leaves open, while the accessible DOM text
- *     stays "Identifiers".
+ * `9:102` as `#3A4060`, Inter SemiBold 600, 10px, authored uppercase. Per the CP4
+ * Figma-fidelity finding (§IdentifierRows L305) and D1 precedence (Figma is
+ * authoritative for UI), the label now reproduces that EXACTLY —
+ * `text-text-placeholder` (`#3A4060`) + `text-field-label` (Inter 600 / 10px) +
+ * `uppercase` — replacing the earlier readable `text-text-muted` /
+ * `text-meta-label` (400) reconciliation. The sibling `MetadataFields` field
+ * labels and `TagChipEditor` "Tags" label adopt the SAME `#3A4060` / 600 treatment
+ * in this CP4 pass, so the whole modal column stays consistent. The
+ * `#3A4060`-on-`#13162E` contrast trade-off is recorded in the `LABEL_CLASSES`
+ * BLITZY [A11Y] note. The `uppercase` utility (text-transform only — no color/size
+ * token) honors Figma's authoritative uppercase case while the accessible DOM text
+ * stays "Identifiers".
  *
- * BLITZY [DESIGN] (key field width + "+ Add ID" variant): The Figma display key
- * column is ~90px (≈15.5% of the 580px row); the editable key field here uses a
- * slightly wider `w-28` (112px ≈ 19%) so scheme names like "goodreads" fit
- * comfortably while still reading clearly as the narrower of the two fields
- * (value `flex-1`). The "+ Add ID" Figma button is a neutral quiet box
- * (rgba(255,255,255,0.04) fill / rgba(255,255,255,0.07) border / `#64748B` text
- * / 6px radius); per the agent contract it is realized with the design system's
- * `secondary` Button variant (white-6% fill / white-9% border / `#94A3B8` text /
- * 8px radius), whose values are within token-snapping tolerance of the Figma box
- * and keep the prototype's add-action treatment consistent app-wide.
+ * BLITZY [DESIGN] (key field width + "+ Add ID" variant): both reconciled to
+ * EXACT Figma values in the CP4 Figma-fidelity fix (finding §IdentifierRows L330):
+ *   • KEY WIDTH → the editable key field is now a fixed 90px
+ *     (`w-[var(--size-identifier-key-w)]` — the EXACT Figma key column, the
+ *     `9:103` divider at x90 of the 580px row), replacing the prior slightly
+ *     wider `w-28` (112px). The value field stays `flex-1`, so the key reads as
+ *     the narrower of the two fields exactly as in Figma.
+ *   • "+ Add ID" → realized with the new `ghost` Button variant, which reproduces
+ *     the Figma quiet box (`9:115`) EXACTLY: white-4% fill (`--border-white-04`) /
+ *     white-7% border (`--border-white-07`) / `#64748B` text (`text-text-muted`) /
+ *     6px radius (`--radius-control-sm`) / 28px height (`--size-button-quiet-h`).
+ *     This replaces the prior heavier `secondary` treatment (white-6% / white-9% /
+ *     `#94A3B8` / 8px / 32px). (The sibling "+ Add format" stays `secondary`: its
+ *     Figma is a PURPLE box, a different reconciliation flagged in
+ *     `MetadataCoverColumn` BLITZY [COLOR].)
  *
  * BLITZY [DESIGN] (scheme-key casing): the Figma static mock labels the keys
  * "ISBN" / "Amazon" / "Goodreads", but this is an EDITABLE key field and `row.key`
@@ -151,16 +153,18 @@
  * ZERO-HARDCODED-TOKEN RULE (AAP §0.4.5)
  * --------------------------------------------------------------------------
  * Every COLOR / TYPOGRAPHY value resolves to an `@theme` token from
- * `src/app/globals.css`: the label is `text-text-muted` (`--color-text-muted`)
- * + `text-meta-label` (`--text-meta-label`). The field surface / border / radius
- * / placeholder colors and the button fills / borders / text colors / radii live
- * INSIDE the `InputField` and `Button` primitives, so this file declares NO
- * color / radius / typography literals at all. The only bare utilities here are
- * LAYOUT / appearance values that carry no color information — Tailwind's
- * standard spacing / flex scale (`flex`, `flex-col`, `w-full`, `gap-2.5`,
- * `gap-1.5`, `gap-1`, `items-center`, `w-28`, `shrink-0`, `flex-1`, `min-w-0`,
- * `self-start`) and the `uppercase` text-transform — all permitted (matching the
- * sibling primitives' and `TagChipEditor`'s usage). The three vertical gaps
+ * `src/app/globals.css`: the label is `text-text-placeholder` (`--color-text-placeholder`)
+ * + `text-field-label` (`--text-field-label`), and the key-field width is the
+ * `w-[var(--size-identifier-key-w)]` (90px) token. The field surface / border /
+ * radius / placeholder colors and the button fills / borders / text colors / radii
+ * live INSIDE the `InputField` and `Button` primitives (the `ghost` "+ Add ID"
+ * variant's white-4% fill / white-7% border / 6px radius / muted text all resolve
+ * to tokens there), so this file declares NO color / radius / typography literals
+ * at all. The only bare utilities here are LAYOUT / appearance values that carry
+ * no color information — Tailwind's standard spacing / flex scale (`flex`,
+ * `flex-col`, `w-full`, `gap-2.5`, `gap-1.5`, `gap-1`, `items-center`, `shrink-0`,
+ * `flex-1`, `min-w-0`, `self-start`) and the `uppercase` text-transform — all
+ * permitted (matching the sibling primitives' usage). The three vertical gaps
  * reproduce the CONFIRMED Figma rhythm EXACTLY: `gap-1` (4px) label→first row
  * (`9:102`→`9:103`), `gap-1.5` (6px) inter-row (`9:103`→`9:107`→`9:111`), and
  * `gap-2.5` (10px) last row→"+ Add ID" button (`9:111`→`9:115`).
@@ -169,8 +173,9 @@
  * --------------------------------------------------------------------------
  * Each row is a `flex items-center` line whose value field is `flex-1 min-w-0`,
  * so the value absorbs ALL available and ALL reclaimed width: the fixed-width
- * key field (`w-28 shrink-0`) and the intrinsic-width remove button
- * (`shrink-0`) keep their size while the value field shrinks toward zero rather
+ * key field (`w-[var(--size-identifier-key-w)] shrink-0`, 90px) and the
+ * intrinsic-width remove button (`shrink-0`) keep their size while the value
+ * field shrinks toward zero rather
  * than pushing the row past its container. The `min-w-0` is the critical guard —
  * without it a long unbroken value string would establish a min-content floor
  * and force horizontal overflow. The metadata column (~580px) far exceeds the
@@ -296,13 +301,22 @@ const CONTAINER_CLASSES = 'flex w-full flex-col gap-2.5';
 const LABEL_GROUP_CLASSES = 'flex w-full flex-col gap-1';
 
 /**
- * The "Identifiers" section label — token-backed muted small-caps.
- * `text-text-muted` (`#64748B`) is the app-wide muted-label color token;
- * `text-meta-label` (Inter 400 / 10px) is the meta-label type role; `uppercase`
- * matches Figma's uppercase field-label case (see the BLITZY [DESIGN] note in
- * the file header). Rendered on a `<span>`, never a heading.
+ * The "Identifiers" section label — the EXACT App 07 Figma treatment (`9:102`):
+ * `text-text-placeholder` (`#3A4060`) + `text-field-label` (Inter SemiBold 600 /
+ * 10px) + `uppercase`. Per the CP4 Figma-fidelity finding (§IdentifierRows L305)
+ * and D1 precedence (Figma is authoritative for UI), this replaces the earlier
+ * readable `text-text-muted` / `text-meta-label` (400) reconciliation, and is now
+ * IDENTICAL to the sibling `MetadataFields` field labels and `TagChipEditor`
+ * "Tags" label so the whole modal column is consistent. Rendered on a `<span>`,
+ * never a heading.
+ *
+ * BLITZY [A11Y]: `#3A4060` on the `#13162E` modal surface computes ≈1.55:1 —
+ * below WCAG AA for text. Per D1 the explicit Figma value is reproduced EXACTLY
+ * (never silently lightened); this flag records the gap for designer review. The
+ * label is a non-essential caption (the editable rows below carry their own
+ * accessible names), so meaning never rests on the label color alone.
  */
-const LABEL_CLASSES = 'text-text-muted text-meta-label uppercase';
+const LABEL_CLASSES = 'text-text-placeholder text-field-label uppercase';
 
 /**
  * The vertical rows stack. `gap-1.5` (6px) reproduces the CONFIRMED Figma
@@ -320,14 +334,15 @@ const ROWS_STACK_CLASSES = 'flex w-full flex-col gap-1.5';
 const ROW_CLASSES = 'flex items-center gap-2';
 
 /**
- * Key (scheme) field wrapper sizing: `w-28` (112px) is the narrower of the two
- * fields — a slightly-wider-than-Figma editable width (Figma display key ≈90px;
- * see the BLITZY [DESIGN] note) that fits scheme names like "goodreads".
- * `shrink-0` keeps it from collapsing so the value field absorbs all reclaimed
- * width when the column narrows. The `InputField` primitive owns the field's
- * surface / border / radius / height / typography; this only sizes the wrapper.
+ * Key (scheme) field wrapper sizing: a fixed `w-[var(--size-identifier-key-w)]`
+ * (90px — the EXACT Figma key column width, the `9:103` divider at x90 of the
+ * 580px row) that `shrink-0` holds so the value field absorbs all reclaimed width
+ * when the column narrows. Per the CP4 Figma-fidelity finding (§IdentifierRows
+ * L330) this replaces the prior slightly-wider `w-28` (112px). The `InputField`
+ * primitive owns the field's surface / border / radius / height / typography;
+ * this only sizes the wrapper.
  */
-const KEY_FIELD_CLASSES = 'w-28 shrink-0';
+const KEY_FIELD_CLASSES = 'w-[var(--size-identifier-key-w)] shrink-0';
 
 /**
  * Value field wrapper sizing: `flex-1` grows it to fill the remaining row width
@@ -351,8 +366,8 @@ const REMOVE_BUTTON_CLASSES = 'shrink-0';
  * "+ Add ID" button alignment: `self-start` makes the button hug its content
  * (rather than stretch to the column's full width, the flex-column default) and
  * sit flush at the inline-start edge — matching the Figma button's left-aligned,
- * 120px hug-width placement. The `Button` primitive's `secondary` variant owns
- * the fill / border / text color / radius.
+ * 120px hug-width placement (`9:115`). The `Button` primitive's `ghost` variant
+ * owns the quiet fill / border / text color / radius / height.
  */
 const ADD_BUTTON_CLASSES = 'self-start';
 
@@ -462,10 +477,13 @@ export function IdentifierRows({
         )}
       </div>
 
-      {/* Append a new blank identifier row. Secondary (neutral) variant, hug
-          width, left-aligned — matches the Figma "+ Add ID" button (9:115). */}
+      {/* Append a new blank identifier row. The quiet `ghost` variant (white-4%
+          fill / white-7% border / 6px radius / muted text / 28px height)
+          reproduces the Figma "+ Add ID" quiet box (`9:115`) EXACTLY — replacing
+          the prior heavier `secondary` treatment per the CP4 finding
+          (§IdentifierRows L330). Hug width + left-aligned via ADD_BUTTON_CLASSES. */}
       <Button
-        variant="secondary"
+        variant="ghost"
         label={ADD_ID_LABEL}
         onClick={onAddRow}
         className={ADD_BUTTON_CLASSES}

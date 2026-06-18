@@ -3,7 +3,8 @@
 /**
  * ==========================================================================
  * Calibre-UI Design System — Toggle
- * The single iOS-style on/off SWITCH primitive.
+ * The single binary on/off control primitive — two presentations: iOS pill
+ * SWITCH (default) and App-05 status DOT.
  * ==========================================================================
  *
  * WHAT THIS IS
@@ -11,12 +12,19 @@
  * `Toggle` is one of the 14 bespoke design-system primitives (AAP §0.3.3 /
  * §0.4.2) for the UI-only Calibre e-book-manager prototype (Next.js 15 App
  * Router · React 19 · TypeScript 5 strict · Tailwind CSS v4 CSS-first tokens).
- * It is the ONE pill-shaped on/off switch used everywhere a raw checkbox would
- * otherwise appear — most authoritatively the 2×3 "Reading Behavior" toggle
- * grid in Preferences (App 06, Figma screen `8:2`). Screen code must NEVER
- * render a raw `<input type="checkbox">`; it always composes this primitive so
- * the track, knob, animation, focus ring, and on/off colors stay identical and
- * 100% token-backed across every screen.
+ * It is the ONE binary on/off control used everywhere a raw checkbox would
+ * otherwise appear. Screen code must NEVER render a raw `<input
+ * type="checkbox">`; it always composes this primitive so the focus ring,
+ * animation, and on/off colors stay identical and 100% token-backed.
+ *
+ * It renders in one of two visually-distinct PRESENTATIONS (`presentation`
+ * prop) — both are the SAME semantic `<button role="switch" aria-checked>`:
+ *   • `'switch'` (DEFAULT) — the iOS pill track + sliding knob. Used most
+ *     authoritatively by the 2×3 "Reading Behavior" toggle grid in Preferences
+ *     (App 06, Figma screen `8:2`) and the Convert justification row.
+ *   • `'dot'` — an 18×18 circular STATUS DOT (accent-gradient fill = ON,
+ *     rgba(255,255,255,0.10) = OFF; no knob, no travel). Used by the App 05
+ *     Convert "processing options" 2×3 grid (Figma screen `6:9`).
  *
  * WHY `'use client'`
  * --------------------------------------------------------------------------
@@ -48,17 +56,25 @@
  *     Horizontal travel = 18px.
  * Both ON and OFF states are rendered (data-state completeness, FG2 / DS5-f).
  *
- * APP 05 RECONCILIATION NOTE (why this matches App 06, not App 05)
+ * APP 05 RECONCILIATION NOTE (the `'dot'` presentation, finding §LookAndFeel)
  * --------------------------------------------------------------------------
  * The agent brief named the Convert dialog's Look & Feel panel (App 05, `6:9`)
- * as a Toggle consumer. analyze_figma_node on `6:9` CONFIRMED that App 05 has
- * NO iOS pill switch: its "processing options" controls are 18×18 circular
- * status DOTS (gradient fill = ON, rgba(255,255,255,0.1) = OFF; no knob, no
- * travel) and its "justification toggle" is a 3-button SEGMENTED control
- * (Left / Justify / Right). Those are distinct controls composed by their own
- * screen components — they are NOT this pill switch. This primitive therefore
- * faithfully reproduces the App 06 iOS switch, which is the canonical
- * "Toggle: iOS switch" of AAP §0.3.3.
+ * as a Toggle consumer. analyze_figma_node on `6:9` CONFIRMED that App 05's
+ * "processing options" controls are NOT the iOS pill switch but 18×18 circular
+ * status DOTS (accent-gradient fill = ON, rgba(255,255,255,0.10) = OFF; no
+ * knob, no travel). Rather than fork a second primitive, those dots are the
+ * `presentation="dot"` mode of THIS primitive (CP4 fidelity fix): the same
+ * `<button role="switch" aria-checked>` semantics, the same `onChange`/focus
+ * ring/disabled handling, only the rendered visual differs (a bare colored
+ * circle instead of a track + knob — see `DOT_BASE` / `DOT_ON` / `DOT_OFF`
+ * below). App 05's "justification toggle" is a 3-button SEGMENTED control
+ * (Left / Justify / Right) in Figma; however AAP §0.3.1 / §0.7.4 explicitly
+ * specify a binary "justification toggle", so per the D1 precedence order
+ * (explicit AAP rule wins) the justification row stays a binary `Toggle`
+ * (`presentation="switch"`) and the segmented variant is declined — documented
+ * at its call site in `LookAndFeelPanel`. This primitive thus serves both the
+ * canonical App 06 iOS switch ("Toggle: iOS switch", AAP §0.3.3) and the App 05
+ * status dot from one source of truth.
  *
  * BLITZY [COLOR] (on-track): the agent brief's "Key insight" hypothesized the
  * ON track as a FLAT `bg-accent` (#7B61FF). The CONFIRMED Figma fill on the
@@ -93,14 +109,18 @@
  *
  * RENDERING MODEL
  * --------------------------------------------------------------------------
- * An outer inline-flex `<span>` hosts the switch and (optionally) its label;
+ * An outer inline-flex `<span>` hosts the control and (optionally) its label;
  * the caller `className` is merged onto this WRAPPER (so callers own the
- * control's outer layout / margins), mirroring the sibling `Select`. The switch
- * itself is a single `<button type="button" role="switch">` (the track) that
- * contains one absolutely-positioned `<span>` (the knob). The knob slides via a
- * `translate-x` transform; the track color flips by swapping one class. Both
- * transitions are gated behind `motion-safe:` so reduced-motion users see an
- * instant state change (UI6 / prefers-reduced-motion).
+ * control's outer layout / margins), mirroring the sibling `Select`. The
+ * control itself is a single `<button type="button" role="switch">` whose
+ * visual depends on `presentation`:
+ *   • `'switch'` (default) — the button is the pill TRACK and contains one
+ *     absolutely-positioned `<span>` knob; the knob slides via a `translate-x`
+ *     transform and the track color flips by swapping one class.
+ *   • `'dot'` — the button IS the 18px status circle (no inner knob child); its
+ *     fill flips by swapping one class.
+ * All transitions are gated behind `motion-safe:` so reduced-motion users see
+ * an instant state change (UI6 / prefers-reduced-motion).
  *
  * ACCESSIBILITY (UI3 — invisible, always applied)
  * --------------------------------------------------------------------------
@@ -192,6 +212,21 @@ export interface ToggleProps {
    */
   ariaLabel?: string;
   /**
+   * Which visual the control renders (CP4 Figma-fidelity fix per finding
+   * §LookAndFeelPanel L359-363). BOTH presentations are the SAME semantic
+   * `<button role="switch" aria-checked>` control (identical state, `onChange`,
+   * keyboard, focus ring, and accessible-name handling) — only the visual marker
+   * differs:
+   *   • `'switch'` — the canonical iOS pill track + sliding knob (App 06
+   *     "Reading Behavior" grid, `8:53`/`8:63`). The default.
+   *   • `'dot'`    — a single 18×18 circular STATUS DOT (no track, no knob, no
+   *     travel): accent-gradient fill when ON, `rgba(255,255,255,0.10)` when OFF.
+   *     This is the CONFIRMED App 05 Convert "processing options" marker
+   *     (`analyze_figma_node(6:9)`), used by `LookAndFeelPanel`'s 2×3 grid.
+   * @default 'switch'
+   */
+  presentation?: 'switch' | 'dot';
+  /**
    * Extra classes merged onto the outer WRAPPER `<span>` — callers own the
    * control's outer layout / spacing here (e.g. `ms-auto`, `self-center`).
    */
@@ -261,6 +296,42 @@ const KNOB_ON = 'translate-x-[var(--space-toggle-knob-travel)]';
 const KNOB_OFF = 'translate-x-0';
 
 /**
+ * `'dot'` presentation — the App 05 Convert "processing options" status DOT
+ * (CONFIRMED via `analyze_figma_node(6:9)`: an 18×18 circle, gradient fill = ON,
+ * `rgba(255,255,255,0.10)` = OFF; no track, no knob, no travel). The control is
+ * still a full `<button role="switch" aria-checked>` (same state/keyboard/focus
+ * as the pill switch); only the visual marker changes.
+ *
+ * - Box: `relative inline-flex` · `h-[var(--size-toggle-knob)]
+ *   w-[var(--size-toggle-knob)]` (the 18px `--size-toggle-knob` token, shared
+ *   with the pill knob) · `shrink-0` (never collapses in a flex row) ·
+ *   `rounded-full` (full circle) · `cursor-pointer`.
+ * - Focus / disabled / motion: identical token-backed treatment to the pill
+ *   track (a keyboard-only `:focus-visible` ring on `--border-accent`, the
+ *   `disabled` dim, and a `motion-safe` color transition).
+ */
+const DOT_BASE =
+  'relative inline-flex h-[var(--size-toggle-knob)] w-[var(--size-toggle-knob)] shrink-0 ' +
+  'cursor-pointer rounded-full ' +
+  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--border-accent)] ' +
+  'disabled:cursor-not-allowed disabled:opacity-50 ' +
+  'motion-safe:transition-colors motion-safe:duration-200 motion-safe:ease-out';
+
+/**
+ * ON-state dot fill: the ACCENT gradient (`--gradient-accent`, #7B61FF→#A78BFA)
+ * via `bg-gradient-accent` — the CONFIRMED Figma "gradient fill = ON" for the
+ * App 05 processing dots (`6:9`); shares the pill switch's ON token.
+ */
+const DOT_ON = 'bg-gradient-accent';
+
+/**
+ * OFF-state dot fill: `rgba(255,255,255,0.10)` via the `--border-white-10` token
+ * (`bg-[var(--border-white-10)]`) — the CONFIRMED Figma "rgba(255,255,255,0.1) =
+ * OFF" for the App 05 processing dots (`6:9`).
+ */
+const DOT_OFF = 'bg-[var(--border-white-10)]';
+
+/**
  * Optional-label typography (AAP §0.3.3 contract for this primitive's `label`):
  * the `text-body` role (12px) in the secondary text token (#94A3B8).
  * `select-none` keeps the label from being text-selected on rapid toggling.
@@ -268,19 +339,20 @@ const KNOB_OFF = 'translate-x-0';
 const LABEL_CLASSES = 'select-none text-body text-text-secondary';
 
 /**
- * Toggle — the bespoke design-system iOS-style on/off switch primitive.
+ * Toggle — the bespoke design-system binary on/off control primitive.
  *
  * Renders an inline-flex wrapper containing a single `<button type="button"
- * role="switch" aria-checked>` (the pill track) with one absolutely-positioned
- * knob `<span>` inside it, plus an optional adjacent label. Flipping the switch
- * calls `onChange(!checked)` (never while `disabled`); the knob slides via a
- * `translate-x` transform and the track color swaps between the accent gradient
- * (on) and the card surface (off). When `label` is provided it is rendered as
- * visible text and wired to the switch as its accessible name via
- * `aria-labelledby`.
+ * role="switch" aria-checked>`, plus an optional adjacent label. Flipping it
+ * calls `onChange(!checked)` (never while `disabled`). The `presentation` prop
+ * selects the visual: `'switch'` (default) renders the iOS pill track with an
+ * absolutely-positioned knob `<span>` that slides via a `translate-x` transform
+ * (track color swaps accent-gradient on / card surface off); `'dot'` renders the
+ * 18px App-05 status circle with no inner knob (fill swaps accent-gradient on /
+ * `--border-white-10` off). When `label` is provided it is rendered as visible
+ * text and wired to the control as its accessible name via `aria-labelledby`.
  *
  * @param props - {@link ToggleProps}
- * @returns The rendered switch (optionally with an adjacent label).
+ * @returns The rendered control (optionally with an adjacent label).
  */
 export function Toggle({
   checked,
@@ -289,6 +361,7 @@ export function Toggle({
   label,
   ariaLabelledby,
   ariaLabel,
+  presentation = 'switch',
   className,
 }: ToggleProps): JSX.Element {
   // A stable, SSR-safe unique id (React 19 `useId`) used to associate the
@@ -323,8 +396,13 @@ export function Toggle({
   };
 
   // Compose token-backed class strings: base + the active state's class. The
-  // caller className is merged onto the WRAPPER (last) so its utilities win.
-  const trackClassName = `${TRACK_BASE} ${checked ? TRACK_ON : TRACK_OFF}`;
+  // 'dot' presentation swaps the pill track for an 18px status dot (no knob);
+  // 'switch' (default) renders the iOS pill track + sliding knob. The caller
+  // className is merged onto the WRAPPER (last) so its utilities win.
+  const isDot = presentation === 'dot';
+  const controlClassName = isDot
+    ? `${DOT_BASE} ${checked ? DOT_ON : DOT_OFF}`
+    : `${TRACK_BASE} ${checked ? TRACK_ON : TRACK_OFF}`;
   const knobClassName = `${KNOB_BASE} ${checked ? KNOB_ON : KNOB_OFF}`;
   const wrapperClassName = [WRAPPER_BASE, className].filter(Boolean).join(' ');
 
@@ -338,11 +416,13 @@ export function Toggle({
         aria-label={resolvedAriaLabel}
         disabled={disabled}
         onClick={handleToggle}
-        className={trackClassName}
+        className={controlClassName}
       >
-        {/* Decorative sliding thumb — the switch button owns the state, so the
-            knob is hidden from assistive tech. */}
-        <span aria-hidden="true" className={knobClassName} />
+        {/* Pill ('switch') only: the decorative sliding thumb — the button owns
+            the state, so the knob is hidden from assistive tech. The 'dot'
+            presentation is a bare colored circle (the button itself), so it
+            renders no inner knob. */}
+        {isDot ? null : <span aria-hidden="true" className={knobClassName} />}
       </button>
       {hasLabel ? (
         <span id={labelId} className={LABEL_CLASSES}>

@@ -192,6 +192,7 @@ export function ConvertOptionTabs({
       tabs={[...CONVERT_OPTION_TABS]}
       active={active}
       onSelect={onSelect}
+      variant="convert"
       className={className}
     />
   );

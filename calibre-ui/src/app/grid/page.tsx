@@ -57,9 +57,11 @@
  * (multi-select). Conceptual parity only; this is a net-new React prototype.
  *
  * Token fidelity: every CSS value resolves to a Tailwind v4 `@theme` token from
- * `app/globals.css`. The only raw bracketed literal is the fixed panel width
- * `w-[236px]` (matching the App 01 detail-panel width so List ↔ Grid feel
- * consistent); the left hairline uses the `border-line-07` token (the
+ * `app/globals.css`. The fixed right-panel width is the named
+ * `--size-detail-panel-w` token (236px, Figma `2:345` — the SAME token the App 01
+ * `BookDetailPanel` sizes itself with, so List ↔ Grid feel consistent), consumed
+ * as `w-[var(--size-detail-panel-w)]` (NO hardcoded `w-[236px]` literal — R3 /
+ * AAP §0.4.5); the left hairline uses the `border-line-07` token (the
  * white-7%-opacity line from the AAP §0.3.2 manifest). No color/rgba/radius
  * literals appear anywhere in this file.
  */
@@ -101,12 +103,15 @@ export default function GridPage() {
       </section>
 
       {/* RIGHT: the detail panel that switches on selection, with the Recently */}
-      {/* Added list beneath. Fixed `w-[236px]` (matches the App 01 detail panel) */}
-      {/* + `shrink-0` so the center column, not this panel, absorbs the slack. */}
+      {/* Added list beneath. Width is the `--size-detail-panel-w` token (236px, */}
+      {/* Figma `2:345` — the SAME token the App 01 `BookDetailPanel` sizes itself */}
+      {/* with, so List ↔ Grid feel identical) + `shrink-0` so the center column, */}
+      {/* not this panel, absorbs the slack. No hardcoded width literal (R3 / AAP */}
+      {/* §0.4.5): the value resolves to the named `@theme` token. */}
       {/* `border-l border-line-07` is the white-7% divider; it lives on the */}
       {/* aside (not the panels) so the hairline is consistent across BOTH the */}
       {/* batch and single-book states (BatchActionsPanel carries no own border). */}
-      <aside className="flex w-[236px] shrink-0 flex-col overflow-y-auto border-l border-line-07">
+      <aside className="flex w-[var(--size-detail-panel-w)] shrink-0 flex-col overflow-y-auto border-l border-line-07">
         {/* Selecting 2+ cards flips `isBatchMode` → swap the single-book detail */}
         {/* panel for the batch-actions panel. The ternary is required because */}
         {/* `BookDetailPanel` does not self-guard on batch mode (only */}

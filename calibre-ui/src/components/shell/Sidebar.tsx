@@ -99,15 +99,15 @@
  * (which renders a real `<button type="button">` with free Enter/Space
  * activation, a token-backed inset `:focus-visible` ring, and a `motion-safe`
  * color transition); each supplies only its per-row layout/active-fill via
- * `className`. The TAG chips are NATIVE `<button type="button">` elements (the
- * full-width `NavRowButton` is unsuitable for an inline, content-hugging chip),
- * with their default button chrome neutralized so only the `TagPill` primitive
- * paints. Every control carries `aria-pressed` to announce its toggle state to
- * assistive tech — these are FILTER toggles, so `aria-pressed` (not
- * `aria-current`) is the correct semantic, which is why the rows pass
- * `aria-pressed` rather than the primitive's `active` prop. There are NO
- * `div role="button"` controls and NO `onKeyDown` shims — keyboard operability
- * comes natively from the underlying buttons. The root is an `<aside>` landmark;
+ * `className`. The TAG chips compose the interactive `TagPill` primitive
+ * DIRECTLY (`variant="sidebar"` + `onClick` + `active`) — it renders its OWN real
+ * `<button type="button" aria-pressed>` in the clickable form, so there is no
+ * raw native `<button>` wrapper around the pill (CP4 R4 composition fix per
+ * finding §Sidebar L324). These are FILTER toggles, so `aria-pressed` (not
+ * `aria-current`) is the correct semantic — the primitive sets it from the
+ * `active` prop. There are NO `div role="button"` controls and NO `onKeyDown`
+ * shims — keyboard operability comes natively from the underlying buttons. The
+ * root is an `<aside>` landmark;
  * group items are real `<ul>`/`<li>` lists; emoji glyphs are `aria-hidden`
  * (decorative — the visible label is the control's accessible name). Color is
  * never the sole active cue (the label brightens AND, for tags, a ring appears;
@@ -230,30 +230,15 @@ const LABEL_CLASSES = 'min-w-0 flex-1 truncate text-body';
 const COUNT_CLASSES = 'shrink-0 text-meta-value text-text-muted';
 
 /**
- * Clickable wrapper around each {@link TagPill} — a NATIVE `<button type="button">`
- * (R4: native semantics over a `div role="button"`), with its default button
- * chrome neutralized so ONLY the pill renders: `appearance-none border-0
- * bg-transparent p-0` strip the user-agent button look, leaving the pill's own
- * translucent-purple surface intact. `inline-flex` hugs the pill (the full-width
- * `NavRowButton` is unsuitable for an inline chip); `rounded-full` matches the
- * pill so the `:focus-visible` ring is capsule-shaped; `cursor-pointer
- * select-none` signal interactivity. Enter/Space activation and the button role
- * now come natively from the element (no `onKeyDown` helper needed).
+ * NOTE (CP4 R4 composition fix per finding §Sidebar L324): the former
+ * `TAG_WRAP_CLASSES` (a raw native `<button>` wrapper) and `TAG_ACTIVE_CLASSES`
+ * (an active-ring className escape hatch) have been REMOVED. The sidebar now
+ * composes the interactive `TagPill` primitive directly — `<TagPill
+ * variant="sidebar" onClick active>` — which renders its own real
+ * `<button type="button" aria-pressed>`, paints the CONFIRMED Figma dark chip,
+ * and owns the active ring. Tag interactions are therefore fully primitive-backed
+ * with no raw wrapper element and no design-system coverage gap.
  */
-const TAG_WRAP_CLASSES =
-  'inline-flex rounded-full cursor-pointer select-none appearance-none border-0 bg-transparent p-0 ' +
-  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--border-accent)]';
-
-/**
- * ACTIVE tag treatment, passed to {@link TagPill} via its `className` escape
- * hatch. A 2px accent-colored ring is used DELIBERATELY (rather than a stronger
- * background fill): the pill's base already paints `bg-accent/20`, and stacking
- * a second `bg-accent/NN` utility would rely on Tailwind source-order to win,
- * which is fragile. A `ring-*` utility sets `box-shadow` — a property the pill
- * base never sets — so the active ring ALWAYS renders, giving a reliable,
- * token-backed selected cue with zero layout shift.
- */
-const TAG_ACTIVE_CLASSES = 'ring-2 ring-[var(--color-accent)]';
 
 /**
  * Sidebar — the persistent left library facet panel (sections + tags + authors).
@@ -321,17 +306,18 @@ export function Sidebar({ className }: SidebarProps): JSX.Element {
             const activate = (): void => toggleTag(tag.label);
             return (
               <li key={tag.label}>
-                <button
-                  type="button"
-                  aria-pressed={isActive}
+                {/* The interactive sidebar `TagPill` IS the `<button>` — it
+                    renders a real `<button type="button" aria-pressed>` in its
+                    clickable form, so no raw wrapper element is needed (CP4 R4
+                    composition fix per finding §Sidebar L324). The `sidebar`
+                    variant paints the CONFIRMED Figma dark `#1D2148` chip; the
+                    active ring + `aria-pressed` are owned by the primitive. */}
+                <TagPill
+                  label={tag.label}
+                  variant="sidebar"
                   onClick={activate}
-                  className={TAG_WRAP_CLASSES}
-                >
-                  <TagPill
-                    label={tag.label}
-                    className={isActive ? TAG_ACTIVE_CLASSES : undefined}
-                  />
-                </button>
+                  active={isActive}
+                />
               </li>
             );
           })}

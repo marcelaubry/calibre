@@ -61,9 +61,14 @@
  *     boundary.
  *   • CODE → monospace, `bg-code-bg`; colors injected by Shiki (see above). The
  *     Figma mock colors each whole LINE one solid color (a designer shortcut);
- *     per AAP §0.3.3 / §0.7.4 (which mandate real syntax highlighting) this view
- *     uses Shiki's per-TOKEN coloring with the same palette — an intended,
- *     architecturally-correct divergence from the stylized mock.
+ *     per AAP §0.5.4 (which EXPLICITLY SELECTS Shiki as the highlighter) plus
+ *     §0.3.3 / §0.7.4 (which MANDATE real per-token syntax highlighting with this
+ *     exact palette) this view uses Shiki's per-TOKEN coloring with the AAP
+ *     palette — an EXPLICITLY AAP-ACCEPTED, architecturally-correct divergence
+ *     from the stylized whole-line mock (see the BLITZY [FIGMA] acceptance note at
+ *     the code-injection site). Per the D1 precedence order the explicit AAP rule
+ *     wins over the mock's stylization, so this is a resolved acceptance — not an
+ *     open fidelity gap (CP4 finding §CodeEditor L293).
  *   • NOTICE → pinned BOTTOM-LEFT, amber `--color-star` (`text-star`), with the
  *     ⚠ warning glyph. Per the CONFIRMED Figma it has NO border and NO background
  *     (it sits directly on the code surface), and its default wording is the
@@ -288,6 +293,19 @@ export async function CodeEditor({
             scroll WITHIN the panel (no page overflow); `min-w-0` lets the flex
             child actually shrink. `SHIKI_NORMALIZE` aligns the injected pre to
             the gutter and reveals the single `bg-code-bg` surface. */}
+        {/* BLITZY [FIGMA] (acceptance, CP4 finding §CodeEditor L293): the Figma
+            mock `5:74` colors each whole LINE one solid color (a stylized
+            shortcut), whereas this view injects Shiki's PER-TOKEN highlighted
+            HTML. This is EXPLICITLY AAP-ACCEPTED, not a fidelity gap: AAP §0.5.4
+            SELECTS Shiki as the syntax highlighter, and §0.3.3 / §0.7.4 MANDATE
+            real per-token highlighting with the exact App04 palette (tag #A78BFA /
+            attr #38BDF8 / string #FBBF24 / value #4ADE80 / comment #64748B). Those
+            token colors are defined ONCE in `@/lib/highlight`'s `calibreCodeTheme`,
+            every value pulled from `@/theme/tokens` (ZERO hardcoded literals), so
+            the injected HTML already carries the AAP palette exactly. Per the D1
+            precedence order the explicit AAP rule (real Shiki highlighting) wins
+            over the mock's whole-line look — this file must NOT, and does not,
+            re-color syntax tokens. */}
         <div
           className={`min-w-0 flex-1 overflow-x-auto p-4 font-mono text-sm leading-[var(--size-editor-line-h)] ${SHIKI_NORMALIZE}`}
           dangerouslySetInnerHTML={{ __html: html }}

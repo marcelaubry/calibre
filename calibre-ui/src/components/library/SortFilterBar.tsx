@@ -233,15 +233,21 @@ export function SortFilterBar({ className }: SortFilterBarProps): JSX.Element {
   return (
     <div role="toolbar" aria-label="Grid sort and view options" className={barClassName}>
       {/* LEFT cluster — result count + sort control + order toggle.
-          BLITZY [FIGMA]: the result count, the "Sort by" label, and the order
-          toggle are sanctioned-OPTIONAL per this file's spec (agent_prompt
-          Phase 2: "Optionally add an order-toggle…", "Optionally show a result
-          count… if the Figma bar includes it"). The Figma verification tools
-          (analyze_figma_node / compare_screenshot_with_figma) were unavailable
-          at build time, so these are kept under the optional allowance; the
-          REQUIRED controls (sort Select + grid/list view toggles) are always
-          present. Chose to include the optionals (useful, token-compliant,
-          accessible). Alternative: prune them if Figma confirms their absence. */}
+          BLITZY [FIGMA] (CP4 finding §SortFilterBar L246-262 — MINOR/verification
+          risk): the result count, the "Sort by" label, and the order toggle are
+          sanctioned-OPTIONAL per this file's spec (agent_prompt Phase 2:
+          "Optionally add an order-toggle…", "Optionally show a result count… if
+          the Figma bar includes it") AND consistent with AAP §0.7.4 ("a sort/view
+          bar sits above the grid"). The finding asks to re-compare against node
+          `3:66` and prune any extra content WHEN Figma tooling is restored — but
+          `analyze_figma_node` / `compare_screenshot_with_figma` STILL return the
+          same infrastructure error at CP4 resolution time (the identical block the
+          reviewer hit), so an exact 3:66 re-compare is not possible. Per D1
+          precedence the AAP is authoritative and frozen, so AAP/prompt-sanctioned
+          content is KEPT (never pruned on unverified speculation that Figma omits
+          it); the REQUIRED controls (sort Select + grid/list view toggles) are
+          always present, and the whole bar is token-clean + primitive-backed.
+          Documented verification limitation; revisit if Figma tooling is restored. */}
       <div className="flex min-w-0 items-center gap-2">
         <span className={LABEL_CLASSES}>{countLabel}</span>
         <span className={LABEL_CLASSES}>Sort by</span>

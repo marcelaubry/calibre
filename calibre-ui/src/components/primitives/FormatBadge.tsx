@@ -51,29 +51,28 @@
  *   • text   → `text-format-epub` / `text-format-mobi` / `text-format-pdf`
  *              (`--color-format-epub` #4ADE80 · `--color-format-mobi` #FBBF24 ·
  *              `--color-format-pdf` #F87171).
- *   • fill   → `bg-format-epub/10` / `bg-format-mobi/10` / `bg-format-pdf/10`
- *              (a 10%-opacity wash of the SAME format token — see BLITZY [COLOR]).
+ *   • fill   → `bg-[var(--color-format-epub-bg)]` / `…-mobi-bg` / `…-pdf-bg`
+ *              (the CONFIRMED Figma opaque dark chip fills — see BLITZY [COLOR]).
+ *   • size   → `w-[var(--size-format-badge-w)]` (40px) ·
+ *              `h-[var(--size-format-badge-h)]` (16px) — the exact Figma frame.
  *   • radius → `rounded-badge` (`--radius-badge` = 3 px).
  *   • type   → `text-badge` (`--text-badge` = 8 px + companion
  *              `--text-badge--font-weight: 500` = Inter Medium, set in one
  *              utility; no separate `font-medium` is needed — matching how the
  *              sibling `Button` consumes `text-button-secondary`).
- * There are NO raw hex / rgba color literals anywhere in this file. The only
- * non-token literals are Tailwind's standard spacing-scale utilities (`px-1.5`,
- * `py-1`) and layout/keyword utilities (`inline-flex`, `leading-none`, …), none
- * of which are design-token color/geometry values.
+ * There are NO raw hex / rgba color literals anywhere in this file; every color
+ * AND geometry value resolves to an `@theme` token. The only non-token literals
+ * are layout/keyword utilities (`inline-flex`, `leading-none`, …), none of which
+ * are design-token color/geometry values.
  *
- * BLITZY [COLOR]: chip background is a token wash, NOT the Figma opaque dark.
- *   The Figma chips use SOLID, FULLY-OPAQUE, INDEPENDENT dark fills — EPUB
- *   `#1A2A1A`, MOBI `#1A1A2E`, PDF `#2A1A1A` — that are NOT named `@theme`
- *   tokens and that the zero-hardcoded rule forbids hardcoding. Each is realized
- *   token-safely as a 10%-opacity wash of its OWN format color (`bg-format-<kind>/10`)
- *   so the chip stays 100% token-sourced while preserving the design intent: a
- *   subtle dark fill tinted toward the format's hue. This mirrors the sibling
- *   `Button` primitive, which maps the IDENTICAL `#2A1A1A` danger fill to
- *   `bg-danger/10`. The wash is alpha-composited over the surface behind it
- *   (vs. the Figma opaque cousin), an accepted, imperceptible reconciliation of
- *   the single token-backed look; flagged here for designer review.
+ * BLITZY [COLOR]: chip background is now the CONFIRMED Figma OPAQUE dark fill.
+ *   CP4 Figma-fidelity fix (per finding §FormatBadge L199-203): the prior
+ *   10%-opacity wash (`bg-format-<kind>/10`) is replaced by dedicated opaque
+ *   chip-fill tokens — EPUB `--color-format-epub-bg` #1A2A1A, MOBI
+ *   `--color-format-mobi-bg` #1A1A2E, PDF `--color-format-pdf-bg` #2A1A1A — that
+ *   reproduce the Figma SOLID, FULLY-OPAQUE, INDEPENDENT dark fills exactly while
+ *   keeping the file 100% token-sourced (the new tokens live in globals.css and
+ *   are mirrored in `tokens.ts`).
  *
  * BLITZY [COLOR]: MOBI label is the AAP semantic AMBER token, not Figma violet.
  *   The Figma file renders the MOBI label in violet `#A78BFA` (the accent-light
@@ -88,19 +87,16 @@
  *   wins; flagged here for designer review. EPUB and PDF need no reconciliation
  *   (Figma and the AAP agree exactly).
  *
- * LAYOUT RECONCILIATION (design-system centering rule)
+ * LAYOUT (CP4 Figma-fidelity fix — fixed 40×16 box)
  * --------------------------------------------------------------------------
- * Figma seats the label at a fixed 4 px left / 3 px top offset inside a FIXED
- * 40×16 px box (so the label is left-aligned with a variable residual right
- * gap). Per the design-system centering rule — and this file's explicit contract
- * ("small symmetric padding … visually center the label; do not apply literal
- * asymmetric Figma auto-layout padding") — this primitive instead HUGS its label
- * with small symmetric padding and centers it geometrically (`inline-flex
- * items-center justify-center`). The fixed-width/left-aligned Figma geometry is
- * an auto-layout artifact, not design intent (the same reconciliation the
- * sibling `CheckBadge` makes for its glyph). The 16 px Figma chip height is
- * preserved exactly: `leading-none` (8 px line box) + `py-1` (4 px top+bottom) =
- * 16 px under the global `border-box`.
+ * The chip now reproduces the EXACT Figma `3:87` frame: a FIXED 40×16 px box
+ * (`w-[var(--size-format-badge-w)]` + `h-[var(--size-format-badge-h)]`) with the
+ * label centered geometrically (`inline-flex items-center justify-center`). This
+ * supersedes the prior label-hugging treatment (small symmetric padding) flagged
+ * by finding §FormatBadge L199-203: a fixed footprint makes every badge identical
+ * in size and lets format chips align cleanly in the library "Format" column and
+ * the card info strips. `leading-none` keeps the 8px label's line box tight; the
+ * flex centering (not padding) places it inside the fixed 16px height.
  *
  * DATA-STATE COMPLETENESS (AAP §0.9 / UI9)
  * --------------------------------------------------------------------------
@@ -163,43 +159,44 @@ export interface FormatBadgeProps {
  * Base classes shared by every format variant — the canonical token-backed chip.
  *
  * - Shape/layout: `inline-flex items-center justify-center` centers the label on
- *   both axes (the design-system centering rule; see the file header's LAYOUT
- *   RECONCILIATION). `align-middle` keeps the chip vertically centered on the
- *   surrounding text baseline when it sits inline (e.g. a table format cell or a
- *   card info strip next to the author line). `whitespace-nowrap` stops the
- *   short label from ever wrapping.
- * - Geometry: `rounded-badge` (`--radius-badge` = 3 px). `px-1.5` (6 px) gives a
- *   small symmetric horizontal inset (the chip hugs its label); `py-1` (4 px)
- *   plus `leading-none` (an 8 px line box for the 8 px label) yields the exact
- *   16 px Figma chip height under the global `border-box`.
+ *   both axes inside the FIXED chip box. `align-middle` keeps the chip vertically
+ *   centered on the surrounding text baseline when it sits inline (e.g. a table
+ *   format cell or a card info strip next to the author line). `whitespace-nowrap`
+ *   stops the short label from ever wrapping.
+ * - Geometry (CP4 Figma-fidelity fix): the chip is the EXACT Figma `3:87` frame —
+ *   a FIXED 40×16 px box via `w-[var(--size-format-badge-w)]` (40px) +
+ *   `h-[var(--size-format-badge-h)]` (16px), with `rounded-badge`
+ *   (`--radius-badge` = 3px). This replaces the prior label-hugging
+ *   `px-1.5 py-1` treatment so every badge has identical footprint and aligns in
+ *   a column. `leading-none` keeps the 8px label's line box tight inside the
+ *   16px box (the flex centering does the vertical placement).
  * - Typography: `text-badge` (`--text-badge` = 8 px + companion font-weight 500
- *   = Inter Medium, in a single utility); `leading-none` keeps the line box
- *   tight so the height math holds (the badge role declares no line-height
- *   companion, so `leading-none` is free to set it).
+ *   = Inter Medium, in a single utility).
  *
  * Color is intentionally OMITTED here — it is supplied per-format by
- * {@link FORMAT_CLASSES} so each variant gets its own text color + chip wash.
+ * {@link FORMAT_CLASSES} so each variant gets its own text color + opaque fill.
  */
 const BADGE_BASE_CLASSES =
   'inline-flex items-center justify-center align-middle whitespace-nowrap ' +
-  'rounded-badge px-1.5 py-1 leading-none text-badge';
+  'w-[var(--size-format-badge-w)] h-[var(--size-format-badge-h)] ' +
+  'rounded-badge leading-none text-badge';
 
 /**
  * Per-format color treatment — an exhaustive `Record<FormatKind, string>` so the
  * compiler guarantees all three variants are styled (data-state completeness).
  *
- * Each entry pairs the format's text-color token utility with a 10%-opacity wash
- * of the SAME token for the chip fill (the token-safe stand-in for the Figma
- * opaque dark — see the file header's BLITZY [COLOR] flags):
- *   • EPUB → green  `text-format-epub` (#4ADE80) on `bg-format-epub/10`.
- *   • MOBI → amber  `text-format-mobi` (#FBBF24) on `bg-format-mobi/10`
- *            (AAP semantic token; Figma renders violet — see BLITZY [COLOR]).
- *   • PDF  → red    `text-format-pdf`  (#F87171) on `bg-format-pdf/10`.
+ * Each entry pairs the format's text-color token utility with the CONFIRMED
+ * Figma OPAQUE dark chip-fill token (CP4 Figma-fidelity fix — see the file
+ * header's BLITZY [COLOR] flags):
+ *   • EPUB → green  `text-format-epub` (#4ADE80) on `--color-format-epub-bg` #1A2A1A.
+ *   • MOBI → amber  `text-format-mobi` (#FBBF24) on `--color-format-mobi-bg` #1A1A2E
+ *            (AAP semantic amber token; Figma renders violet — see BLITZY [COLOR]).
+ *   • PDF  → red    `text-format-pdf`  (#F87171) on `--color-format-pdf-bg` #2A1A1A.
  */
 const FORMAT_CLASSES: Record<FormatKind, string> = {
-  EPUB: 'text-format-epub bg-format-epub/10',
-  MOBI: 'text-format-mobi bg-format-mobi/10',
-  PDF: 'text-format-pdf bg-format-pdf/10',
+  EPUB: 'text-format-epub bg-[var(--color-format-epub-bg)]',
+  MOBI: 'text-format-mobi bg-[var(--color-format-mobi-bg)]',
+  PDF: 'text-format-pdf bg-[var(--color-format-pdf-bg)]',
 };
 
 /**
