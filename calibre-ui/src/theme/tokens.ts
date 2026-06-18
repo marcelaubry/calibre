@@ -90,6 +90,9 @@ export const colors = {
   formatEpubBg: '#1A2A1A',
   formatMobiBg: '#1A1A2E',
   formatPdfBg: '#2A1A1A',
+  // semantic — Button danger SURFACE fill (Figma 2:375 "Delete" = solid dark-maroon #2A1A1A, opacity 1);
+  // mirrors --color-danger-bg. Same hex as formatPdfBg but semantically distinct (button surface vs format chip).
+  dangerBg: '#2A1A1A',
   // semantic — Sidebar TagPill solid fill (Figma 2:36); distinct from the metadata accent wash
   tagSidebarBg: '#1D2148',
   // semantic — App 04 code-editor syntax theme

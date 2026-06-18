@@ -79,12 +79,17 @@
  * (`px-4`, `gap-2`). The gradient is consumed only via the `bg-gradient-cta`
  * token utility, never an inline gradient string.
  *
- * BLITZY [COLOR] (danger fill): Figma node 2:375 confirms a SOLID dark-maroon
- * fill `#2A1A1A` (opacity 1), which is NOT part of the named `@theme` token set
- * and therefore cannot be hardcoded under the zero-hardcoded rule. It is
- * realized token-safely as `bg-danger/10` — a low-opacity wash of the danger
- * token (`--color-danger` #F87171) — per the file's authoring directive. If a
- * dedicated maroon token is ever added to `globals.css`, prefer it here.
+ * DANGER FILL (Figma-exact, token-backed): Figma node 2:375 confirms a SOLID
+ * dark-maroon fill `#2A1A1A` (opacity 1) — NOT a translucent wash. This is now
+ * realized via the dedicated named token `--color-danger-bg` (#2A1A1A, declared
+ * in `globals.css` and mirrored in `theme/tokens.ts` as `colors.dangerBg`),
+ * consumed as `bg-[var(--color-danger-bg)]`. This makes the resting fill an
+ * EXACT match to Figma while remaining 100% token-backed (AAP §0.4.5; R1) — it
+ * supersedes the prior `bg-danger/10` low-opacity stand-in (a CP4 fidelity fix
+ * for the QA "danger bg #F87171@10% vs #2A1A1A" finding). The HOVER state uses a
+ * `brightness-125` filter (a state EFFECT, not a color literal) so the resting
+ * surface stays pixel-exact to Figma; the border (`danger/30`) and text
+ * (`danger` #F87171) are unchanged and were already Figma-exact.
  *
  * ICONS ARE GLYPHS, NOT ASSETS (AAP §0.3.4)
  * --------------------------------------------------------------------------
@@ -202,11 +207,11 @@ const BASE_CLASSES =
  *                 `text-text-secondary` (#94A3B8), `rounded-control`,
  *                 `text-button-secondary` (11px/500). Height ≈32px.
  *                 `hover:bg-[var(--border-white-09)]`.
- *   • danger    — `bg-danger/10` (see BLITZY [COLOR] flag in the file header —
- *                 token-safe stand-in for Figma's solid #2A1A1A), 1px
+ *   • danger    — `bg-[var(--color-danger-bg)]` (Figma-exact solid #2A1A1A; see header —
+ *                 DANGER FILL note for the named-token rationale), 1px
  *                 `border-danger/30`, `text-danger` (#F87171),
  *                 `rounded-control`, `text-button-secondary`. Height ≈32px.
- *                 `hover:bg-danger/20`.
+ *                 `hover:brightness-125` (state effect; resting stays Figma-exact).
  *   • toolbar   — transparent idle, container default `text-text-muted`
  *                 (#64748B) which the label inherits UNLESS `toolbarLabelTone`
  *                 overrides it on the label span (see that prop + the
@@ -239,8 +244,8 @@ const VARIANT_CLASSES: Record<ButtonVariant, string> = {
     'text-text-secondary rounded-control text-button-secondary ' +
     'min-h-[var(--size-button-compact-h)] px-u16 gap-u8 hover:bg-[var(--border-white-09)]',
   danger:
-    'bg-danger/10 border border-danger/30 text-danger rounded-control ' +
-    'text-button-secondary min-h-[var(--size-button-compact-h)] px-u16 gap-u8 hover:bg-danger/20',
+    'bg-[var(--color-danger-bg)] border border-danger/30 text-danger rounded-control ' +
+    'text-button-secondary min-h-[var(--size-button-compact-h)] px-u16 gap-u8 hover:brightness-125',
   toolbar:
     'bg-transparent text-text-muted rounded-toolbar ' +
     'min-w-[var(--size-toolbar-button-w)] min-h-[var(--size-button-h)] ' +

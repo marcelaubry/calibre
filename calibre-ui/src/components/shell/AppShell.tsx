@@ -62,6 +62,7 @@
 import type { ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
 
+import { useLibrary } from '@/state/LibraryProvider';
 import { WindowTitleBar } from '@/components/shell/WindowTitleBar';
 import { TopToolbar } from '@/components/shell/TopToolbar';
 import { Sidebar } from '@/components/shell/Sidebar';
@@ -104,6 +105,16 @@ export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
   const isLibraryRoute = LIBRARY_ROUTES.includes(pathname);
 
+  // Data-driven window-title book count (QA Issue 2): the title bar must reflect
+  // the ACTUAL catalog size — exactly the 15-book dataset (AAP §0.1.2) — never a
+  // stale literal. `books` is the full, unfiltered library, so the count matches
+  // the sidebar "All Books" facet and the status-bar "N books" label. The
+  // separator is the U+2014 EM DASH (matching the Figma `2:7` title structure).
+  const { books } = useLibrary();
+  const windowTitle = `calibre \u2014 My Library (${books.length} ${
+    books.length === 1 ? 'book' : 'books'
+  })`;
+
   return (
     // Root: full-viewport vertical stack. `overflow-hidden` clips the window so
     // the internal regions scroll (never the page), and the app background token
@@ -111,8 +122,10 @@ export function AppShell({ children }: AppShellProps) {
     // toolbar, and sidebar are owned by those components — `AppShell` only
     // provides the flex context, so the content row absorbs the remaining height.
     <div className="flex h-screen flex-col overflow-hidden bg-[var(--color-bg-app)]">
-      {/* macOS-style window title bar — rendered identically on EVERY route. */}
-      <WindowTitleBar />
+      {/* macOS-style window title bar — rendered identically on EVERY route.
+          The live book count (QA Issue 2) is computed from the library dataset
+          above and passed in, so it always reflects the real 15-book catalog. */}
+      <WindowTitleBar title={windowTitle} />
 
       {isLibraryRoute ? (
         // Library routes (`/`, `/grid`): standard chrome = top toolbar above a

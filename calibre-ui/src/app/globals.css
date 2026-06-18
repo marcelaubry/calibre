@@ -111,6 +111,16 @@
   --color-format-mobi-bg: #1A1A2E;       /* MOBI chip fill (indigo-tinted dark) */
   --color-format-pdf-bg: #2A1A1A;        /* PDF chip fill (red-tinted dark) */
 
+  /* ---- Colors — semantic: Button danger fill (1) ---------------------
+   * CONFIRMED Figma App01 "Delete" button (node 2:375): a SOLID dark-maroon
+   * fill #2A1A1A (opacity 1) — NOT a translucent wash of the danger color.
+   * Promoted to a named token so the Button `danger` variant carries zero hex
+   * literal (AAP §0.4.5; R1). Shares the same hex as `--color-format-pdf-bg`
+   * but is kept SEMANTICALLY DISTINCT (a button SURFACE vs a format CHIP) so
+   * either can be retuned independently. Mirrored byte-for-byte in
+   * `src/theme/tokens.ts` (`colors.dangerBg`). */
+  --color-danger-bg: #2A1A1A;            /* Delete/danger button fill (red-tinted dark) */
+
   /* ---- Colors — semantic: Sidebar TagPill fill (1) --------------------
    * CONFIRMED Figma App01/App02 sidebar tag chips (2:36): a baked solid dark
    * fill (NOT the translucent accent wash used by metadata pills). Promoted to

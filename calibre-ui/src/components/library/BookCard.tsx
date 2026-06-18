@@ -360,10 +360,15 @@ export function BookCard({ book }: BookCardProps) {
           <FormatBadge format={book.format as FormatKind} className="shrink-0" />
         </div>
 
-        {/* Rating ↔ date-added. Compact amber display stars (size 12 for the
-            card) on the left; the formatted acquisition date on the right. */}
+        {/* Rating ↔ date-added. Amber display stars on the left; the formatted
+            acquisition date on the right. Per AAP §0.3.3 the StarRating component
+            has a SINGLE 14px spec (no compact card variant is documented), so the
+            per-book card rating uses the 14px default — identical to the
+            detail-panel (2:348) and list-row stars. (CP4 fidelity fix for the QA
+            "card mini-star 12px vs detail-panel 14px" finding; the prior size={12}
+            override was an uncited deviation from the AAP's stated size.) */}
         <div className={META_ROW}>
-          <StarRating value={book.rating} size={12} />
+          <StarRating value={book.rating} size={14} />
           <span className={META_VALUE_CLASS}>{formatDate(book.date)}</span>
         </div>
 

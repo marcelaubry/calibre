@@ -181,11 +181,20 @@ const TITLE_CLASSES =
   'justify-center pt-[var(--space-window-title-nudge)] text-window-title text-text-muted';
 
 /**
- * The default centered title — the exact App 01 design string (Figma node
- * `2:7`). The separator is the U+2014 EM DASH, written as an explicit escape so
- * the precise codepoint is unambiguous and encoding-independent.
+ * The default centered title — the App 01 design string structure (Figma node
+ * `2:7`: "calibre — My Library (N books)"). The separator is the U+2014 EM DASH,
+ * written as an explicit escape so the precise codepoint is unambiguous and
+ * encoding-independent.
+ *
+ * The book COUNT is supplied live by {@link AppShell} (which reads the library
+ * dataset and passes the full counted string via the `title` prop), so it always
+ * reflects the real catalog — exactly the 15-book dataset (AAP §0.1.2), matching
+ * the sidebar "All Books" count and the status-bar "N books" label. The Figma
+ * mock's incidental placeholder count ("836") is NOT a design token; per AAP §0.9
+ * /§0.1.2 the rendered count MUST reflect the actual 15-book library, so this
+ * fallback (used only if no `title` prop is passed) carries NO hardcoded number.
  */
-const DEFAULT_TITLE = 'calibre \u2014 My Library (836 books)';
+const DEFAULT_TITLE = 'calibre \u2014 My Library';
 
 /**
  * WindowTitleBar — the persistent macOS-style window title bar.
