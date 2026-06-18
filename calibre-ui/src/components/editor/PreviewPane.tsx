@@ -32,21 +32,23 @@
  * viewport, and this preview always agree on the active file, in lockstep, at
  * zero extra state cost.
  *
- * THE CRITICAL CONSOLE-ERROR GUARD (the single most important detail)
+ * STRUCTURED RENDERING (NO raw-HTML injection, NO console errors)
  * --------------------------------------------------------------------------
- * The mock chapter files in `@/data/editorFiles` are FULL XHTML documents:
- * each `chapter-00X.xhtml` carries a `<head>` containing
+ * The mock chapter files in `@/data/editorFiles` are FULL XHTML documents whose
+ * `code` (shown verbatim in the Shiki code view) carries a `<head>` with
  * `<link rel="stylesheet" type="text/css" href="../styles/stylesheet.css">`
  * (plus `<!DOCTYPE html>`, `<html>`, and `<meta>`). If that raw markup were
  * injected via `dangerouslySetInnerHTML`, the browser would try to FETCH
- * `../styles/stylesheet.css`, 404, and emit a CONSOLE ERROR — violating the
- * AAP "zero console errors" gate (§0.1.2 / §0.9). Therefore this component
- * renders BODY-ONLY inner HTML: {@link extractBodyHtml} returns only what is
- * inside `<body>…</body>` and defensively strips any `<!doctype>`, `<html>`,
- * `<head>…</head>`, `<link>`, `<script>`, and `<meta>` so NO external resource
- * reference can survive into the rendered output. The extraction is a pure
- * string/regex transform (NO `DOMParser`/`document`), so it is SSR-safe and
- * deterministic, and it runs inside `useMemo` keyed on the previewed file.
+ * `../styles/stylesheet.css`, 404, and emit a CONSOLE ERROR — and the injection
+ * itself would be an unsanctioned raw-HTML sink. This pane therefore does NOT
+ * inject HTML at all. Instead it renders the file's STRUCTURED `previewBlocks`
+ * (a heading + paragraphs authored alongside the `code` in `@/data/editorFiles`)
+ * as REAL React `<h1>`/`<p>` elements. With no `<head>`, `<link>`, `<script>`,
+ * or `<meta>` ever present in the output and no `dangerouslySetInnerHTML`
+ * anywhere, there is no external resource to fetch (no 404), nothing to
+ * sanitize, and the AAP "zero console errors" gate (§0.1.2 / §0.9) holds by
+ * construction. (The ONLY sanctioned raw-HTML sink in the app is the
+ * Shiki-rendered `CodeEditor`.)
  *
  * ACTIVE-FILE SELECTION + FALLBACK (never blank — AAP data-bound integrity)
  * --------------------------------------------------------------------------
@@ -108,8 +110,8 @@
  * real webview, no EPUB parsing, and no file I/O.
  *
  * @see ./FileTabs.tsx — `useEditorWorkspace` (the shared editor-state hook).
- * @see ../../data/editorFiles.ts — the mock OEBPS files (HTML chapters link an
- *   external stylesheet → the 404 this component guards against).
+ * @see ../../data/editorFiles.ts — the mock OEBPS files; HTML chapters carry the
+ *   structured `previewBlocks` this pane renders (and `code` for the code view).
  * @see ../../types/index.ts — the `EditorFile` contract (`@/types`).
  * @see ./CodeEditor.tsx — the sibling center code view (same screen `5:2`).
  * @see src/app/globals.css — the authoritative `@theme` token declarations.
@@ -119,58 +121,45 @@
 
 import { useMemo, type JSX } from 'react';
 
-import type { EditorFile } from '@/types';
+import type { EditorFile, PreviewBlock } from '@/types';
 import { useEditorWorkspace } from '@/components/editor/FileTabs';
 
 /**
- * Strip the document scaffolding from a (possibly full) XHTML string and return
- * only the inner `<body>` markup, so NO external resource reference (e.g.
- * `<link rel="stylesheet" href="../styles/stylesheet.css">`) survives into the
- * injected HTML — which would otherwise trigger a 404 fetch and a console
- * error, violating the AAP "zero console errors" gate.
+ * Render a single structured {@link PreviewBlock} as the matching React element.
  *
- * Pure string/regex transform (NO `DOMParser`/`document`): SSR-safe and
- * deterministic, so server and client produce identical output and the
- * `/editor` route hydrates without warnings.
+ * The cream page renders STRUCTURED content (not raw HTML), so each block maps
+ * to a real element by its `type`: `h1`/`h2` headings, a `blockquote`, or — for
+ * `p` and defensively any other value — a paragraph. The book-page typography
+ * (size, weight, first-line indent, etc.) is applied by {@link BOOK_TYPOGRAPHY}
+ * on the wrapping `<article>` via child-combinator variants, so these elements
+ * stay style-free here.
  *
- * Algorithm:
- *   1. If a `<body>…</body>` block exists, take its inner markup.
- *   2. Otherwise, fall back to the whole string (defensive — the previewed file
- *      is always an HTML chapter, which has a body).
- *   3. Either way, defensively remove any `<!doctype>`, `<html>`,
- *      `<head>…</head>`, `<link>`, `<script>…</script>`, and `<meta>` so
- *      resource- and head-only tags can never leak into the output.
+ * The `previewBlocks` list is static mock data that never reorders, so the
+ * array index is a stable React key.
  *
- * @param code - The raw file contents (a full XHTML chapter, or any markup).
- * @returns The inner body markup, trimmed; `''` for empty input.
+ * @param block - The structured block to render.
+ * @param index - The block's position in the list (used as a stable key).
+ * @returns The rendered heading, paragraph, or blockquote element.
  */
-function extractBodyHtml(code: string): string {
-  if (!code) {
-    return '';
+function renderPreviewBlock(block: PreviewBlock, index: number): JSX.Element {
+  switch (block.type) {
+    case 'h1':
+      return <h1 key={index}>{block.text}</h1>;
+    case 'h2':
+      return <h2 key={index}>{block.text}</h2>;
+    case 'blockquote':
+      return <blockquote key={index}>{block.text}</blockquote>;
+    case 'p':
+    default:
+      return <p key={index}>{block.text}</p>;
   }
-
-  // Prefer the explicit <body>…</body> inner markup when present.
-  const bodyMatch = code.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
-  let html = bodyMatch ? bodyMatch[1] : code;
-
-  // Defensively strip doctype / html / head / external-resource / script /
-  // meta tags so no external fetch (404) can be triggered by the injected HTML.
-  html = html
-    .replace(/<!DOCTYPE[^>]*>/gi, '')
-    .replace(/<\/?html[^>]*>/gi, '')
-    .replace(/<head[\s\S]*?<\/head>/gi, '')
-    .replace(/<link[^>]*>/gi, '')
-    .replace(/<script[\s\S]*?<\/script>/gi, '')
-    .replace(/<meta[^>]*>/gi, '');
-
-  return html.trim();
 }
 
 /**
- * Book-page typography for the injected chapter markup.
+ * Book-page typography for the rendered preview blocks.
  *
  * Tailwind v4's preflight resets headings (`font-size`/`font-weight: inherit`)
- * and clears margins, so the injected `<h1>`/`<p>` would otherwise render flat.
+ * and clears margins, so the rendered `<h1>`/`<p>` would otherwise render flat.
  * These arbitrary child-combinator variants restore a reader-page hierarchy
  * using only typography/geometry SCALE utilities (no color literals):
  *   • `h1`         → larger, bold, tight leading, with space beneath.
@@ -183,18 +172,19 @@ function extractBodyHtml(code: string): string {
  * inherit into every child, so these variants stay color-free and token-clean.
  */
 const BOOK_TYPOGRAPHY =
-  '[&_h1]:mb-6 [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:leading-tight ' +
-  '[&_h2]:mt-6 [&_h2]:mb-4 [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:leading-snug ' +
+  '[&_h1]:mb-u24 [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:leading-tight ' +
+  '[&_h2]:mt-u24 [&_h2]:mb-u16 [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:leading-snug ' +
   '[&_p]:indent-[var(--space-preview-indent)] [&_p:first-of-type]:indent-0 ' +
-  '[&_blockquote]:my-4 [&_blockquote]:mx-6 [&_blockquote]:italic';
+  '[&_blockquote]:my-u16 [&_blockquote]:mx-u24 [&_blockquote]:italic';
 
 /**
  * `PreviewPane` — the App 04 EPUB Editor's cream live preview (Figma `5:131`).
  *
  * Reads the active file from {@link useEditorWorkspace}; if it is not an HTML
  * document, falls back to the first HTML chapter so the page is never blank.
- * Renders the active file's BODY-ONLY HTML (see {@link extractBodyHtml}) as a
- * dark-serif, justified reader page on a cream surface.
+ * Renders that file's structured `previewBlocks` as REAL React headings and
+ * paragraphs (see {@link renderPreviewBlock}) — NO raw-HTML injection — on a
+ * dark-serif, justified cream page.
  *
  * Switching the active file (via the tab strip or the file tree) updates the
  * preview automatically, because all editor panes read the same shared state.
@@ -213,32 +203,32 @@ export function PreviewPane(): JSX.Element {
     return fileEntries.find((f) => f.language === 'html') ?? null;
   }, [activeFile, fileEntries]);
 
-  // Body-only markup (the console-error guard); recomputed only when the
-  // previewed file changes.
-  const bodyHtml = useMemo(
-    () => extractBodyHtml(previewFile?.code ?? ''),
-    [previewFile],
-  );
+  // The structured preview content for the previewed file (heading +
+  // paragraphs). HTML chapters always carry `previewBlocks`; the `?? []` keeps
+  // the render total and drives the never-blank fallback below.
+  const blocks = previewFile?.previewBlocks ?? [];
 
   return (
     <section
       aria-label="Live preview"
       className="flex min-w-0 basis-[var(--size-preview-basis)] shrink flex-col overflow-y-auto border-l border-[var(--border-white-07)] bg-preview-cream"
     >
-      {bodyHtml ? (
+      {blocks.length > 0 ? (
         // Reader page: serif, justified, generous leading + reading-page
-        // padding, dark ink token on cream. Body-only markup → no external
-        // resources → no 404s. `break-words` + `hyphens-auto` keep the narrow
+        // padding, dark ink token on cream. Rendered from structured
+        // `previewBlocks` as REAL React elements → no raw HTML, no external
+        // resources, no 404s. `break-words` + `hyphens-auto` keep the narrow
         // column overflow-safe when it shrinks toward the 1280 minimum.
         <article
-          className={`px-10 py-8 font-serif text-justify leading-7 break-words hyphens-auto text-[color:var(--color-bg-app)] ${BOOK_TYPOGRAPHY}`}
-          dangerouslySetInnerHTML={{ __html: bodyHtml }}
-        />
+          className={`px-u40 py-u32 font-serif text-justify leading-7 break-words hyphens-auto text-[color:var(--color-bg-app)] ${BOOK_TYPOGRAPHY}`}
+        >
+          {blocks.map(renderPreviewBlock)}
+        </article>
       ) : (
         // Defensive never-blank state (the HTML-chapter fallback makes this
         // essentially unreachable in this dataset). Token ink for guaranteed
         // contrast on the cream surface.
-        <div className="grid flex-1 place-items-center px-10 py-8">
+        <div className="grid flex-1 place-items-center px-u40 py-u32">
           <p className="text-center font-serif text-[color:var(--color-bg-app)]">
             No preview available for this file.
           </p>

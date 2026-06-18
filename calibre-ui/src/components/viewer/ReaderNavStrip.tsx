@@ -157,7 +157,7 @@ const NEXT_GLYPH = '\u2192'; // →
  *   1px top hairline that separates the strip from the reading row above.
  */
 const BAR_CLASSES =
-  'flex h-11 w-full min-w-0 items-center justify-between px-4 ' +
+  'flex h-u44 w-full min-w-0 items-center justify-between px-u16 ' +
   'bg-[var(--color-surface-1)] border-t border-[var(--border-white-07)]';
 
 /**

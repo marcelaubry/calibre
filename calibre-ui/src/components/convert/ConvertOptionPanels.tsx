@@ -79,31 +79,31 @@ import { Select } from '@/components/primitives/Select';
  * ------------------------------------------------------------------------ */
 
 /** Panel shell: a full-width vertical stack matching the LookAndFeelPanel rhythm. */
-const PANEL_BASE = 'flex w-full flex-col gap-5';
+const PANEL_BASE = 'flex w-full flex-col gap-u20';
 /** A labeled control group (label stacked above its control). */
-const CONTROL_STACK = 'flex flex-col gap-1.5';
+const CONTROL_STACK = 'flex flex-col gap-u6';
 /** A control label — body type (Inter 400 / 12px) in the secondary text token. */
 const LABEL_CLASSES = 'select-none text-body text-text-secondary';
 /** A muted helper hint beneath a field — meta-label type (Inter 400 / 10px). */
 const HINT_CLASSES = 'text-meta-label text-text-muted';
 /** Two-column responsive grid for switch cells (mirrors the L&F processing grid). */
-const TOGGLE_GRID = 'grid grid-cols-2 gap-x-7 gap-y-3';
+const TOGGLE_GRID = 'grid grid-cols-2 gap-x-u28 gap-y-u12';
 /** A single switch cell: switch + wrapping label, baseline-aligned. */
-const TOGGLE_CELL = 'flex min-w-0 items-center gap-3 py-0.5';
+const TOGGLE_CELL = 'flex min-w-0 items-center gap-u12 py-u2';
 /** The switch's label text — body type, secondary token, wraps rather than clips. */
 const TOGGLE_LABEL = 'select-none break-words text-body text-text-secondary';
 /** Keeps a switch from shrinking beside its (flexible) label. */
 const SWITCH_SHRINK = 'shrink-0';
 /** Two-column field grid for compact form panels (Metadata / Search & Replace). */
-const FIELD_GRID = 'grid grid-cols-2 gap-4';
+const FIELD_GRID = 'grid grid-cols-2 gap-u16';
 /** A field group that spans both grid columns (full-width inputs). */
-const FIELD_FULL = 'col-span-2 flex flex-col gap-1.5';
+const FIELD_FULL = 'col-span-2 flex flex-col gap-u6';
 /** Hairline section divider — the house white-7% token, reset of the UA border. */
-const DIVIDER_CLASSES = 'm-0 h-px border-0 bg-[var(--border-white-07)]';
+const DIVIDER_CLASSES = 'm-0 h-u1 border-0 bg-[var(--border-white-07)]';
 /** A labeled sub-group heading inside a panel. */
 const GROUP_LABEL = 'select-none text-body text-text-secondary';
 /** Vertical group wrapper. */
-const GROUP_STACK = 'flex flex-col gap-3';
+const GROUP_STACK = 'flex flex-col gap-u12';
 
 /* --------------------------------------------------------------------------
  * Panel 1 — Heuristic Processing

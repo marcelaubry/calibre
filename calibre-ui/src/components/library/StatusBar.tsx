@@ -139,8 +139,8 @@ export function StatusBar({ className }: StatusBarProps): JSX.Element {
   // Compose the root classes; the caller `className` is appended last so its
   // utilities win on conflict (`filter(Boolean)` drops a missing className).
   const rootClassName = [
-    'flex w-full min-w-0 items-center justify-between gap-3',
-    'px-4 py-2 bg-surface-1 border-t border-[var(--border-white-07)]',
+    'flex w-full min-w-0 items-center justify-between gap-u12',
+    'px-u16 py-u8 bg-surface-1 border-t border-[var(--border-white-07)]',
     className,
   ]
     .filter(Boolean)
@@ -160,7 +160,7 @@ export function StatusBar({ className }: StatusBarProps): JSX.Element {
       {/* RIGHT — mock pagination cluster (single page → chevrons disabled). */}
       <nav
         aria-label="Library pagination"
-        className="flex shrink-0 items-center gap-2"
+        className="flex shrink-0 items-center gap-u8"
       >
         <Button
           label="‹"

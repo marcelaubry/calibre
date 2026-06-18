@@ -282,7 +282,7 @@ export async function CodeEditor({
             gutter in lieu of Figma's untokenizable near-identical lighter fill. */}
         <div
           aria-hidden="true"
-          className="flex-none select-none border-r border-[var(--border-white-07)] px-3 py-4 text-right font-mono text-xs leading-[var(--size-editor-line-h)] text-text-muted"
+          className="flex-none select-none border-r border-[var(--border-white-07)] px-u12 py-u16 text-right font-mono text-xs leading-[var(--size-editor-line-h)] text-text-muted"
         >
           {lineNumbers.map((n) => (
             <div key={n}>{n}</div>
@@ -307,7 +307,7 @@ export async function CodeEditor({
             over the mock's whole-line look — this file must NOT, and does not,
             re-color syntax tokens. */}
         <div
-          className={`min-w-0 flex-1 overflow-x-auto p-4 font-mono text-sm leading-[var(--size-editor-line-h)] ${SHIKI_NORMALIZE}`}
+          className={`min-w-0 flex-1 overflow-x-auto p-u16 font-mono text-sm leading-[var(--size-editor-line-h)] ${SHIKI_NORMALIZE}`}
           dangerouslySetInnerHTML={{ __html: html }}
         />
       </div>
@@ -321,7 +321,7 @@ export async function CodeEditor({
           normal text. They are decorative (aria-hidden) and the color is the
           Figma/AAP-mandated token, so per the CRITICAL Directive the rendered
           value is kept exact and flagged here rather than silently darkened. */}
-      <p className="flex-none pl-12 pr-4 pb-6 pt-3 text-xs leading-5 text-star">
+      <p className="flex-none pl-u48 pr-u16 pb-u24 pt-u12 text-xs leading-5 text-star">
         <span aria-hidden="true">⚠ </span>
         <span className="sr-only">Warning: </span>
         {noticeCountPrefix}

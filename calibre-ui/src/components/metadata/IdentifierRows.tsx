@@ -287,7 +287,7 @@ export interface IdentifierRowsProps {
  * (row3 bottom y540 → button top y550); `w-full` lets the rows span the full
  * metadata-column width so the responsive flex math has the real width.
  */
-const CONTAINER_CLASSES = 'flex w-full flex-col gap-2.5';
+const CONTAINER_CLASSES = 'flex w-full flex-col gap-u10';
 
 /**
  * The label-group: the "Identifiers" label stacked directly above the rows.
@@ -298,7 +298,7 @@ const CONTAINER_CLASSES = 'flex w-full flex-col gap-2.5';
  * gap each be an exact, token-scale `gap` (no margins — UI2). `w-full` lets the
  * inner rows stack span the full column width.
  */
-const LABEL_GROUP_CLASSES = 'flex w-full flex-col gap-1';
+const LABEL_GROUP_CLASSES = 'flex w-full flex-col gap-u4';
 
 /**
  * The "Identifiers" section label — the EXACT App 07 Figma treatment (`9:102`):
@@ -324,14 +324,14 @@ const LABEL_CLASSES = 'text-text-placeholder text-field-label uppercase';
  * only when there is at least one row (the empty state shows just the label and
  * the add button).
  */
-const ROWS_STACK_CLASSES = 'flex w-full flex-col gap-1.5';
+const ROWS_STACK_CLASSES = 'flex w-full flex-col gap-u6';
 
 /**
  * A single identifier row: key field | value field | remove control, vertically
  * centered (`items-center`) with an 8px (`gap-2`) inter-control gap. The value
  * field grows / shrinks (see field-width consts) so the row never overflows.
  */
-const ROW_CLASSES = 'flex items-center gap-2';
+const ROW_CLASSES = 'flex items-center gap-u8';
 
 /**
  * Key (scheme) field wrapper sizing: a fixed `w-[var(--size-identifier-key-w)]`

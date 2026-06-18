@@ -138,7 +138,7 @@ export interface CheckBadgeProps {
  * keeps the decorative glyph from being text-selected.
  */
 const BASE_CLASSES =
-  'inline-flex h-5 w-5 items-center justify-center rounded-full select-none';
+  'inline-flex h-u20 w-u20 items-center justify-center rounded-full select-none';
 
 /**
  * Checked fill: the ACCENT gradient (`--gradient-accent`), applied as a

@@ -271,15 +271,15 @@ const ACTIVE_SURFACE_CLASSES =
  *   search control.
  */
 const VARIANT_INPUT_CLASSES: Record<InputVariant, string> = {
-  text: 'h-9',
+  text: 'h-u36',
   number:
-    'h-9 ' +
+    'h-u36 ' +
     '[appearance:textfield] ' +
     '[&::-webkit-outer-spin-button]:appearance-none ' +
     '[&::-webkit-inner-spin-button]:appearance-none ' +
     '[&::-webkit-inner-spin-button]:m-0',
   search:
-    'h-8 ' +
+    'h-u32 ' +
     '[&::-webkit-search-cancel-button]:appearance-none ' +
     '[&::-webkit-search-decoration]:appearance-none',
 };
@@ -296,7 +296,7 @@ const VARIANT_INPUT_CLASSES: Record<InputVariant, string> = {
  */
 const ICON_WRAPPER_CLASSES =
   'pointer-events-none absolute inset-y-0 start-0 flex items-center ' +
-  'ps-3 leading-none text-text-muted text-body';
+  'ps-u12 leading-none text-text-muted text-body';
 
 /**
  * InputField — the bespoke design-system text/number/search input primitive.
@@ -332,7 +332,7 @@ export function InputField({
 
   // Horizontal padding depends on whether a leading glyph is present: reserve
   // inline-start space (`ps-9`) to clear the glyph, otherwise symmetric `px-3`.
-  const paddingClassName = icon != null ? 'ps-9 pe-3' : 'px-3';
+  const paddingClassName = icon != null ? 'ps-u36 pe-u12' : 'px-u12';
 
   // Compose the input classes (the caller `className` is intentionally NOT here
   // — it lives on the wrapper). The surface is chosen by `active`: the always-on

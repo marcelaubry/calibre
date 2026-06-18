@@ -139,14 +139,14 @@ const DOTS: ReadonlyArray<{ id: string; colorClass: string }> = [
  * background is the `--color-title-bar` token.
  */
 const BAR_CLASSES =
-  'relative flex h-8 w-full items-center pl-3 bg-[var(--color-title-bar)]';
+  'relative flex h-u32 w-full items-center pl-u12 bg-[var(--color-title-bar)]';
 
 /**
  * Dot-cluster classes: a horizontal row, vertically centered, with the Figma
  * 6px edge-to-edge gap (`gap-1.5`). The whole cluster is `aria-hidden` (the
  * dots are decorative — see the file header).
  */
-const DOT_CLUSTER_CLASSES = 'flex items-center gap-1.5';
+const DOT_CLUSTER_CLASSES = 'flex items-center gap-u6';
 
 /**
  * Per-dot base classes: an 11×11 px perfect circle via the named

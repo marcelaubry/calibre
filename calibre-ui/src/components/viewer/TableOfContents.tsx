@@ -189,7 +189,7 @@ const ROOT =
  * Header band: never shrinks, a bottom white@7% hairline divider, and balanced
  * inset padding. Holds the section heading.
  */
-const HEADER = 'shrink-0 border-b border-[var(--border-white-07)] px-4 py-3';
+const HEADER = 'shrink-0 border-b border-[var(--border-white-07)] px-u16 py-u12';
 
 /** Section heading: Inter 600 / 15px / 22px (`text-detail-title`), near-white. */
 const HEADING = 'truncate text-detail-title text-text-primary';
@@ -200,7 +200,7 @@ const HEADING = 'truncate text-detail-title text-text-primary';
  * while the header stays pinned. A small `gap-0.5` keeps adjacent active/hover
  * row fills from visually merging.
  */
-const LIST = 'flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-2 py-2';
+const LIST = 'flex min-h-0 flex-1 flex-col gap-u2 overflow-y-auto px-u8 py-u8';
 
 /**
  * Per-context chapter-row classes layered onto the {@link NavRowButton}
@@ -216,7 +216,7 @@ const LIST = 'flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-2 py-2';
  * row's text horizontally (zero-reflow indicator). The per-state class below
  * adds color (the left-rail color + the active fill).
  */
-const ROW_BASE = 'block truncate rounded-control border-l-2 px-3 py-2 text-body';
+const ROW_BASE = 'block truncate rounded-control border-l-2 px-u12 py-u8 text-body';
 
 /**
  * Active (current) chapter: the "current chapter purple" treatment (AAP §0.7.4)

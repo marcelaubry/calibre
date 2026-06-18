@@ -180,7 +180,7 @@ const THEME_META: Record<ViewerTheme, { readonly glyph: string; readonly label: 
  * for the Figma-fallback sourcing of both tokens).
  */
 const BAR_CLASSES =
-  'flex h-11 w-full flex-none items-center gap-2 px-3.5 ' +
+  'flex h-u44 w-full flex-none items-center gap-u8 px-u14 ' +
   'bg-surface-1 border-b border-[var(--border-white-07)]';
 
 /**
@@ -243,7 +243,7 @@ export function ReaderToolbar({ className }: ReaderToolbarProps): JSX.Element {
 
       {/* Inline-end cluster: font scale + viewer theme. `ml-auto` pins it to the
           bar's trailing edge while the Back button stays at the inline start. */}
-      <div className="ml-auto flex items-center gap-1.5">
+      <div className="ml-auto flex items-center gap-u6">
         <Button
           variant="toolbar"
           label="A−"

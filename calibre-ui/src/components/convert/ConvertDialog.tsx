@@ -211,7 +211,7 @@ export function ConvertDialog(): JSX.Element {
         onClose={close}
         footer={<Button variant="secondary" label="Close" onClick={close} />}
       >
-        <div className="flex flex-col items-center justify-center gap-2 px-5 py-12 text-center">
+        <div className="flex flex-col items-center justify-center gap-u8 px-u20 py-u48 text-center">
           <p className="text-detail-title text-text-primary">
             No book to convert
           </p>
@@ -239,12 +239,12 @@ export function ConvertDialog(): JSX.Element {
       {/* Body: a vertical stack inset to match the chrome header's px-5. The
           ModalShell body owns the scroll, so tall content (the option panel +
           the log) scrolls within the 740px card with zero horizontal overflow. */}
-      <div className="flex flex-col gap-5 px-5 py-5">
+      <div className="flex flex-col gap-u20 px-u20 py-u20">
         {/* §6.1 — inner header: the source-book identity (Figma 6:13 subtitle)
             and an input→output recap, with prev/next steppers on the right. The
             ✕ close lives in ModalShell's chrome header and is NOT duplicated. */}
-        <section className="flex items-start justify-between gap-4">
-          <div className="flex min-w-0 flex-col gap-1">
+        <section className="flex items-start justify-between gap-u16">
+          <div className="flex min-w-0 flex-col gap-u4">
             <h3 className="truncate text-detail-title text-text-primary">
               {book.title}
             </h3>
@@ -257,7 +257,7 @@ export function ConvertDialog(): JSX.Element {
               </span>
             </p>
           </div>
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="flex shrink-0 items-center gap-u8">
             <Button
               variant="secondary"
               label={PREV_GLYPH}
@@ -289,7 +289,7 @@ export function ConvertDialog(): JSX.Element {
             grouped so the panel sits flush beneath its tabs. EVERY tab renders a
             fully-built panel: "Look & Feel" → LookAndFeelPanel; each of the other
             five tabs → its concrete ConvertOptionPanel (never a placeholder). */}
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-u16">
           <ConvertOptionTabs active={activeTab} onSelect={setActiveTab} />
           {activeTab === DEFAULT_OPTION_TAB ? (
             <LookAndFeelPanel />

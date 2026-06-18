@@ -140,7 +140,7 @@ const MAX_VISIBLE_TAGS = 2;
  *   (invisible accessibility — no visual impact at rest).
  */
 const ROW_BASE_CLASSES =
-  'group relative grid items-center gap-x-3 px-3 py-2.5 text-body ' +
+  'group relative grid items-center gap-x-u12 px-u12 py-u10 text-body ' +
   'border-b border-[var(--border-white-07)] cursor-pointer transition-colors ' +
   'outline-none focus-visible:ring-2 focus-visible:ring-[var(--border-accent)]';
 
@@ -240,7 +240,7 @@ export function BookListRow({ book }: BookListRowProps): JSX.Element {
       {highlighted ? (
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute inset-y-0 start-0 w-0.5 bg-[var(--border-accent)]"
+          className="pointer-events-none absolute inset-y-0 start-0 w-u2 bg-[var(--border-accent)]"
         />
       ) : null}
 
@@ -248,7 +248,7 @@ export function BookListRow({ book }: BookListRowProps): JSX.Element {
           optional muted series subtitle. The cover keeps its exact 20×26 px size
           (`shrink-0`); the text wrapper takes the remaining width (`flex-1
           min-w-0`) so the title truncates at the cell edge. */}
-      <div role="gridcell" className={`${CELL_BASE} flex items-center gap-2.5`}>
+      <div role="gridcell" className={`${CELL_BASE} flex items-center gap-u10`}>
         <BookCoverPlaceholder book={book} size="sm" className="shrink-0" />
         <div className="min-w-0 flex-1">
           <div className="truncate font-medium text-text-primary">{book.title}</div>
@@ -287,7 +287,7 @@ export function BookListRow({ book }: BookListRowProps): JSX.Element {
       {/* 5) Tags — up to MAX_VISIBLE_TAGS chips + a muted "+N" overflow count. */}
       <div
         role="gridcell"
-        className={`${CELL_BASE} flex items-center gap-1 overflow-hidden`}
+        className={`${CELL_BASE} flex items-center gap-u4 overflow-hidden`}
       >
         {visibleTags.map((tag) => (
           <TagPill key={tag} label={tag} className="shrink-0" />

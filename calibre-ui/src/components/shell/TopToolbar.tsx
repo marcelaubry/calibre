@@ -224,7 +224,7 @@ const TOOLBAR_ACTIONS: readonly ToolbarAction[] = [
  * `min-w-0` allows the bar's own flex children to shrink cleanly.
  */
 const BAR_CLASSES =
-  'flex h-12 w-full min-w-0 items-center px-3.5 ' +
+  'flex h-u48 w-full min-w-0 items-center px-u14 ' +
   'bg-[var(--color-surface-1)] border-b border-[var(--border-white-07)]';
 
 /**
@@ -291,7 +291,7 @@ export function TopToolbar({ className }: TopToolbarProps): JSX.Element {
     <div className={merged} role="toolbar" aria-label="Library toolbar" aria-orientation="horizontal">
       {/* Left cluster — the eight fixed-width action buttons. `shrink-0` keeps
           them from compressing; `gap-1` is the Figma 4px inter-button gap. */}
-      <div className="flex shrink-0 items-center gap-1">
+      <div className="flex shrink-0 items-center gap-u4">
         {TOOLBAR_ACTIONS.map((action) => {
           // A navigation action is "active" when its route is the current route.
           // Convert / no-op actions have a null route and are never active.

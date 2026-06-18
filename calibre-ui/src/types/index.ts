@@ -56,8 +56,12 @@
  *   AuthorFacet       → data/sidebar, shell/Sidebar author filter
  *   PreferencesState  → PreferencesProvider, data/preferences, preferences/*
  *   Identifier        → metadata/IdentifierRows (App07)
- *   Bookmark          → ReaderProvider, viewer/ReaderToolsPanel (App03)
- *   Highlight         → ReaderProvider, viewer/ReaderToolsPanel (App03)
+ *
+ * NOTE: The reader's `Bookmark` and `Highlight` types are intentionally owned
+ * by — and imported directly from — `@/state/ReaderProvider` (the App03 reader
+ * state owner); they are deliberately NOT re-exported from this barrel. This
+ * keeps a single authoritative shape (`chapterIndex` / `createdAt` / `title` /
+ * `text` / `note`) and prevents consumers from importing a divergent copy.
  *
  * ──────────────────────────────────────────────────────────────────────────
  * DESIGN-PARITY REFERENCE ONLY — NOT CODE REUSE
@@ -131,6 +135,33 @@ export type ViewerTheme = 'dark' | 'light' | 'sepia' | 'high-contrast';
 // ───────────────────────────────────────────────────────────────────────────
 
 /**
+ * A single inline run within a chapter paragraph.
+ *
+ * The reading area (App03, node `4:43`) renders each run as plain text, or — when
+ * `highlight` is `true` — wrapped in a `<mark>` styled with the accent wash to
+ * reproduce the Figma "highlighted passage". Modeling chapter prose as
+ * structured runs (rather than a raw HTML string) lets the viewer render real
+ * React `<p>`/`<mark>` elements WITHOUT `dangerouslySetInnerHTML`, eliminating
+ * the raw-HTML-injection path entirely (the only sanctioned raw-HTML sink in the
+ * app is the Shiki-rendered `CodeEditor`).
+ */
+export interface ChapterInlineRun {
+  /** The run's literal text content. */
+  text: string;
+  /** When `true`, render the run as a highlighted `<mark>` passage (Figma 4:43). */
+  highlight?: boolean;
+}
+
+/**
+ * A single chapter paragraph — an ordered list of inline runs that the reading
+ * area renders as one `<p>` element (justified 15px/26px body).
+ */
+export interface ChapterParagraph {
+  /** The inline runs composing this paragraph, in document order. */
+  runs: ChapterInlineRun[];
+}
+
+/**
  * A single reader chapter.
  *
  * Seeded by `data/chapters`; consumed by `ReaderProvider` and the viewer
@@ -142,10 +173,30 @@ export interface Chapter {
   id: string;
   /** Chapter title shown in the table of contents (App03, node 4:23). */
   title: string;
-  /** Pre-rendered HTML shown in the reading area (justified 15px/26px body). */
-  htmlContent: string;
+  /**
+   * Structured chapter body — an ordered list of paragraphs, each a list of
+   * inline runs. Rendered as real React `<p>`/`<mark>` elements by the reading
+   * area (justified 15px/26px body), so NO raw-HTML injection is needed.
+   */
+  body: ChapterParagraph[];
   /** Word count feeding the reading-progress stats in the reader tools panel. */
   wordCount: number;
+}
+
+/**
+ * A single block in the editor's cream live-preview pane (App04, Figma `5:131`).
+ *
+ * The preview renders an HTML chapter's body as structured React (a heading and
+ * paragraphs) rather than injecting raw HTML, so the cream page needs no
+ * `dangerouslySetInnerHTML` and triggers no external-resource fetch. `type`
+ * selects the rendered element (`h1`/`h2`/`p`/`blockquote`) and `text` is its
+ * literal content.
+ */
+export interface PreviewBlock {
+  /** The rendered element for this block. */
+  type: 'h1' | 'h2' | 'p' | 'blockquote';
+  /** The block's literal text content. */
+  text: string;
 }
 
 /**
@@ -171,6 +222,13 @@ export interface EditorFile {
   sizeBytes: number;
   /** Tree-node kind — a structural folder or an openable file. */
   kind: 'folder' | 'file';
+  /**
+   * Optional structured preview for HTML chapter files — rendered by the cream
+   * `PreviewPane` (App04, node `5:131`) as React headings/paragraphs instead of
+   * injected raw HTML. Present only for `language: 'html'` files; omitted for
+   * folders and non-HTML files (`.css`/`.xml`/`.opf`/`.ncx`).
+   */
+  previewBlocks?: PreviewBlock[];
 }
 
 /**
@@ -258,40 +316,4 @@ export interface Identifier {
   scheme: string;
   /** The identifier value, e.g. `"978-0441013593"`. */
   value: string;
-}
-
-/**
- * A reader bookmark.
- *
- * Owned by `ReaderProvider` and listed in the viewer's reader-tools panel
- * (App03, node 4:56). Points at a position within a specific chapter.
- */
-export interface Bookmark {
-  /** Stable, unique bookmark identifier. */
-  id: string;
-  /** Id of the {@link Chapter} the bookmark lives in. */
-  chapterId: string;
-  /** Short display label (e.g. a chapter title or text snippet). */
-  label: string;
-  /** Normalized reading position within the book, from 0 to 1. */
-  progress: number;
-}
-
-/**
- * A reader highlight / note.
- *
- * Owned by `ReaderProvider` and listed in the viewer's reader-tools panel
- * (App03, node 4:56) alongside bookmarks and reading-progress stats.
- */
-export interface Highlight {
-  /** Stable, unique highlight identifier. */
-  id: string;
-  /** Id of the {@link Chapter} the highlight belongs to. */
-  chapterId: string;
-  /** The highlighted passage text. */
-  text: string;
-  /** Optional free-form annotation attached to the highlight. */
-  note?: string;
-  /** Optional highlight color (a theme token reference). */
-  color?: string;
 }

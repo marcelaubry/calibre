@@ -421,7 +421,7 @@ export function FileTabs(): JSX.Element {
   };
 
   return (
-    <div className="flex h-9 w-full flex-none items-stretch overflow-x-auto bg-surface-2">
+    <div className="flex h-u36 w-full flex-none items-stretch overflow-x-auto bg-surface-2">
       <Tabs
         tabs={tabLabels}
         active={activeFile?.name ?? tabLabels[0] ?? ''}

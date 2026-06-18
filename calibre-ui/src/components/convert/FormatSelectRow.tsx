@@ -276,7 +276,7 @@ const LABEL_CLASSES =
  * columns share the row width and shrink below their content (responsive, no
  * horizontal overflow); `gap-1.5` (6px) reproduces Figma's ≈5px label→control gap.
  */
-const COLUMN_CLASSES = 'flex min-w-0 flex-1 flex-col gap-1.5';
+const COLUMN_CLASSES = 'flex min-w-0 flex-1 flex-col gap-u6';
 
 /**
  * FormatSelectRow — the input → output format-selection row of the App 05
@@ -310,7 +310,7 @@ export function FormatSelectRow({
   // dropdown band without needing a hardcoded control height. `gap-6` (24px)
   // approximates Figma's 62px inter-dropdown gap once the fixed arrow column and
   // both side gaps are accounted for. The caller `className` is appended last.
-  const rowClassName = ['flex items-stretch gap-6', className]
+  const rowClassName = ['flex items-stretch gap-u24', className]
     .filter(Boolean)
     .join(' ');
 
@@ -333,7 +333,7 @@ export function FormatSelectRow({
       {/* Directional "→" connector. The invisible, label-height spacer mirrors the
           columns' label line so the arrow band (flex-1) aligns to — and centers on
           — the dropdown band. Both spans are decorative / aria-hidden. */}
-      <div className="flex flex-col gap-1.5">
+      <div className="flex flex-col gap-u6">
         <span aria-hidden="true" className="text-meta-label invisible select-none">
           {ARROW_GLYPH}
         </span>

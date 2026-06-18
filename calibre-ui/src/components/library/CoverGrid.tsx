@@ -144,7 +144,7 @@ import { BookCard } from './BookCard';
  *     the BLITZY [FIGMA] note on {@link GRID_CLASSES} for the full width math).
  */
 const CONTAINER_CLASSES =
-  'flex-1 min-w-0 overflow-y-auto overflow-x-hidden bg-bg-app px-1.5 py-4';
+  'flex-1 min-w-0 overflow-y-auto overflow-x-hidden bg-bg-app px-u6 py-u16';
 
 /**
  * Card-matrix classes — the 5-column CSS grid, pixel-exact at the 1440 baseline.
@@ -172,7 +172,7 @@ const CONTAINER_CLASSES =
  */
 const GRID_CLASSES =
   'grid grid-cols-[repeat(5,minmax(0,var(--size-cover-md-w)))] justify-center ' +
-  'gap-4 w-full min-w-0';
+  'gap-u16 w-full min-w-0';
 
 /**
  * Empty-state wrapper — centers the message both axes within the (definite-

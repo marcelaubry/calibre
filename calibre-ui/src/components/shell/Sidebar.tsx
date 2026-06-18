@@ -163,7 +163,7 @@ export interface SidebarProps {
  * hairline (no radius) are the reconciled Figma values for node `2:36`.
  */
 const ASIDE_CLASSES =
-  'flex h-full w-[var(--size-sidebar-w)] shrink-0 flex-col gap-5 overflow-y-auto px-3 py-4 ' +
+  'flex h-full w-[var(--size-sidebar-w)] shrink-0 flex-col gap-u20 overflow-y-auto px-u12 py-u16 ' +
   'bg-[var(--color-surface-1)] border-r border-[var(--border-white-07)]';
 
 /**
@@ -174,7 +174,7 @@ const ASIDE_CLASSES =
  * label non-selectable.
  */
 const HEADING_CLASSES =
-  'px-2 pb-2 text-meta-label uppercase tracking-wider text-text-muted select-none';
+  'px-u8 pb-u8 text-meta-label uppercase tracking-wider text-text-muted select-none';
 
 /**
  * Per-context LAYOUT classes for a SECTION / AUTHOR row, merged onto the
@@ -189,7 +189,7 @@ const HEADING_CLASSES =
  * absent here to avoid duplicating the primitive's base (a future change to the
  * primitive then governs every row uniformly).
  */
-const ROW_BASE_CLASSES = 'flex items-center gap-2 rounded-control px-2 py-2 min-w-0';
+const ROW_BASE_CLASSES = 'flex items-center gap-u8 rounded-control px-u8 py-u8 min-w-0';
 
 /**
  * ACTIVE row treatment — the translucent purple fill (the `--color-accent`
@@ -212,7 +212,7 @@ const ROW_INACTIVE_CLASSES = 'text-text-secondary hover:bg-[var(--border-white-0
  * compressing. The glyph inherits the row's `--color`/font-size and is
  * `aria-hidden` at the call site (decorative — the label names the control).
  */
-const ICON_CLASSES = 'w-5 shrink-0 text-center';
+const ICON_CLASSES = 'w-u20 shrink-0 text-center';
 
 /**
  * Row label — `flex-1` to fill the space between icon and count, `truncate`
@@ -274,7 +274,7 @@ export function Sidebar({ className }: SidebarProps): JSX.Element {
       {/* ---- Group 1: Sections (navigation rows with live counts) ---- */}
       <div>
         <p className={HEADING_CLASSES}>Library</p>
-        <ul className="flex flex-col gap-0.5">
+        <ul className="flex flex-col gap-u2">
           {sidebarSections.map((section: SidebarSection) => {
             const isActive = activeSection === section.id;
             const activate = (): void => setActiveSection(section.id);
@@ -300,7 +300,7 @@ export function Sidebar({ className }: SidebarProps): JSX.Element {
       {/* ---- Group 2: Tags (flex-wrapping chip browser, label only) ---- */}
       <div>
         <p className={HEADING_CLASSES}>Tags</p>
-        <ul className="flex flex-wrap gap-1.5 px-2">
+        <ul className="flex flex-wrap gap-u6 px-u8">
           {tagFacets.map((tag: TagFacet) => {
             const isActive = activeTags.includes(tag.label);
             const activate = (): void => toggleTag(tag.label);
@@ -327,7 +327,7 @@ export function Sidebar({ className }: SidebarProps): JSX.Element {
       {/* ---- Group 3: Authors (author-filter rows with counts) ---- */}
       <div>
         <p className={HEADING_CLASSES}>Authors</p>
-        <ul className="flex flex-col gap-0.5">
+        <ul className="flex flex-col gap-u2">
           {authorFacets.map((author: AuthorFacet) => {
             const isActive = activeAuthor === author.name;
             // Toggle: clicking the active author clears the filter (null).

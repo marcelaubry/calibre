@@ -112,7 +112,7 @@ export interface TextareaProps
  */
 const BASE_TEXTAREA_CLASSES =
   'block w-full resize-none bg-card border border-[var(--border-white-09)] rounded-control ' +
-  'px-3 py-2 text-text-primary text-body leading-relaxed placeholder:text-text-placeholder ' +
+  'px-u12 py-u8 text-text-primary text-body leading-relaxed placeholder:text-text-placeholder ' +
   'outline-none ' +
   'focus:bg-accent/10 focus:border-accent/50 ' +
   'motion-safe:transition-colors';

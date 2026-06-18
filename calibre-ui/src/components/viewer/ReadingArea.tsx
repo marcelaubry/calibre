@@ -27,11 +27,12 @@
  *
  * STATE CONSUMED (read-only — this component mutates nothing)
  * --------------------------------------------------------------------------
- *   • `currentChapter` — the `Chapter` being read (`{ id, title, htmlContent,
+ *   • `currentChapter` — the `Chapter` being read (`{ id, title, body,
  *     wordCount }`), or `undefined` when the seeded chapter list is empty. Its
- *     `htmlContent` is TRUSTED static mock markup authored in `@/data/chapters`
- *     (a series of `<p>` paragraphs; exactly one early chapter carries a single
- *     `<mark>` highlighted passage).
+ *     `body` is STRUCTURED static mock content authored in `@/data/chapters`: an
+ *     ordered list of paragraphs, each a list of inline runs (`{ text,
+ *     highlight? }`); exactly one early chapter carries a single `highlight: true`
+ *     run (the highlighted passage).
  *   • `progressPercent` — the 0–100 reading-progress value DERIVED by the
  *     provider from the chapter index (index 2 of 7 ⇒ 29, matching the design's
  *     29% bar). It is bound to the progress-bar fill width and re-renders the bar
@@ -43,15 +44,17 @@
  * read `usePreferences` — the base reading surface is the dedicated
  * `--color-reading-surface` token regardless of the active viewer theme.
  *
- * RENDERING TRUSTED MOCK HTML (`dangerouslySetInnerHTML`)
+ * RENDERING STRUCTURED CONTENT (NO `dangerouslySetInnerHTML`)
  * --------------------------------------------------------------------------
- * `currentChapter.htmlContent` is injected with `dangerouslySetInnerHTML`. This
- * is the intended consumption path: the markup is STATIC, original, in-repo mock
- * prose (no user input, no network fetch, no real EPUB parsing), so there is
- * nothing to fetch or sanitize at runtime. The injected `<p>` and `<mark>`
+ * The chapter body is rendered as REAL React elements: each paragraph maps to a
+ * `<p>` and each inline run to either a plain text node or, when `highlight` is
+ * set, a `<mark>`. There is deliberately NO `dangerouslySetInnerHTML` here — the
+ * viewer injects no raw HTML at all, so there is no injection-shaped sink to
+ * reason about and nothing to sanitize at runtime. (The ONLY sanctioned raw-HTML
+ * sink in the app is the Shiki-rendered `CodeEditor`, whose markup is produced by
+ * the highlighter, not by this surface.) The rendered `<p>` and `<mark>`
  * descendants are styled with Tailwind arbitrary descendant variants on the
- * content wrapper (`READER_PROSE`) — the same injected-HTML styling pattern used
- * by the sibling `CodeEditor`.
+ * content wrapper (`READER_PROSE`).
  *
  * FONT SCALING (base from token, multiplier from `fontScale`)
  * --------------------------------------------------------------------------
@@ -115,6 +118,8 @@
  * @see Agent Action Plan §0.3.1 / §0.3.2 / §0.7.4 (App03 ReadingArea + tokens).
  */
 
+import { Fragment } from 'react';
+
 import { useReader } from '@/state/ReaderProvider';
 
 /**
@@ -131,10 +136,10 @@ export interface ReadingAreaProps {
 }
 
 /**
- * Tailwind arbitrary-variant styling for the injected chapter HTML.
+ * Tailwind arbitrary-variant styling for the rendered chapter content.
  *
- * Applied to the body content wrapper so the trusted `<p>` / `<mark>`
- * descendants from `currentChapter.htmlContent` render correctly:
+ * Applied to the body content wrapper so the `<p>` / `<mark>` elements rendered
+ * from `currentChapter.body` are styled correctly:
  *   • `[&_p:not(:last-child)]:mb-5` — comfortable inter-paragraph rhythm. This is
  *     required because Tailwind's Preflight zeroes the default `<p>` margins; the
  *     `:not(:last-child)` guard avoids a trailing gap after the final paragraph.
@@ -146,9 +151,9 @@ export interface ReadingAreaProps {
  *     line fragment. These override the user-agent default yellow `<mark>`.
  */
 const READER_PROSE =
-  '[&_p:not(:last-child)]:mb-5 ' +
+  '[&_p:not(:last-child)]:mb-u20 ' +
   '[&_mark]:bg-accent/30 [&_mark]:text-text-primary ' +
-  '[&_mark]:rounded-[var(--radius-badge)] [&_mark]:px-0.5 [&_mark]:box-decoration-clone';
+  '[&_mark]:rounded-[var(--radius-badge)] [&_mark]:px-u2 [&_mark]:box-decoration-clone';
 
 /** The base reading-surface root classes (shared by the empty state). */
 const SURFACE_ROOT =
@@ -172,7 +177,7 @@ export function ReadingArea({ className }: ReadingAreaProps = {}) {
   // Empty-state guard: with no current chapter there is nothing to read, so
   // render the same token surface with a centered muted message. This keeps the
   // viewer layout stable (the panel still occupies its flex slot) and avoids a
-  // runtime error from reading `.title` / `.htmlContent` off `undefined`.
+  // runtime error from reading `.title` / `.body` off `undefined`.
   if (currentChapter === undefined) {
     return (
       <section
@@ -217,7 +222,7 @@ export function ReadingArea({ className }: ReadingAreaProps = {}) {
         {/* Gradient divider — a decorative full-width hairline using the
             `--gradient-accent` token, separating the header band from the
             reading content. `aria-hidden` (purely decorative). */}
-        <div aria-hidden="true" className="h-px w-full bg-gradient-accent" />
+        <div aria-hidden="true" className="h-u1 w-full bg-gradient-accent" />
       </div>
 
       {/* Scrollable reading body. `min-h-0` lets this flex child shrink so its
@@ -228,12 +233,12 @@ export function ReadingArea({ className }: ReadingAreaProps = {}) {
             15px) and `mx-auto` centers it within the surface, giving the generous
             side gutters of the design; `px-8` keeps edge padding when the surface
             narrows toward 1280, and `py-12` provides vertical breathing room. */}
-        <article className="mx-auto w-full max-w-[var(--size-reading-measure)] px-8 py-12">
+        <article className="mx-auto w-full max-w-[var(--size-reading-measure)] px-u32 py-u48">
           {/* Chapter title — the reading section heading. `text-detail-title`
               (Inter 600, 15px/22px) over the body's 400 weight gives clear
               hierarchy; `<h2>` sits beneath the app/book-level `<h1>` owned by
               the shell. */}
-          <h2 className="mb-6 text-detail-title text-text-primary">
+          <h2 className="mb-u24 text-detail-title text-text-primary">
             {currentChapter.title}
           </h2>
 
@@ -242,16 +247,29 @@ export function ReadingArea({ className }: ReadingAreaProps = {}) {
               AND line-height by the runtime `fontScale` (A-/A+), keeping the base
               in the token layer and only the multiplier here. `text-justify`
               matches the design's justified column; `READER_PROSE` styles the
-              injected `<p>` / `<mark>` descendants. The HTML is trusted static
-              mock markup (see file header). */}
+              `<p>` / `<mark>` descendants. The body is rendered as REAL React
+              elements from the structured `currentChapter.body` — NO raw-HTML
+              injection (see file header). The paragraph/run lists are static mock
+              data that never reorder, so the array index is a stable key. */}
           <div
             className={`text-reader-body text-justify text-text-primary ${READER_PROSE}`}
             style={{
               fontSize: `calc(var(--text-reader-body) * ${fontScale})`,
               lineHeight: `calc(var(--text-reader-body--line-height) * ${fontScale})`,
             }}
-            dangerouslySetInnerHTML={{ __html: currentChapter.htmlContent }}
-          />
+          >
+            {currentChapter.body.map((paragraph, paragraphIndex) => (
+              <p key={paragraphIndex}>
+                {paragraph.runs.map((run, runIndex) =>
+                  run.highlight ? (
+                    <mark key={runIndex}>{run.text}</mark>
+                  ) : (
+                    <Fragment key={runIndex}>{run.text}</Fragment>
+                  ),
+                )}
+              </p>
+            ))}
+          </div>
         </article>
       </div>
     </section>

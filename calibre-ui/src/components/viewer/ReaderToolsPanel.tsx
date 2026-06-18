@@ -174,30 +174,30 @@ function activateOnKey(handler: () => void): (event: KeyboardEvent<HTMLDivElemen
  */
 const PANEL_CONTAINER =
   'flex h-full min-w-[var(--size-reader-tools-min-w)] shrink basis-[var(--size-reader-tools-basis)] flex-col overflow-y-auto ' +
-  'border-l border-[var(--border-white-07)] px-4';
+  'border-l border-[var(--border-white-07)] px-u16';
 
 /** A section: vertical stack with an inter-element gap and top/bottom padding. */
-const SECTION = 'flex flex-col gap-3 py-4';
+const SECTION = 'flex flex-col gap-u12 py-u16';
 /** Sections 2 & 3 add a white-7% top hairline divider above their padding. */
 const SECTION_DIVIDED = SECTION + ' border-t border-[var(--border-white-07)]';
 
 /** Header row: heading on the left, the "Add" action on the right. */
-const SECTION_HEADER_ROW = 'flex items-center justify-between gap-2';
+const SECTION_HEADER_ROW = 'flex items-center justify-between gap-u8';
 /** Section heading: Inter 600 / 15px (the panel-title role token), primary text. */
 const SECTION_HEADING = 'text-detail-title text-text-primary';
 
 /** Bookmark list: a tight vertical stack. */
-const LIST = 'flex flex-col gap-1';
+const LIST = 'flex flex-col gap-u4';
 /** Highlight list: a slightly looser stack (rows are multi-line). */
-const LIST_LOOSE = 'flex flex-col gap-2';
+const LIST_LOOSE = 'flex flex-col gap-u8';
 
 /** Empty-state hint: body type in the muted token. */
-const EMPTY_HINT = 'py-1 text-body text-text-muted';
+const EMPTY_HINT = 'py-u4 text-body text-text-muted';
 
 /** Bookmark row: navigable region + sibling remove button on one line. */
-const ROW = 'flex items-center gap-1';
+const ROW = 'flex items-center gap-u4';
 /** Highlight row: navigable region + sibling remove button, top-aligned. */
-const ROW_TOP = 'flex items-start gap-1';
+const ROW_TOP = 'flex items-start gap-u4';
 
 /**
  * The navigable region of a bookmark row — a keyboard-operable `role="button"`.
@@ -206,14 +206,14 @@ const ROW_TOP = 'flex items-start gap-1';
  * control radius. Hover/focus visuals are invisible at rest (DS2-e).
  */
 const ROW_NAV =
-  'flex min-w-0 flex-1 cursor-pointer items-center gap-2 rounded-control px-2 py-2 ' +
+  'flex min-w-0 flex-1 cursor-pointer items-center gap-u8 rounded-control px-u8 py-u8 ' +
   'text-left hover:bg-accent/10 ' +
   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--border-accent)] ' +
   'motion-safe:transition-colors';
 
 /** The navigable region of a highlight row — like `ROW_NAV` but a column stack. */
 const ROW_NAV_COL =
-  'flex min-w-0 flex-1 cursor-pointer flex-col gap-1 rounded-control px-2 py-2 ' +
+  'flex min-w-0 flex-1 cursor-pointer flex-col gap-u4 rounded-control px-u8 py-u8 ' +
   'text-left hover:bg-accent/10 ' +
   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--border-accent)] ' +
   'motion-safe:transition-colors';
@@ -229,20 +229,20 @@ const REMOVE_BTN = 'shrink-0';
  * accent wash + end-rounded corners, so it reads as a highlight without any
  * hardcoded color.
  */
-const HIGHLIGHT_QUOTE = 'rounded-e-control border-l-2 border-accent bg-accent/10 px-2 py-1';
+const HIGHLIGHT_QUOTE = 'rounded-e-control border-l-2 border-accent bg-accent/10 px-u8 py-u4';
 /** The quoted passage text: body type, primary color, wraps on long words. */
 const HIGHLIGHT_TEXT = 'text-body text-text-primary break-words';
 /** The optional note beneath a highlight: smaller, secondary color, wraps. */
 const HIGHLIGHT_NOTE = 'text-meta-value text-text-secondary break-words';
 
 /** Progress headline row: the big percent value beside its "complete" label. */
-const PROGRESS_HEADLINE = 'flex items-baseline gap-2';
+const PROGRESS_HEADLINE = 'flex items-baseline gap-u8';
 /** The headline percent value: dialog-heading scale (20/600) in the accent color. */
 const PROGRESS_PERCENT = 'text-dialog-heading text-accent';
 /** The two-up stats grid beneath the headline. */
-const PROGRESS_GRID = 'grid grid-cols-2 gap-3';
+const PROGRESS_GRID = 'grid grid-cols-2 gap-u12';
 /** A single stat block: a muted label stacked above its value. */
-const STAT_BLOCK = 'flex flex-col gap-0.5';
+const STAT_BLOCK = 'flex flex-col gap-u2';
 /** Stat label: Inter 400 / 10px, muted. */
 const META_LABEL = 'text-meta-label text-text-muted';
 /** Stat value: Inter 500 / 10px, primary. */

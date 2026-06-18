@@ -224,7 +224,7 @@ export interface SliderProps
  * Figma ~16px gap between the track's right cap and the "32 px" value). The
  * `opacity-50` dim and the caller `className` are appended in {@link Slider}.
  */
-const WRAPPER_BASE = 'flex w-full items-center gap-4';
+const WRAPPER_BASE = 'flex w-full items-center gap-u16';
 
 /**
  * Track-lane classes — the `relative` containing block for the two overlay bars
@@ -232,7 +232,7 @@ const WRAPPER_BASE = 'flex w-full items-center gap-4';
  * `flex-1 min-w-0` lets the track grow to fill the wrapper while still being
  * able to shrink (no horizontal overflow, AAP responsive gate).
  */
-const TRACK_LANE = 'relative h-5 flex-1 min-w-0';
+const TRACK_LANE = 'relative h-u20 flex-1 min-w-0';
 
 /**
  * UNFILLED base bar — the full-width 6px pill behind everything. `bg-card`
@@ -241,7 +241,7 @@ const TRACK_LANE = 'relative h-5 flex-1 min-w-0';
  * vertically in the 20px lane via `top-1/2 -translate-y-1/2`.
  */
 const TRACK_UNFILLED =
-  'pointer-events-none absolute inset-x-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-card';
+  'pointer-events-none absolute inset-x-0 top-1/2 h-u6 -translate-y-1/2 rounded-full bg-card';
 
 /**
  * FILLED bar — the purple progress portion, painted over the unfilled base.
@@ -253,7 +253,7 @@ const TRACK_UNFILLED =
  * gradient definition lives in the token manifest, not here).
  */
 const TRACK_FILLED =
-  'pointer-events-none absolute left-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full ' +
+  'pointer-events-none absolute left-0 top-1/2 h-u6 -translate-y-1/2 rounded-full ' +
   'bg-gradient-slider-track';
 
 /**
@@ -277,15 +277,15 @@ const TRACK_FILLED =
  *   wrapper carries the `opacity-50` dim so the bars + value label dim too).
  */
 const INPUT_CLASSES =
-  'relative m-0 block h-5 w-full cursor-pointer appearance-none bg-transparent outline-none ' +
+  'relative m-0 block h-u20 w-full cursor-pointer appearance-none bg-transparent outline-none ' +
   'disabled:cursor-not-allowed ' +
   // WebKit / Blink (the prototype's Chromium target)
-  '[&::-webkit-slider-runnable-track]:h-5 [&::-webkit-slider-runnable-track]:bg-transparent ' +
-  '[&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 ' +
+  '[&::-webkit-slider-runnable-track]:h-u20 [&::-webkit-slider-runnable-track]:bg-transparent ' +
+  '[&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-u20 [&::-webkit-slider-thumb]:w-u20 ' +
   '[&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-0 [&::-webkit-slider-thumb]:bg-white ' +
   // Firefox / Gecko
-  '[&::-moz-range-track]:h-5 [&::-moz-range-track]:bg-transparent ' +
-  '[&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:rounded-full ' +
+  '[&::-moz-range-track]:h-u20 [&::-moz-range-track]:bg-transparent ' +
+  '[&::-moz-range-thumb]:h-u20 [&::-moz-range-thumb]:w-u20 [&::-moz-range-thumb]:rounded-full ' +
   '[&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-white ' +
   // Keyboard-only focus halo on the knob (token-sourced width + color; invisible at rest)
   '[&:focus-visible::-webkit-slider-thumb]:shadow-[0_0_0_var(--ring-focus-width)_var(--border-accent)] ' +

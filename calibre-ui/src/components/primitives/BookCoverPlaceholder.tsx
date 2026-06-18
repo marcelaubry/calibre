@@ -307,7 +307,7 @@ const CONTAINER_BASE =
  *   • `pb-6` — ~24px bottom inset, approximating Figma's ~28.5px title baseline
  *     above the cover bottom.
  */
-const TITLE_INSET = 'px-4 pb-6';
+const TITLE_INSET = 'px-u16 pb-u24';
 
 /**
  * Title overlay classes: full content width with up-to-three-line clamping

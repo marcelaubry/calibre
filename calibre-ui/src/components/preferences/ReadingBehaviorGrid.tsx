@@ -150,7 +150,7 @@ import { readingBehaviorOptions } from '@/data/preferences';
  * gutter. No fixed column widths, so the grid reflows from 1440px to 1280px
  * without horizontal overflow (the six options always lay out 3-up, two rows).
  */
-const GRID_CLASSES = 'grid grid-cols-3 gap-3';
+const GRID_CLASSES = 'grid grid-cols-3 gap-u12';
 
 /**
  * One setting cell — the {@link GlassCard} body. A horizontal flex row that
@@ -161,7 +161,7 @@ const GRID_CLASSES = 'grid grid-cols-3 gap-3';
  * forcing overflow. The surface fill, hairline border, and corner radius come
  * from `GlassCard`'s default `surface="card"` rendering.
  */
-const CELL_CLASSES = 'flex min-w-0 items-center justify-between gap-3 p-4';
+const CELL_CLASSES = 'flex min-w-0 items-center justify-between gap-u12 p-u16';
 
 /**
  * The setting label: the `text-body` role token (Inter 400 / 12px) in the

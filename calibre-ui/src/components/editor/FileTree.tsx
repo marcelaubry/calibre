@@ -148,7 +148,7 @@ function FileTreeNode({ file, active, onSelect }: FileTreeNodeProps): JSX.Elemen
       onClick={() => onSelect(file.path)}
       style={{ paddingInlineStart }}
       className={[
-        'flex items-center gap-2 rounded-control py-1 pe-2 text-xs',
+        'flex items-center gap-u8 rounded-control py-u4 pe-u8 text-xs',
         active ? 'bg-accent/10 text-text-primary' : 'text-text-secondary',
         isFolder ? 'font-medium' : 'hover:text-text-primary',
       ].join(' ')}
@@ -187,9 +187,9 @@ export function FileTree(): JSX.Element {
   return (
     <nav
       aria-label="EPUB file tree"
-      className="flex h-full w-[var(--size-filetree-w)] min-w-[var(--size-filetree-w)] flex-none flex-col gap-0.5 overflow-y-auto border-r border-[var(--border-white-07)] bg-surface-2 p-2"
+      className="flex h-full w-[var(--size-filetree-w)] min-w-[var(--size-filetree-w)] flex-none flex-col gap-u2 overflow-y-auto border-r border-[var(--border-white-07)] bg-surface-2 p-u8"
     >
-      <p className="px-2 pb-1 text-meta-value uppercase tracking-wide text-text-muted">
+      <p className="px-u8 pb-u4 text-meta-value uppercase tracking-wide text-text-muted">
         Files
       </p>
       {editorFiles.map((file) => (

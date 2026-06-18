@@ -277,7 +277,7 @@ const CHEVRON_GLYPH = '\u25BE';
 const BASE_SELECT_CLASSES =
   'block w-full appearance-none cursor-pointer ' +
   'rounded-control text-body ' +
-  'ps-3 pe-8 py-2 ' +
+  'ps-u12 pe-u32 py-u8 ' +
   'outline-none focus-visible:ring-2 focus-visible:ring-[var(--border-accent)] ' +
   'disabled:opacity-50 disabled:cursor-not-allowed ' +
   'motion-safe:transition-colors';
@@ -322,7 +322,7 @@ const DEFAULT_SURFACE_CLASSES =
  */
 const CHEVRON_WRAPPER_CLASSES =
   'pointer-events-none absolute inset-y-0 end-0 flex items-center ' +
-  'pe-4.5 leading-none text-body';
+  'pe-u18 leading-none text-body';
 
 /**
  * Per-`<option>` classes so the native popup list renders dark-navy and legible

@@ -329,6 +329,60 @@
    * Consumed via arbitrary box-shadow utilities, e.g.
    * `shadow-[0_0_0_var(--ring-focus-width)_var(--border-accent)]`. */
   --ring-focus-width: 3px;               /* Slider thumb focus halo width */
+
+  /* ---- Spacing & sizing rhythm scale — `u<px>` named tokens (27) --------
+   * The bespoke, EXHAUSTIVE spacing/geometry scale that backs every padding,
+   * margin, gap, width, height, inset, size, flex-basis, translate, and
+   * space-between utility across the app (R3 / AAP §0.4.5 — "no hardcoded
+   * spacing/radius literals"; every value must resolve to an `@theme` token).
+   *
+   * NAMING — pixel-encoded: `--spacing-u<px>` where `<px>` is the literal
+   * pixel value (e.g. `--spacing-u16` = 16px). Self-documenting, unique per
+   * value, and non-numeric-leading so a scan for bare `gap-<n>` / `px-<n>`
+   * utilities never re-matches the tokenized form.
+   *
+   * WHY THE `--spacing-*` NAMESPACE — Tailwind v4 derives ALL spacing/sizing
+   * utilities from the `--spacing-*` theme namespace, so declaring a single
+   * `--spacing-uN` token auto-generates the token-backed utilities for every
+   * family at once: `p-uN px-uN py-uN pt/pr/pb/pl-uN ps/pe-uN m*-uN gap-uN
+   * gap-x/gap-y-uN space-x/space-y-uN w-uN h-uN size-uN min-w/min-h/max-w/
+   * max-h-uN basis-uN inset*-uN top/right/bottom/left/start/end-uN
+   * translate-x/translate-y-uN` (negatives compute `calc(var(--spacing-uN) *
+   * -1)`). Components consume these instead of bare Tailwind scale numbers.
+   *
+   * ZERO VISUAL CHANGE — values are byte-identical to the Tailwind default
+   * 0.25rem scale they replace (`px-u16` ≡ the former `px-4` = 16px), so this
+   * is a pure tokenization with no rendered-pixel delta. The dynamic numeric
+   * scale still coexists as a safety net but is no longer used in component
+   * class lists. Mirrored byte-for-byte in `src/theme/tokens.ts`
+   * (`spacingScale` group). */
+  --spacing-u1: 1px;                     /* ≡ Tailwind `*-px`  (1px hairline)        */
+  --spacing-u2: 2px;                     /* ≡ Tailwind `*-0.5` (0.5 × 4px)           */
+  --spacing-u4: 4px;                     /* ≡ Tailwind `*-1`                          */
+  --spacing-u6: 6px;                     /* ≡ Tailwind `*-1.5`                        */
+  --spacing-u8: 8px;                     /* ≡ Tailwind `*-2`                          */
+  --spacing-u10: 10px;                   /* ≡ Tailwind `*-2.5`                        */
+  --spacing-u12: 12px;                   /* ≡ Tailwind `*-3`                          */
+  --spacing-u14: 14px;                   /* ≡ Tailwind `*-3.5`                        */
+  --spacing-u16: 16px;                   /* ≡ Tailwind `*-4`                          */
+  --spacing-u18: 18px;                   /* ≡ Tailwind `*-4.5`                        */
+  --spacing-u20: 20px;                   /* ≡ Tailwind `*-5`                          */
+  --spacing-u24: 24px;                   /* ≡ Tailwind `*-6`                          */
+  --spacing-u28: 28px;                   /* ≡ Tailwind `*-7`                          */
+  --spacing-u32: 32px;                   /* ≡ Tailwind `*-8`                          */
+  --spacing-u36: 36px;                   /* ≡ Tailwind `*-9`                          */
+  --spacing-u40: 40px;                   /* ≡ Tailwind `*-10`                         */
+  --spacing-u44: 44px;                   /* ≡ Tailwind `*-11`                         */
+  --spacing-u48: 48px;                   /* ≡ Tailwind `*-12`                         */
+  --spacing-u52: 52px;                   /* ≡ Tailwind `*-13`                         */
+  --spacing-u64: 64px;                   /* ≡ Tailwind `*-16`                         */
+  --spacing-u96: 96px;                   /* ≡ Tailwind `*-24`                         */
+  --spacing-u120: 120px;                 /* ≡ Tailwind `*-30`                         */
+  --spacing-u128: 128px;                 /* ≡ Tailwind `*-32`                         */
+  --spacing-u160: 160px;                 /* ≡ Tailwind `*-40`                         */
+  --spacing-u220: 220px;                 /* ≡ Tailwind `*-55`                         */
+  --spacing-u240: 240px;                 /* ≡ Tailwind `*-60`                         */
+  --spacing-u288: 288px;                 /* ≡ Tailwind `*-72`                         */
 }
 
 /* ==========================================================================

@@ -156,7 +156,7 @@ const TABLE_CONTAINER_CLASSES =
  * (reads as a centered empty state); `text-body` is the Inter 12px/400 role and
  * `text-text-muted` is the #64748B muted token.
  */
-const EMPTY_MESSAGE_CLASSES = 'px-4 py-16 text-center text-body text-text-muted';
+const EMPTY_MESSAGE_CLASSES = 'px-u16 py-u64 text-center text-body text-text-muted';
 
 /**
  * The placeholder text shown when the active filters match no books. Verbatim,

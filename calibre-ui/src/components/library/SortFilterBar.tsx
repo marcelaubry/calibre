@@ -141,7 +141,7 @@ const GLYPH_VIEW_LIST = '\u2630';
  * (`TopToolbar`, which sits directly above on `/grid`).
  */
 const BAR_CLASSES =
-  'flex w-full min-w-0 items-center justify-between gap-3 px-3.5 py-1 ' +
+  'flex w-full min-w-0 items-center justify-between gap-u12 px-u14 py-u4 ' +
   'bg-surface-1 border-b border-[var(--border-white-07)]';
 
 /**
@@ -248,7 +248,7 @@ export function SortFilterBar({ className }: SortFilterBarProps): JSX.Element {
           it); the REQUIRED controls (sort Select + grid/list view toggles) are
           always present, and the whole bar is token-clean + primitive-backed.
           Documented verification limitation; revisit if Figma tooling is restored. */}
-      <div className="flex min-w-0 items-center gap-2">
+      <div className="flex min-w-0 items-center gap-u8">
         <span className={LABEL_CLASSES}>{countLabel}</span>
         <span className={LABEL_CLASSES}>Sort by</span>
         <Select
@@ -256,7 +256,7 @@ export function SortFilterBar({ className }: SortFilterBarProps): JSX.Element {
           onChange={handleSortFieldChange}
           options={SORT_OPTIONS}
           aria-label="Sort books by"
-          className="w-40 shrink-0"
+          className="w-u160 shrink-0"
         />
         {/* Order toggle — glyph reflects the current direction; the visible
             label is the accessible name (WCAG 2.5.3); `title` adds hover context. */}
@@ -273,7 +273,7 @@ export function SortFilterBar({ className }: SortFilterBarProps): JSX.Element {
           always active here (this bar only renders on the grid screen); the list
           toggle returns to App 01. `aria-pressed` conveys the toggle state and
           the active grid toggle adds a token-backed accent ring. */}
-      <div role="group" aria-label="View mode" className="flex shrink-0 items-center gap-1">
+      <div role="group" aria-label="View mode" className="flex shrink-0 items-center gap-u4">
         <Button
           variant="toolbar"
           icon={GLYPH_VIEW_GRID}

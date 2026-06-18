@@ -140,7 +140,7 @@ const MARGINS_STEP = 4;
  * `LookAndFeelPanel` field-label spacing. `w-full` lets the section fill the
  * width the parent settings panel allots (fluid; no fixed track width).
  */
-const SECTION_CLASSES = 'flex w-full flex-col gap-1.5';
+const SECTION_CLASSES = 'flex w-full flex-col gap-u6';
 
 /**
  * Caption ("Content margins", Figma `8:98`): the `text-body` role (12px / 400)
@@ -154,7 +154,7 @@ const LABEL_CLASSES = 'select-none text-body text-text-secondary';
  * right, vertically centered with a `gap-4` (16px) step — the CONFIRMED Figma
  * ~16px gap between the track's right cap and the "32 px" value (`8:102`).
  */
-const TRACK_ROW_CLASSES = 'flex w-full items-center gap-4';
+const TRACK_ROW_CLASSES = 'flex w-full items-center gap-u16';
 
 /**
  * Merged onto the `Slider` wrapper so the track GROWS to fill the row

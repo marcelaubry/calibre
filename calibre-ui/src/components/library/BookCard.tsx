@@ -225,7 +225,7 @@ const CARD_FOCUS =
  * never be allowed to collapse below its content, so its automatic minimum size
  * is preserved. `overflow-hidden` bounds the clamped title/author text.
  */
-const INFO_STRIP = 'flex flex-1 flex-col gap-0.5 px-3 py-2 overflow-hidden';
+const INFO_STRIP = 'flex flex-1 flex-col gap-u2 px-u12 py-u8 overflow-hidden';
 
 /**
  * Info-strip card title: the small per-card title (`--text-card-title`, Inter
@@ -235,7 +235,7 @@ const INFO_STRIP = 'flex flex-1 flex-col gap-0.5 px-3 py-2 overflow-hidden';
 const TITLE_CLASS = 'text-card-title text-text-primary line-clamp-2 break-words';
 
 /** The author ↔ format row: author on the left, `FormatBadge` on the right. */
-const META_ROW = 'flex items-center justify-between gap-2 min-w-0';
+const META_ROW = 'flex items-center justify-between gap-u8 min-w-0';
 
 /**
  * Author line: the secondary `--text-meta-label` (Inter 400 10px) in the muted
@@ -265,7 +265,7 @@ const META_VALUE_CLASS = 'shrink-0 text-meta-label text-text-muted';
  * `min-w-0` + `overflow-hidden` so a long tag/chip is CLIPPED rather than forcing
  * horizontal overflow of the narrow card (mirrors the `BookListRow` tags cell).
  */
-const TAGS_WRAP = 'flex min-w-0 items-center gap-1 overflow-hidden';
+const TAGS_WRAP = 'flex min-w-0 items-center gap-u4 overflow-hidden';
 
 /** The muted "+N" hidden-tag overflow indicator; `shrink-0` so it never clips. */
 const TAG_OVERFLOW_CLASS = 'shrink-0 text-meta-label text-text-muted';
@@ -386,7 +386,7 @@ export function BookCard({ book }: BookCardProps) {
           the top-right corner. Decorative (aria-hidden inside the primitive);
           the accessible selected state is `aria-pressed` on the card. */}
       {selected ? (
-        <CheckBadge checked className="absolute right-2 top-2 z-10" />
+        <CheckBadge checked className="absolute right-u8 top-u8 z-10" />
       ) : null}
     </GlassCard>
   );

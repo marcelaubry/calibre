@@ -189,7 +189,7 @@ const COLUMNS: readonly ColumnDef[] = [
  *   3. container horizontal padding — `px-3` (12px).
  */
 const CONTAINER_BASE =
-  'sticky top-0 z-10 grid items-center h-9 gap-x-3 px-3 select-none ' +
+  'sticky top-0 z-10 grid items-center h-u36 gap-x-u12 px-u12 select-none ' +
   'bg-surface-1 border-b border-[var(--border-white-07)]';
 
 /**
@@ -198,7 +198,7 @@ const CONTAINER_BASE =
  * instead of forcing the track wider (overflow safety); `gap-1` (4px) separates
  * the label from the glyph; `h-full` fills the header band height.
  */
-const CELL_BASE = 'flex items-center min-w-0 gap-1 h-full';
+const CELL_BASE = 'flex items-center min-w-0 gap-u4 h-full';
 
 /**
  * Extra classes for a SORTABLE cell: a pointer cursor, the keyboard

@@ -157,24 +157,24 @@ const PREVIEW_CAP = 6;
  * sections; `p-4` is the inner padding.
  */
 const PANEL_CONTAINER =
-  'flex h-full shrink-0 basis-[var(--size-detail-panel-w)] min-w-[var(--size-detail-panel-w)] flex-col gap-5 ' +
-  'overflow-y-auto p-4';
+  'flex h-full shrink-0 basis-[var(--size-detail-panel-w)] min-w-[var(--size-detail-panel-w)] flex-col gap-u20 ' +
+  'overflow-y-auto p-u16';
 
 /** Header block: heading stacked above its muted subtitle. */
-const HEADER = 'flex flex-col gap-1';
+const HEADER = 'flex flex-col gap-u4';
 /** Selection-count heading: the panel-title role (Inter 600 / 15px), primary text. */
 const HEADING = 'text-detail-title text-text-primary';
 /** Muted helper subtitle beneath the count: body type (Inter 400 / 12px), muted. */
 const SUBTITLE = 'text-body text-text-muted';
 
 /** Selection-preview section: a label stacked above the wrapped cover row. */
-const PREVIEW_SECTION = 'flex flex-col gap-2';
+const PREVIEW_SECTION = 'flex flex-col gap-u8';
 /**
  * Cover preview row: wraps the small cover tiles + the "+N" chip, vertically
  * centered with a token-scale gap. `overflow-hidden` clips any tile bleed
  * (agent brief) and bounds the wrapped rows.
  */
-const PREVIEW_ROW = 'flex flex-wrap items-center gap-2 overflow-hidden';
+const PREVIEW_ROW = 'flex flex-wrap items-center gap-u8 overflow-hidden';
 /**
  * The "+N" overflow chip: a hairline-bordered pill (white-9% border, badge
  * radius) carrying the remaining-count in the meta-value type role (Inter 500 /
@@ -183,7 +183,7 @@ const PREVIEW_ROW = 'flex flex-wrap items-center gap-2 overflow-hidden';
  */
 const PREVIEW_MORE =
   'inline-flex items-center justify-center self-stretch rounded-badge ' +
-  'border border-[var(--border-white-09)] px-2 ' +
+  'border border-[var(--border-white-09)] px-u8 ' +
   'text-meta-value text-text-muted';
 
 /**
@@ -194,26 +194,26 @@ const PREVIEW_MORE =
 const MAX_SUMMARY_TAGS = 4;
 
 /** Selection-summary section: a label stacked above a small token-scale stat list. */
-const SUMMARY_SECTION = 'flex flex-col gap-2';
+const SUMMARY_SECTION = 'flex flex-col gap-u8';
 /** A single summary stat: muted label on the left, value on the right, one line. */
-const SUMMARY_ROW = 'flex items-center justify-between gap-2 min-w-0';
+const SUMMARY_ROW = 'flex items-center justify-between gap-u8 min-w-0';
 /** A stacked summary stat (label above a wrapping value — used for the tags rollup). */
-const SUMMARY_BLOCK = 'flex flex-col gap-1 min-w-0';
+const SUMMARY_BLOCK = 'flex flex-col gap-u4 min-w-0';
 /** Summary stat label: meta-label role (Inter 400 / 10px) in the muted text token. */
 const SUMMARY_LABEL = 'shrink-0 text-meta-label text-text-muted';
 /** Summary stat value: meta-value role (Inter 500 / 10px) in the secondary text token. */
 const SUMMARY_VALUE = 'min-w-0 truncate text-meta-value text-text-secondary';
 /** Inline cluster pairing a value with its primitive (badge/stars) on one baseline. */
-const SUMMARY_INLINE = 'flex min-w-0 items-center gap-1 overflow-hidden';
+const SUMMARY_INLINE = 'flex min-w-0 items-center gap-u4 overflow-hidden';
 /** Formats distribution row: wraps each "badge ×N" pair; clips on the narrow panel. */
-const SUMMARY_FORMATS = 'flex min-w-0 flex-wrap items-center justify-end gap-1.5 overflow-hidden';
+const SUMMARY_FORMATS = 'flex min-w-0 flex-wrap items-center justify-end gap-u6 overflow-hidden';
 /** Tags rollup row: wraps the common-tag chips + "+N"; clips rather than overflows. */
-const SUMMARY_TAGS = 'flex flex-wrap items-center gap-1 overflow-hidden';
+const SUMMARY_TAGS = 'flex flex-wrap items-center gap-u4 overflow-hidden';
 /** The muted "+N" hidden-tag overflow indicator; `shrink-0` so it never clips. */
 const SUMMARY_TAG_OVERFLOW = 'shrink-0 text-meta-label text-text-muted';
 
 /** Bulk-actions group: a vertical stack with a token-scale gap. */
-const ACTIONS = 'flex flex-col gap-2';
+const ACTIONS = 'flex flex-col gap-u8';
 /** Every action button fills the narrow panel width (full-width block button). */
 const ACTION_BTN = 'w-full';
 
@@ -348,7 +348,7 @@ export function BatchActionsPanel({
           <span className={SUMMARY_LABEL}>Formats</span>
           <div className={SUMMARY_FORMATS}>
             {formatEntries.map(([format, count]) => (
-              <span key={format} className="inline-flex shrink-0 items-center gap-1">
+              <span key={format} className="inline-flex shrink-0 items-center gap-u4">
                 {/* `Book.format` is a plain string per the verbatim contract;
                     narrow to the badge's `FormatKind` union at this boundary. */}
                 <FormatBadge format={format as FormatKind} />

@@ -19,8 +19,10 @@
  *
  * This is the navigation column ONLY; the wide settings panel to its right is
  * `PreferencesPanel`, and the page-level "Preferences" heading + action buttons
- * live in the screen Header (Figma `8:8`), NOT inside this node. The page
- * (`/preferences`) composes this nav beside the panel in a horizontal row.
+ * live in the full-width screen Header (Figma `8:8`), owned by the dedicated
+ * `PreferencesHeader` component, NOT inside this node. The page (`/preferences`)
+ * stacks that full-width header ABOVE a horizontal body row that composes this
+ * nav beside the panel — so this CatNav begins BELOW the header (Figma `8:2`).
  *
  * UI-ONLY: there is no backend. The active-category / active-sub-item highlight
  * and the filter query are LOCAL React state. Per the AAP the prototype designs
@@ -228,8 +230,8 @@ function cx(...parts: Array<string | false | undefined>): string {
  * between the filter field and the list; `overflow-y-auto` is defensive.
  */
 const NAV_CONTAINER =
-  'flex h-full w-60 shrink-0 flex-col gap-2 overflow-y-auto ' +
-  'bg-surface-2 border-r border-[var(--border-white-06)] px-2 py-3';
+  'flex h-full w-u240 shrink-0 flex-col gap-u8 overflow-y-auto ' +
+  'bg-surface-2 border-r border-[var(--border-white-06)] px-u8 py-u12';
 
 /**
  * The category `<ul>`: a flush vertical stack (no inter-row gap) whose exact
@@ -252,7 +254,7 @@ const CATEGORY_LIST = 'flex flex-col gap-0';
  * active row). Because `NavRowButton` already contributes the stripped fragments,
  * the rendered row is byte-identical to the prior hand-rolled `<button>`.
  */
-const CATEGORY_BUTTON_BASE = 'flex items-center gap-2 rounded-control px-2 h-10';
+const CATEGORY_BUTTON_BASE = 'flex items-center gap-u8 rounded-control px-u8 h-u40';
 
 /** Inactive category: slate label, Inter 400 / 12px, brightens on hover. */
 const CATEGORY_INACTIVE = 'text-body text-text-secondary hover:text-text-primary';
@@ -281,7 +283,7 @@ const ICON_GLYPH = 'shrink-0 leading-none';
  * accent@10% fill is added only when the group is the active category.
  */
 const GROUP_BASE =
-  'rounded-control pb-2 mb-2 motion-safe:transition-colors motion-safe:duration-200';
+  'rounded-control pb-u8 mb-u8 motion-safe:transition-colors motion-safe:duration-200';
 const GROUP_ACTIVE = 'bg-accent/10';
 
 /**
@@ -294,7 +296,7 @@ const GROUP_ACTIVE = 'bg-accent/10';
  * 64px below the group top) and the purple group container is exactly 152px tall
  * (Figma `8:20` y=96→248) — eliminating the ~8px low offset / ~7px over-height.
  */
-const SUBLIST = '-mt-1 flex flex-col gap-1 ps-5 pe-2';
+const SUBLIST = '-mt-u4 flex flex-col gap-u4 ps-u20 pe-u8';
 
 /**
  * Per-context sub-item-row LAYOUT classes, merged onto the `NavRowButton`
@@ -314,7 +316,7 @@ const SUBLIST = '-mt-1 flex flex-col gap-1 ps-5 pe-2';
  * is byte-identical to the prior hand-rolled `<button>`.
  */
 const SUBITEM_BASE =
-  'flex items-center h-6 rounded-toolbar ps-4 pe-2 ' +
+  'flex items-center h-u24 rounded-toolbar ps-u16 pe-u8 ' +
   'text-button-secondary font-normal';
 
 /** Inactive sub-item: muted slate label, brightens to secondary on hover. */
@@ -323,7 +325,7 @@ const SUBITEM_INACTIVE = 'text-text-muted hover:text-text-secondary';
 const SUBITEM_ACTIVE = 'text-accent-light bg-accent/15';
 
 /** Empty-state line shown only when a non-empty filter matches no category. */
-const EMPTY_STATE = 'px-2 py-1.5 text-button-secondary text-text-muted';
+const EMPTY_STATE = 'px-u8 py-u6 text-button-secondary text-text-muted';
 
 /**
  * PreferencesNav — the App 06 left category navigation column.
@@ -364,7 +366,7 @@ export default function PreferencesNav(): JSX.Element {
         aria-label="Filter preferences"
         autoComplete="off"
         spellCheck={false}
-        className="mx-2"
+        className="mx-u8"
       />
 
       {visibleCategories.length > 0 ? (

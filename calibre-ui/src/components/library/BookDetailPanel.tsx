@@ -114,8 +114,8 @@ const noop = (): void => {};
  * (`surface-2` tone is set via the `GlassCard surface` prop, not here.)
  */
 const PANEL_CONTAINER =
-  'flex h-full shrink-0 basis-[var(--size-detail-panel-w)] min-w-[var(--size-detail-panel-w)] flex-col gap-5 ' +
-  'overflow-y-auto border-l border-[var(--border-white-07)] px-4 py-4';
+  'flex h-full shrink-0 basis-[var(--size-detail-panel-w)] min-w-[var(--size-detail-panel-w)] flex-col gap-u20 ' +
+  'overflow-y-auto border-l border-[var(--border-white-07)] px-u16 py-u16';
 
 /**
  * Empty-state layout: identical width/height/scroll/hairline to
@@ -124,13 +124,13 @@ const PANEL_CONTAINER =
  */
 const EMPTY_CONTAINER =
   'flex h-full shrink-0 basis-[var(--size-detail-panel-w)] min-w-[var(--size-detail-panel-w)] items-center ' +
-  'justify-center overflow-y-auto border-l border-[var(--border-white-07)] px-4 py-4';
+  'justify-center overflow-y-auto border-l border-[var(--border-white-07)] px-u16 py-u16';
 
 /** A metadata row: label on the left, value on the right, on a single line. */
-const META_ROW = 'flex items-center justify-between gap-2';
+const META_ROW = 'flex items-center justify-between gap-u8';
 
 /** A stacked metadata block (label above a multi-line / wrapping value). */
-const META_BLOCK = 'flex flex-col gap-1';
+const META_BLOCK = 'flex flex-col gap-u4';
 
 /** Metadata label typography (Inter 400 10 px, muted) — `text-meta-label`. */
 const META_LABEL = 'text-meta-label text-text-muted';
@@ -190,7 +190,7 @@ export function BookDetailPanel() {
       </div>
 
       {/* ── Title · author · optional series ──────────────────────────────── */}
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-u4">
         <h2 className="text-detail-title text-text-primary">{currentBook.title}</h2>
         <p className="text-body text-text-secondary">{currentBook.author}</p>
         {currentBook.series ? (
@@ -203,7 +203,7 @@ export function BookDetailPanel() {
       <StarRating value={currentBook.rating} editable onChange={noop} />
 
       {/* ── Metadata table ────────────────────────────────────────────────── */}
-      <dl className="flex flex-col gap-2.5">
+      <dl className="flex flex-col gap-u10">
         <div className={META_ROW}>
           <dt className={META_LABEL}>Format</dt>
           <dd>
@@ -231,7 +231,7 @@ export function BookDetailPanel() {
         {identifierEntries.length > 0 ? (
           <div className={META_BLOCK}>
             <dt className={META_LABEL}>Identifiers</dt>
-            <dd className="flex flex-col gap-0.5">
+            <dd className="flex flex-col gap-u2">
               {identifierEntries.map(([scheme, value]) => (
                 <span key={scheme} className={`${META_VALUE} break-words`}>
                   {scheme}: {value}
@@ -242,9 +242,9 @@ export function BookDetailPanel() {
         ) : null}
 
         {currentBook.tags.length > 0 ? (
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-u6">
             <dt className={META_LABEL}>Tags</dt>
-            <dd className="flex flex-wrap gap-1.5">
+            <dd className="flex flex-wrap gap-u6">
               {currentBook.tags.map((tag) => (
                 <TagPill key={tag} label={tag} />
               ))}
@@ -255,7 +255,7 @@ export function BookDetailPanel() {
 
       {/* ── Synopsis ──────────────────────────────────────────────────────── */}
       {currentBook.synopsis ? (
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col gap-u6">
           <span className={META_LABEL}>Synopsis</span>
           <p className="text-body text-text-secondary break-words">
             {currentBook.synopsis}
@@ -264,7 +264,7 @@ export function BookDetailPanel() {
       ) : null}
 
       {/* ── Actions — Read Now emphasized at the top of the group ─────────── */}
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-u8">
         <Button
           variant="primary"
           label="Read Now"

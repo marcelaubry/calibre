@@ -235,7 +235,7 @@ const TABLIST_BASE = 'flex items-stretch border-b border-[var(--border-white-07)
  *   • editor  → `gap-0` (CONTIGUOUS tabs, Editor `5:29`).
  */
 const TABLIST_GAP: Record<TabsVariant, string> = {
-  convert: 'gap-1',
+  convert: 'gap-u4',
   editor: 'gap-0',
 };
 
@@ -265,7 +265,7 @@ const TABLIST_GAP: Record<TabsVariant, string> = {
  */
 const TAB_BASE =
   'relative inline-flex items-center justify-center whitespace-nowrap ' +
-  'select-none cursor-pointer px-2.5 py-2.5 text-[length:var(--text-button-secondary)] ' +
+  'select-none cursor-pointer px-u10 py-u10 text-[length:var(--text-button-secondary)] ' +
   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset ' +
   'focus-visible:ring-[var(--border-accent)] ' +
   'motion-safe:transition-colors motion-safe:duration-200 motion-safe:ease-out';
@@ -302,7 +302,7 @@ const TAB_INACTIVE = 'text-text-muted font-normal hover:text-text-secondary';
  * intercepts clicks; `aria-hidden` (decorative). Out of flow ⇒ zero layout shift.
  */
 const UNDERLINE_BAR =
-  'pointer-events-none absolute inset-x-0 bottom-0 h-0.5 bg-gradient-tab-underline';
+  'pointer-events-none absolute inset-x-0 bottom-0 h-u2 bg-gradient-tab-underline';
 
 /**
  * `'editor'` variant label wrapper — truncates a long file name to an abbreviated
@@ -310,7 +310,7 @@ const UNDERLINE_BAR =
  * editor tabs' abbreviated open-file labels (`5:29`). `block` is required for
  * `truncate` (text-overflow needs a block formatting context with a width).
  */
-const EDITOR_LABEL = 'block max-w-32 truncate';
+const EDITOR_LABEL = 'block max-w-u128 truncate';
 
 /**
  * `'editor'` variant per-tab CLOSE affordance — a real sibling `<button>` (NOT
@@ -319,7 +319,7 @@ const EDITOR_LABEL = 'block max-w-32 truncate';
  * glyph that brightens on hover, with a keyboard-only `:focus-visible` ring.
  */
 const CLOSE_BTN =
-  'absolute right-1.5 top-1/2 -translate-y-1/2 inline-flex h-4 w-4 items-center justify-center ' +
+  'absolute right-u6 top-1/2 -translate-y-1/2 inline-flex h-u16 w-u16 items-center justify-center ' +
   'rounded-control-sm leading-none select-none cursor-pointer ' +
   'text-text-muted hover:text-text-primary motion-safe:transition-colors ' +
   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--border-accent)]';
@@ -440,7 +440,7 @@ export function Tabs({
             role="tab"
             aria-selected={isActive}
             tabIndex={index === focusableIndex ? 0 : -1}
-            className={showClose ? `${tabClassName} pr-6` : tabClassName}
+            className={showClose ? `${tabClassName} pr-u24` : tabClassName}
             onClick={() => onSelect?.(tab)}
             onKeyDown={(event) => handleKeyDown(event, index)}
           >

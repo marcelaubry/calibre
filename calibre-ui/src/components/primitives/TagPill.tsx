@@ -219,8 +219,8 @@ export interface TagPillProps {
  *   the global border-box.
  */
 const CHIP_BASE_CLASSES =
-  'inline-flex items-center gap-0.5 align-middle whitespace-nowrap ' +
-  'rounded-full px-2 py-[var(--space-chip-y)] leading-none';
+  'inline-flex items-center gap-u2 align-middle whitespace-nowrap ' +
+  'rounded-full px-u8 py-[var(--space-chip-y)] leading-none';
 
 /**
  * Per-variant surface + typography — an exhaustive `Record<TagPillVariant,

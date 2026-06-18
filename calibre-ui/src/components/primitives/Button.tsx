@@ -233,14 +233,14 @@ const BASE_CLASSES =
 const VARIANT_CLASSES: Record<ButtonVariant, string> = {
   primary:
     'bg-gradient-cta text-text-primary rounded-control text-button-primary ' +
-    'min-h-[var(--size-button-h)] px-4 gap-2 hover:opacity-90',
+    'min-h-[var(--size-button-h)] px-u16 gap-u8 hover:opacity-90',
   secondary:
     'bg-[var(--border-white-06)] border border-[var(--border-white-09)] ' +
     'text-text-secondary rounded-control text-button-secondary ' +
-    'min-h-[var(--size-button-compact-h)] px-4 gap-2 hover:bg-[var(--border-white-09)]',
+    'min-h-[var(--size-button-compact-h)] px-u16 gap-u8 hover:bg-[var(--border-white-09)]',
   danger:
     'bg-danger/10 border border-danger/30 text-danger rounded-control ' +
-    'text-button-secondary min-h-[var(--size-button-compact-h)] px-4 gap-2 hover:bg-danger/20',
+    'text-button-secondary min-h-[var(--size-button-compact-h)] px-u16 gap-u8 hover:bg-danger/20',
   toolbar:
     'bg-transparent text-text-muted rounded-toolbar ' +
     'min-w-[var(--size-toolbar-button-w)] min-h-[var(--size-button-h)] ' +
@@ -248,7 +248,7 @@ const VARIANT_CLASSES: Record<ButtonVariant, string> = {
   ghost:
     'bg-[var(--border-white-04)] border border-[var(--border-white-07)] ' +
     'text-text-muted rounded-control-sm text-button-secondary ' +
-    'min-h-[var(--size-button-quiet-h)] px-3 gap-2 hover:bg-[var(--border-white-06)]',
+    'min-h-[var(--size-button-quiet-h)] px-u12 gap-u8 hover:bg-[var(--border-white-06)]',
 };
 
 /**

@@ -194,7 +194,7 @@ export function EditorToolbar(): JSX.Element {
   ];
 
   return (
-    <header className="flex h-11 w-full flex-none items-center gap-1.5 overflow-x-auto border-b border-[var(--border-white-06)] bg-surface-1 px-2">
+    <header className="flex h-u44 w-full flex-none items-center gap-u6 overflow-x-auto border-b border-[var(--border-white-06)] bg-surface-1 px-u8">
       {actions.map((action) => (
         <Button
           key={action.label}

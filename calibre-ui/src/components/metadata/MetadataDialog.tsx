@@ -243,8 +243,8 @@ function makeIdentifierId(): string {
  * true top header band with the "Edit Metadata" title and the × close.)
  */
 const HEADER_STRIP_CLASSES =
-  'sticky top-0 z-10 flex items-center gap-4 ' +
-  'bg-surface-2 border-b border-[var(--border-white-07)] px-5 py-3';
+  'sticky top-0 z-10 flex items-center gap-u16 ' +
+  'bg-surface-2 border-b border-[var(--border-white-07)] px-u20 py-u12';
 
 /**
  * The book-name subtitle: the `text-detail-title` role (Inter 600 / 15px) in the
@@ -256,7 +256,7 @@ const SUBTITLE_CLASSES =
   'min-w-0 flex-1 truncate text-detail-title text-text-secondary';
 
 /** The step-arrow cluster — a right-aligned, non-shrinking row of two glyph buttons. */
-const STEP_ARROWS_CLASSES = 'flex shrink-0 items-center gap-2';
+const STEP_ARROWS_CLASSES = 'flex shrink-0 items-center gap-u8';
 
 /**
  * The two-column body: the fixed cover column (left) beside the fluid field grid
@@ -266,7 +266,7 @@ const STEP_ARROWS_CLASSES = 'flex shrink-0 items-center gap-2';
  * internal right padding supplies the remainder of the gutter). The exact gutter
  * is fine-tuned against `compare_screenshot_with_figma`.
  */
-const BODY_CLASSES = 'flex items-start gap-2 pe-5 pb-5';
+const BODY_CLASSES = 'flex items-start gap-u8 pe-u20 pb-u20';
 
 /**
  * The right (fields) column wrapper: `min-w-0 flex-1` so it absorbs the
@@ -274,7 +274,7 @@ const BODY_CLASSES = 'flex items-start gap-2 pe-5 pb-5';
  * critical 1440→1280 overflow guard), with `pt-4` matching the cover column's
  * 16px top inset so both columns top-align.
  */
-const FIELDS_COLUMN_CLASSES = 'min-w-0 flex-1 pt-4';
+const FIELDS_COLUMN_CLASSES = 'min-w-0 flex-1 pt-u16';
 
 /* ==========================================================================
  * Inner content — MetadataDialogContent (NOT exported).

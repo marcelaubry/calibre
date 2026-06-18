@@ -194,7 +194,7 @@ export interface TagChipEditorProps {
  * `9:80` bottom y=360 → container `9:81` top y=364); `w-full` lets the row span
  * the full metadata-column width so wrapping math has the real width.
  */
-const CONTAINER_CLASSES = 'flex w-full flex-col gap-1';
+const CONTAINER_CLASSES = 'flex w-full flex-col gap-u4';
 
 /**
  * The "Tags" section label — the EXACT App 07 Figma treatment (`9:80`):
@@ -242,9 +242,9 @@ const LABEL_CLASSES = 'text-text-placeholder text-field-label uppercase';
  * input reflow onto new lines (growing the box's height) instead of overflowing.
  */
 const CHIP_ROW_CLASSES =
-  'flex flex-wrap items-center gap-1.5 ' +
+  'flex flex-wrap items-center gap-u6 ' +
   'bg-card border border-[var(--border-white-09)] rounded-control ' +
-  'px-2 py-px';
+  'px-u8 py-u1';
 
 /**
  * Add-tag input sizing: `flex-1` grows it to fill the remaining row width after
@@ -258,7 +258,7 @@ const CHIP_ROW_CLASSES =
  * area rather than a competing box. (The add-tag input has no Figma node of its
  * own — it is the functional realization of that trailing empty space.)
  */
-const INPUT_WRAPPER_CLASSES = 'flex-1 min-w-32';
+const INPUT_WRAPPER_CLASSES = 'flex-1 min-w-u128';
 
 /** The placeholder shown in the empty add-tag input (AAP App 07 Tags field). */
 const ADD_TAG_PLACEHOLDER = 'Add a tag\u2026';

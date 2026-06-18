@@ -247,7 +247,7 @@ const THEME_PREVIEW: Record<
  */
 const TILE_BASE =
   'relative flex h-[var(--size-theme-swatch-h)] w-[var(--size-theme-swatch-w)] shrink-0 flex-col items-center justify-between ' +
-  'rounded-card pt-5 pb-2.5 select-none';
+  'rounded-card pt-u20 pb-u10 select-none';
 
 /**
  * ACTIVE border: the 2px accent ring (`--border-accent`). Figma node `8:82` —
@@ -308,7 +308,7 @@ const LABEL_INACTIVE = 'font-normal text-text-muted';
  * `8:85`. Merged into `CheckBadge`'s own `className` (which the badge appends
  * after its base classes, so this positioning wins).
  */
-const BADGE_POSITION = 'absolute top-1.5 right-1.5';
+const BADGE_POSITION = 'absolute top-u6 right-u6';
 
 /**
  * ThemeSwatch — the bespoke design-system viewer-theme preview tile primitive.

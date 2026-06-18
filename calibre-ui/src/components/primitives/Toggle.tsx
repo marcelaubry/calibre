@@ -238,7 +238,7 @@ export interface ToggleProps {
  * label sit centered side by side with an 8px gap. The caller `className` is
  * appended after this base (so caller utilities win on conflicts).
  */
-const WRAPPER_BASE = 'inline-flex items-center gap-2';
+const WRAPPER_BASE = 'inline-flex items-center gap-u8';
 
 /**
  * Variant-invariant TRACK classes — the pill `<button>` itself.
@@ -253,7 +253,7 @@ const WRAPPER_BASE = 'inline-flex items-center gap-2';
  * - Motion: the track color change animates only when motion is allowed (UI6).
  */
 const TRACK_BASE =
-  'relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full ' +
+  'relative inline-flex h-u24 w-u44 shrink-0 cursor-pointer rounded-full ' +
   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--border-accent)] ' +
   'disabled:cursor-not-allowed disabled:opacity-50 ' +
   'motion-safe:transition-colors motion-safe:duration-200 motion-safe:ease-out';

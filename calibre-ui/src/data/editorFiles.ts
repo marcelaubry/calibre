@@ -42,6 +42,13 @@
  * field is the contract between this data and `@/lib/highlight`'s
  * `codeToHtml(code, language)` grammar set.
  *
+ * The two HTML chapter files additionally carry `previewBlocks` -- a STRUCTURED
+ * (heading + paragraph) representation of their `<body>` consumed by the cream
+ * `PreviewPane` (App04, node `5:131`). The pane renders these as real React
+ * elements, so it never injects raw HTML (no `dangerouslySetInnerHTML`); the
+ * `code` string remains the source of truth for the Shiki-highlighted code view.
+ * `previewBlocks` is present only on `language:'html'` files.
+ *
  * DESIGN-PARITY REFERENCE ONLY -- NOT CODE REUSE
  * The OEBPS categories modeled here (Text `.xhtml`, Styles `.css`, plus the OPF
  * package and NCX nav) parallel Calibre's desktop editor file browser
@@ -184,6 +191,12 @@ export const editorFiles: EditorFile[] = [
     <p>She had come to govern, or so the documents said, but standing on that scorched ground she understood that the planet would do the governing. It tested every newcomer the same patient way, drying the soft places, narrowing the careless, until only those who had learned its rules remained. She breathed the burning air and promised herself, without quite knowing why, that she would learn them too.</p>
   </body>
 </html>`,
+    previewBlocks: [
+      { type: 'h1', text: 'Chapter 1 — Arrakis' },
+      { type: 'p', text: 'The shuttle came down through a sky the color of beaten brass, and the first thing she noticed was the silence. No birds, no wind through leaves, only the dry hiss of sand moving against the hull as the engines cooled. Beyond the landing field the dunes ran out to the horizon in long unbroken waves, and the heat stood over them like something with weight and intention.' },
+      { type: 'p', text: 'Here water was not a thing you drank without thinking; it was counted, hoarded, and remembered. The people who met them at the gate wore their stillness like armor, their eyes shadowed beneath hoods bleached pale by the sun. They spoke little and watched everything, and in their economy of motion she read a lesson the green worlds had never taught her: that to waste was to die.' },
+      { type: 'p', text: 'She had come to govern, or so the documents said, but standing on that scorched ground she understood that the planet would do the governing. It tested every newcomer the same patient way, drying the soft places, narrowing the careless, until only those who had learned its rules remained. She breathed the burning air and promised herself, without quite knowing why, that she would learn them too.' },
+    ],
   },
   {
     path: 'OEBPS/text/chapter-002.xhtml',
@@ -206,6 +219,12 @@ export const editorFiles: EditorFile[] = [
     <p>She did not sleep. She sat by the narrow window while the cold deepened and the strange lights kept their distance, and she turned the day's lessons over in her mind like stones. Whatever was coming would not announce itself; it would arrive the way the night had arrived, complete and unarguable, and the only question that mattered was whether she would meet it standing.</p>
   </body>
 </html>`,
+    previewBlocks: [
+      { type: 'h1', text: 'Chapter 2 — The Gathering Dark' },
+      { type: 'p', text: 'Night fell on the desert the way a door closes, all at once and without apology. The heat that had ruled the day fled upward into a sky thick with unfamiliar stars, and in its place came a cold so sudden and complete that it felt less like the absence of warmth than the arrival of something else entirely. The dunes turned from gold to iron, and the wind found its voice.' },
+      { type: 'p', text: 'Far out among the shadowed ridges, lights moved that belonged to no settlement she had been shown on any map. They blinked and slid and vanished, patient as predators, and the watchers on the wall followed them without speaking. There were old quarrels in this place, she had been told, debts and loyalties older than the charters that pretended to govern them, and tonight the desert seemed to be keeping a count of its own.' },
+      { type: 'p', text: 'She did not sleep. She sat by the narrow window while the cold deepened and the strange lights kept their distance, and she turned the day\'s lessons over in her mind like stones. Whatever was coming would not announce itself; it would arrive the way the night had arrived, complete and unarguable, and the only question that mattered was whether she would meet it standing.' },
+    ],
   },
   {
     path: 'OEBPS/styles',

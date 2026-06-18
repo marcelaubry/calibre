@@ -240,6 +240,45 @@ export const spacing = {
 } as const;
 
 // ---------------------------------------------------------------------------
+// Spacing scale — 27 `u<px>` rhythm tokens (R3 / AAP §0.4.5)
+// Mirror of the `--spacing-u*` `@theme` vars in globals.css. These back EVERY
+// padding / margin / gap / width / height / inset / size / basis / translate
+// utility in the app (e.g. `px-u16`, `gap-u8`, `w-u220`) — Tailwind v4 derives
+// those utilities from the `--spacing-*` namespace. Names are pixel-encoded
+// (`u16` = 16px) and byte-identical to the Tailwind 0.25rem scale they replaced,
+// so tokenization is purely structural with zero rendered-pixel change.
+// ---------------------------------------------------------------------------
+export const spacingScale = {
+  u1: '1px',      // --spacing-u1   (≡ Tailwind *-px)
+  u2: '2px',      // --spacing-u2   (≡ *-0.5)
+  u4: '4px',      // --spacing-u4   (≡ *-1)
+  u6: '6px',      // --spacing-u6   (≡ *-1.5)
+  u8: '8px',      // --spacing-u8   (≡ *-2)
+  u10: '10px',    // --spacing-u10  (≡ *-2.5)
+  u12: '12px',    // --spacing-u12  (≡ *-3)
+  u14: '14px',    // --spacing-u14  (≡ *-3.5)
+  u16: '16px',    // --spacing-u16  (≡ *-4)
+  u18: '18px',    // --spacing-u18  (≡ *-4.5)
+  u20: '20px',    // --spacing-u20  (≡ *-5)
+  u24: '24px',    // --spacing-u24  (≡ *-6)
+  u28: '28px',    // --spacing-u28  (≡ *-7)
+  u32: '32px',    // --spacing-u32  (≡ *-8)
+  u36: '36px',    // --spacing-u36  (≡ *-9)
+  u40: '40px',    // --spacing-u40  (≡ *-10)
+  u44: '44px',    // --spacing-u44  (≡ *-11)
+  u48: '48px',    // --spacing-u48  (≡ *-12)
+  u52: '52px',    // --spacing-u52  (≡ *-13)
+  u64: '64px',    // --spacing-u64  (≡ *-16)
+  u96: '96px',    // --spacing-u96  (≡ *-24)
+  u120: '120px',  // --spacing-u120 (≡ *-30)
+  u128: '128px',  // --spacing-u128 (≡ *-32)
+  u160: '160px',  // --spacing-u160 (≡ *-40)
+  u220: '220px',  // --spacing-u220 (≡ *-55)
+  u240: '240px',  // --spacing-u240 (≡ *-60)
+  u288: '288px',  // --spacing-u288 (≡ *-72)
+} as const;
+
+// ---------------------------------------------------------------------------
 // Typography — global Inter font-family + 15 per-role text scales
 // ---------------------------------------------------------------------------
 
@@ -297,6 +336,7 @@ export const tokens = {
   shadows,
   sizes,
   spacing,
+  spacingScale,
   fontFamily,
   typography,
 } as const;
@@ -317,6 +357,8 @@ export type ShadowToken = keyof typeof shadows;
 export type SizeToken = keyof typeof sizes;
 /** Union of valid spacing token keys, e.g. `'toolbarButtonGap' | … | 'conversionLogPb'`. */
 export type SpacingToken = keyof typeof spacing;
+/** Union of valid `u<px>` spacing-scale token keys, e.g. `'u1' | 'u2' | … | 'u288'`. */
+export type SpacingScaleToken = keyof typeof spacingScale;
 /** Union of valid typography role keys, e.g. `'windowTitle' | … | 'readerBody'`. */
 export type TypographyToken = keyof typeof typography;
 /** The fully-typed shape of the aggregate `tokens` object. */

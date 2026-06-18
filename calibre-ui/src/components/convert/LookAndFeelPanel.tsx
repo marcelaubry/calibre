@@ -172,16 +172,16 @@ const PROCESSING_TOGGLE_LABELS = [
  * sits flush on the dialog surface — BLITZY [COLOR]); `gap-5` separates the
  * three control groups, reinforced by the hairline {@link DIVIDER_CLASSES}.
  */
-const PANEL_BASE = 'flex w-full flex-col gap-5';
+const PANEL_BASE = 'flex w-full flex-col gap-u20';
 
 /** Vertical stack holding the three labelled numeric fields; `gap-4` between them. */
-const NUMERIC_STACK = 'flex flex-col gap-4';
+const NUMERIC_STACK = 'flex flex-col gap-u16';
 
 /**
  * One labelled numeric control: the label sits ABOVE its field (the Figma
  * field-label placement), separated by the `gap-1.5` (6px) step.
  */
-const CONTROL_STACK = 'flex flex-col gap-1.5';
+const CONTROL_STACK = 'flex flex-col gap-u6';
 
 /**
  * Compact width for a numeric field's WRAPPER (the `InputField` `className`
@@ -190,7 +190,7 @@ const CONTROL_STACK = 'flex flex-col gap-1.5';
  * rule) keeps each "pt" field a tidy box rather than spanning the panel width,
  * matching the compact numeric fields in the Figma `6:9` Look & Feel render.
  */
-const NUMERIC_FIELD_WIDTH = 'w-24';
+const NUMERIC_FIELD_WIDTH = 'w-u96';
 
 /**
  * Control-label / caption typography: the `text-body` role (12px) in the
@@ -208,10 +208,10 @@ const DIVIDER_CLASSES =
   'm-0 h-0 w-full border-0 border-t border-[var(--border-white-07)]';
 
 /** The "Justify text" switch row: switch on the left, label to its right. */
-const JUSTIFY_ROW = 'flex items-center gap-3';
+const JUSTIFY_ROW = 'flex items-center gap-u12';
 
 /** The processing-options group: caption above the dot grid; `gap-3` between. */
-const PROCESSING_GROUP = 'flex flex-col gap-3';
+const PROCESSING_GROUP = 'flex flex-col gap-u12';
 
 /**
  * The processing-options GRID — the AAP "2×3" grid = 3 columns × 2 rows
@@ -219,7 +219,7 @@ const PROCESSING_GROUP = 'flex flex-col gap-3';
  * clips. Column gap ≈ the `gap-x-7` step (~Figma 27px); row gap ≈ the `gap-y-3`
  * step (~Figma 12px).
  */
-const PROCESSING_GRID = 'grid grid-cols-3 gap-x-7 gap-y-3';
+const PROCESSING_GRID = 'grid grid-cols-3 gap-x-u28 gap-y-u12';
 
 /**
  * One FLUSH processing cell: a flex row with the status DOT on the left and its
@@ -229,7 +229,7 @@ const PROCESSING_GRID = 'grid grid-cols-3 gap-x-7 gap-y-3';
  * can wrap instead of forcing horizontal overflow; `py-0.5` adds a hair of
  * vertical breathing room around the 18px dot without implying a filled chip.
  */
-const PROCESSING_CELL = 'flex min-w-0 items-center gap-3 py-0.5';
+const PROCESSING_CELL = 'flex min-w-0 items-center gap-u12 py-u2';
 
 /**
  * Base classes for a toggle's adjacent label. The color is appended at render

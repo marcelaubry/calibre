@@ -215,7 +215,7 @@ const SECTION_LABEL_CLASSES = 'text-text-muted text-meta-label uppercase select-
  * `--border-white-07` token (the codebase's documented arbitrary-`var()` form
  * for white-border tokens). Purely decorative, so `aria-hidden`.
  */
-const DIVIDER_CLASSES = 'h-px w-full bg-[var(--border-white-07)]';
+const DIVIDER_CLASSES = 'h-u1 w-full bg-[var(--border-white-07)]';
 
 /**
  * One "Available formats" row: a token-backed elevated card whose height is
@@ -224,8 +224,8 @@ const DIVIDER_CLASSES = 'h-px w-full bg-[var(--border-white-07)]';
  * button last. `border`/`bg-card`/`rounded-control` are all token-backed.
  */
 const FORMAT_ROW_CLASSES =
-  'flex items-center gap-2 rounded-control border border-[var(--border-white-09)] ' +
-  'bg-card px-2.5';
+  'flex items-center gap-u8 rounded-control border border-[var(--border-white-09)] ' +
+  'bg-card px-u10';
 
 /** Size-text classes for a format row — muted, meta-label scale, pushed to end. */
 const FORMAT_SIZE_CLASSES = 'ml-auto text-text-muted text-meta-label';
@@ -259,7 +259,7 @@ export function MetadataCoverColumn({
   onAddFormat,
 }: MetadataCoverColumnProps): JSX.Element {
   return (
-    <div className="flex w-55 shrink-0 flex-col px-5 pt-4">
+    <div className="flex w-u220 shrink-0 flex-col px-u20 pt-u16">
       {/* (1) Large generated cover — centered; never real cover art (AAP §0.9). */}
       <BookCoverPlaceholder book={book} size="metadata" className="mx-auto" />
 
@@ -268,19 +268,19 @@ export function MetadataCoverColumn({
           cluster gap is 8px (gap-2) so Change Cover → the Download/Generate row
           matches the row's own 8px sibling gap (Figma ~8.5px), giving the whole
           button cluster a uniform tight rhythm. */}
-      <div className="mt-2.5 flex flex-col gap-2">
+      <div className="mt-u10 flex flex-col gap-u8">
         <Button label="Change Cover" variant="secondary" className="w-full" onClick={noop} />
-        <div className="flex gap-2">
+        <div className="flex gap-u8">
           <Button label="Download" variant="secondary" className="min-w-0 flex-1" onClick={noop} />
           <Button label="Generate" variant="secondary" className="min-w-0 flex-1" onClick={noop} />
         </div>
       </div>
 
       {/* Divider */}
-      <div className={`mt-3 ${DIVIDER_CLASSES}`} aria-hidden="true" />
+      <div className={`mt-u12 ${DIVIDER_CLASSES}`} aria-hidden="true" />
 
       {/* (3) Editable star rating — `rating` is the shared source of truth. */}
-      <div className="mt-5 flex flex-col gap-2.5">
+      <div className="mt-u20 flex flex-col gap-u10">
         <span className={SECTION_LABEL_CLASSES}>Rating</span>
         <StarRating
           value={rating}
@@ -292,12 +292,12 @@ export function MetadataCoverColumn({
       </div>
 
       {/* Divider */}
-      <div className={`mt-4 ${DIVIDER_CLASSES}`} aria-hidden="true" />
+      <div className={`mt-u16 ${DIVIDER_CLASSES}`} aria-hidden="true" />
 
       {/* (4) Available formats — one row per format: chip + size + remove. */}
-      <div className="mt-5 flex flex-col gap-2.5">
+      <div className="mt-u20 flex flex-col gap-u10">
         <span className={SECTION_LABEL_CLASSES}>Available formats</span>
-        <ul className="flex list-none flex-col gap-2">
+        <ul className="flex list-none flex-col gap-u8">
           {formats.map((entry) => (
             <li key={entry.format} className={FORMAT_ROW_CLASSES}>
               <FormatBadge format={entry.format} />
@@ -318,7 +318,7 @@ export function MetadataCoverColumn({
       <Button
         label="+ Add format"
         variant="secondary"
-        className="mt-2 w-full"
+        className="mt-u8 w-full"
         onClick={onAddFormat}
       />
     </div>

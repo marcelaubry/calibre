@@ -142,7 +142,7 @@ const GROUP_LABEL_ID = 'viewer-theme-swatches-label';
  * utilities — zero hardcoded values.
  */
 const SECTION_LABEL =
-  'mb-3 text-card-title uppercase tracking-wide text-text-secondary';
+  'mb-u12 text-card-title uppercase tracking-wide text-text-secondary';
 
 /**
  * Swatch-row layout: a single horizontal flex row with the CONFIRMED 16px Figma
@@ -151,7 +151,7 @@ const SECTION_LABEL =
  * future label wraps. Comfortably fits the settings panel with zero horizontal
  * overflow at the 1280px minimum, so no wrapping is needed.
  */
-const SWATCH_ROW = 'flex items-start gap-4';
+const SWATCH_ROW = 'flex items-start gap-u16';
 
 /**
  * ViewerThemeSwatches — the App 06 Preferences "Viewer Color Themes" section.

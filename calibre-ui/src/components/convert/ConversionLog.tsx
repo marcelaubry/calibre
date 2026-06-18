@@ -171,7 +171,7 @@ const LEVEL_TEXT_CLASS: Record<LogLevel, string> = {
 const CONTAINER_BASE =
   'flex flex-col gap-[var(--space-conversion-log-gap)] w-full ' +
   'bg-[var(--color-code-bg)] border border-[var(--border-white-07)] rounded-control ' +
-  'px-2.5 pt-2 pb-[var(--space-conversion-log-pb)] ' +
+  'px-u10 pt-u8 pb-[var(--space-conversion-log-pb)] ' +
   'max-h-[var(--size-conversion-log-max-h)] overflow-y-auto ' +
   'font-mono text-meta-label leading-3';
 

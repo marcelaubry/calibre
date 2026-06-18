@@ -305,7 +305,7 @@ export interface MetadataFieldsProps {
  * the lower column (Identifiers→Synopsis = 12px exactly; Tags→Identifiers ≈
  * 12–14px) while the tighter field-row rhythm is handled by the nested grid.
  */
-const ROOT_CLASSES = 'flex w-full flex-col gap-3';
+const ROOT_CLASSES = 'flex w-full flex-col gap-u12';
 
 /**
  * Field grid: the six labeled field rows (two full-width + four two-up) stacked
@@ -313,14 +313,14 @@ const ROOT_CLASSES = 'flex w-full flex-col gap-3';
  * + 36px (`h-9`) control of each group, this yields the CONFIRMED ~56px Figma
  * label-top→label-top pitch (`9:52`→`9:55`→… all Δ56).
  */
-const FIELD_GRID_CLASSES = 'flex w-full flex-col gap-1';
+const FIELD_GRID_CLASSES = 'flex w-full flex-col gap-u4';
 
 /**
  * A single field group: the label stacked 4px (`gap-1`) above its control,
  * spanning the full available width. Used for the full-width Title / Author(s) /
  * Synopsis groups and as each column of a two-up row.
  */
-const FIELD_GROUP_CLASSES = 'flex w-full flex-col gap-1';
+const FIELD_GROUP_CLASSES = 'flex w-full flex-col gap-u4';
 
 /**
  * A two-up row: two field columns side by side with a 12px (`gap-3`) inter-column
@@ -328,7 +328,7 @@ const FIELD_GROUP_CLASSES = 'flex w-full flex-col gap-1';
  * the columns so an uneven control (e.g. the label-less index, or the shorter
  * rating glyphs) still aligns to the row's top edge.
  */
-const TWO_UP_ROW_CLASSES = 'flex w-full items-start gap-3';
+const TWO_UP_ROW_CLASSES = 'flex w-full items-start gap-u12';
 
 /**
  * An equal-width two-up column: grows to share the row width with its sibling and
@@ -336,7 +336,7 @@ const TWO_UP_ROW_CLASSES = 'flex w-full items-start gap-3';
  * 1440→1280 overflow guard). Used for Title Sort | Author Sort, the wide Series
  * field, Publisher | Publication Date, and Language | Rating.
  */
-const COLUMN_CLASSES = 'flex min-w-0 flex-1 flex-col gap-1';
+const COLUMN_CLASSES = 'flex min-w-0 flex-1 flex-col gap-u4';
 
 /**
  * The narrow Series-index column: a fixed `w-30` (120px — the CONFIRMED Figma
@@ -344,7 +344,7 @@ const COLUMN_CLASSES = 'flex min-w-0 flex-1 flex-col gap-1';
  * (`flex-1`) absorbs all width changes, reproducing the ~440:120 Series:index
  * proportion.
  */
-const INDEX_COLUMN_CLASSES = 'flex w-30 shrink-0 flex-col gap-1';
+const INDEX_COLUMN_CLASSES = 'flex w-u120 shrink-0 flex-col gap-u4';
 
 /**
  * The field label — the EXACT App 07 Figma label treatment (`9:52`, `9:55`, …):

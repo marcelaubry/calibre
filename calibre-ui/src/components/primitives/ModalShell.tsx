@@ -213,7 +213,7 @@ const DIALOG_SIZE: Record<ModalVariant, string> = {
  * the viewport border at the 1280–1440 widths). The variant scrim fill is
  * appended at render time.
  */
-const SCRIM_BASE = 'fixed inset-0 z-50 flex items-center justify-center p-8';
+const SCRIM_BASE = 'fixed inset-0 z-50 flex items-center justify-center p-u32';
 
 /**
  * Dialog card base (variant-invariant): the glassmorphic surface
@@ -234,8 +234,8 @@ const DIALOG_BASE =
  * the 20px title inset and the ~52px band height.
  */
 const HEADER =
-  'flex shrink-0 items-center gap-4 ' +
-  'bg-surface-1 border-b border-[var(--border-white-07)] px-5 py-3.5';
+  'flex shrink-0 items-center gap-u16 ' +
+  'bg-surface-1 border-b border-[var(--border-white-07)] px-u20 py-u14';
 
 /**
  * Title typography: the `text-modal-title` role (Inter 600 16px) in the primary
@@ -270,7 +270,7 @@ const TITLE = 'min-w-0 flex-1 truncate text-modal-title text-text-primary';
  * brighten to `text-text-primary` on hover. (CP4 fix per finding §ModalShell L244.)
  */
 const CLOSE_BTN =
-  'grid h-6 w-6 shrink-0 place-items-center rounded-control-sm ' +
+  'grid h-u24 w-u24 shrink-0 place-items-center rounded-control-sm ' +
   'bg-[var(--border-white-06)] ' +
   'hover:text-text-primary ' +
   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--border-accent)] ' +
@@ -323,8 +323,8 @@ const BODY = 'min-h-0 flex-1 overflow-y-auto';
  * header; `gap-3` spaces the action buttons supplied via the `footer` slot.
  */
 const FOOTER =
-  'flex shrink-0 items-center justify-end gap-3 ' +
-  'border-t border-[var(--border-white-07)] px-5 py-3.5';
+  'flex shrink-0 items-center justify-end gap-u12 ' +
+  'border-t border-[var(--border-white-07)] px-u20 py-u14';
 
 /**
  * ModalShell — the bespoke centered modal-dialog scaffold primitive.

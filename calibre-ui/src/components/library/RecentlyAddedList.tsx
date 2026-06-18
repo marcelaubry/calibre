@@ -142,14 +142,14 @@ function cx(...parts: Array<string | false | undefined>): string {
  * TRANSPARENT (the surrounding right-column panel owns the surface fill) and
  * carries NO horizontal padding (the column owns that) so it nests flush.
  */
-const SECTION = 'flex w-full min-w-0 flex-col gap-3 py-4';
+const SECTION = 'flex w-full min-w-0 flex-col gap-u12 py-u16';
 
 /**
  * The section heading ("Recently Added"): the body type role (12px) in the
  * SECONDARY text token, so it reads as a quiet section label sitting back from
  * the brighter per-row titles. `px-2` aligns it with the row content inset.
  */
-const HEADING = 'px-2 text-body text-text-secondary';
+const HEADING = 'px-u8 text-body text-text-secondary';
 
 /** The list: a tight vertical stack; rows are separated by hairline dividers. */
 const LIST = 'flex flex-col';
@@ -172,7 +172,7 @@ const LIST_ITEM = 'min-w-0 border-b border-[var(--border-white-07)] last:border-
  * color transition — are owned by `NavRowButton` (R4), so they are intentionally
  * absent here (a future change to the primitive then governs every row).
  */
-const ROW = 'flex min-w-0 items-center gap-2 px-2 py-2 hover:bg-accent/5';
+const ROW = 'flex min-w-0 items-center gap-u8 px-u8 py-u8 hover:bg-accent/5';
 
 /** The cover thumbnail never shrinks (keeps a stable leading column). */
 const COVER = 'shrink-0';
