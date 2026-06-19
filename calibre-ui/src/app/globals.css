@@ -1,0 +1,492 @@
+@import "tailwindcss";
+
+/**
+ * ==========================================================================
+ * Calibre-UI Design System — globals.css
+ * THE authoritative Tailwind CSS v4 (CSS-first) global token layer.
+ * ==========================================================================
+ *
+ * WHAT THIS FILE IS
+ * --------------------------------------------------------------------------
+ * The single, app-wide stylesheet for the UI-only Calibre e-book-manager
+ * prototype (Next.js 15 App Router · React 19 · TypeScript 5 · Tailwind v4).
+ * It is imported exactly once — by `src/app/layout.tsx` (`import './globals.css'`)
+ * — so its tokens and base styles apply globally to every screen.
+ *
+ * It does three things, in order:
+ *   1. `@import "tailwindcss";` — pulls in Tailwind v4 (CSS-first; there is NO
+ *      `tailwind.config.js`/`.ts`, and the legacy v3 `@tailwind` triplet is
+ *      intentionally NOT used).
+ *   2. `@theme static { … }` — declares the FULL bespoke dark-navy glassmorphic
+ *      token manifest (AAP §0.3.2): colors, white-opacity borders, gradients,
+ *      scrims, radii, shadows, the Inter font binding, the per-role typography
+ *      scale, and the named component-geometry tokens (sizes, spacing/offsets,
+ *      and focus-ring widths) that back component dimensions so no TSX carries a
+ *      bare px literal. Tailwind turns these into utilities (`bg-card`,
+ *      `text-accent`, `border-line-07`, `rounded-card`, `shadow-convert`,
+ *      `text-detail-title`, …) AND emits them as `:root` CSS custom properties.
+ *   3. Base styles (`@layer base`) — box-sizing reset, margin/padding reset,
+ *      the body background/text/font, font smoothing, and a token-only dark
+ *      scrollbar.
+ *
+ * AUTHORITY & BYTE-CONSISTENCY (AAP §0.4.3 / §0.4.5)
+ * --------------------------------------------------------------------------
+ * This file is the SOURCE OF TRUTH for every design token in the app.
+ * `src/theme/tokens.ts` is a byte-for-byte JavaScript mirror of these same
+ * values (for the rare cases a token is needed in TS, e.g. `@/lib/covers`).
+ * If the two ever diverge, THIS file wins — but both are authored from the
+ * identical AAP §0.3.2 manifest, so they match by construction. Hex casing is
+ * UPPERCASE, `rgba(...)` opacity forms are preserved verbatim (`0.10` is NOT
+ * collapsed to `0.1`), and gradient strings keep the exact `-45deg` angle and
+ * stop order. ZERO approximation, snapping, or renaming.
+ *
+ * The downstream compliance rule is "zero hardcoded values": every CSS value
+ * in every component resolves to one of the tokens declared below (the only
+ * permitted non-token literals app-wide are `0`, `none`, `auto`, `inherit`,
+ * `currentColor`, and `transparent`).
+ *
+ * WHY `@theme static`
+ * --------------------------------------------------------------------------
+ * Tailwind v4's default `@theme` tree-shakes theme variables that are not
+ * referenced by a generated utility — which would drop the non-namespaced
+ * tokens (`--gradient-*`, `--scrim-*`, `--border-white-*`, `--border-accent`)
+ * and any unused namespaced token from `:root`. Components consume those via
+ * `var(--token)` (incl. inline `style={{…}}` and arbitrary values), which the
+ * scanner cannot always see, so they must be emitted unconditionally. The
+ * `static` modifier forces ALL tokens into `:root` while still generating the
+ * namespaced utilities — exactly what this token layer requires.
+ *
+ * The Inter font is loaded by `next/font/google` in `layout.tsx` (which sets
+ * `--font-inter` on <html>); this file only BINDS it via `--font-sans`. No
+ * font is `@import url(...)`-ed here, and there are no real-cover-art image
+ * URLs (covers are generated at runtime by `@/lib/covers`).
+ *
+ * @see src/theme/tokens.ts — the byte-for-byte TypeScript mirror.
+ * @see Agent Action Plan §0.3.2 — the Figma Token Manifest (single source of truth).
+ */
+
+/* ==========================================================================
+ * Design tokens — bespoke Calibre-UI Design System (AAP §0.3.2).
+ * `static` forces every token into `:root` even when unused by a utility, so
+ * `var(--token)` consumers (gradients, scrims, border aliases, inline styles)
+ * always resolve at runtime.
+ * ======================================================================== */
+@theme static {
+  /* ---- Colors — surfaces / backgrounds (9) ---------------------------- */
+  --color-bg-app: #0C0E1A;
+  --color-title-bar: #070810;
+  --color-surface-1: #10132A;
+  --color-surface-2: #13162E;
+  --color-card: #181C3C;
+  --color-viewer-bg: #08080F;
+  --color-reading-surface: #0F1020;
+  --color-code-bg: #0A0B18;
+  --color-preview-cream: #F5F0E8;
+
+  /* ---- Colors — text (4) ---------------------------------------------- */
+  /* BLITZY [A11Y]: the secondary/muted/placeholder text tones below are the
+   * CONFIRMED, authoritative Figma values (AAP §0.3.2 token manifest:
+   * color-text-secondary #94A3B8, color-text-muted #64748B, color-text-placeholder
+   * #3A4060) used for meta labels and secondary copy on the dark navy surfaces.
+   * Against those surfaces some small-text pairings compute below the WCAG AA
+   * 4.5:1 body-text threshold (≈3.25–4.22:1). Per the design-precedence rule
+   * (D1 / UF3 — Figma is authoritative for VISIBLE color and must NOT be silently
+   * altered), these values are reproduced EXACTLY rather than darkened/lightened
+   * to chase the AA ratio; the contrast finding is therefore FLAGGED here and
+   * DEFERRED to designer review (changing them is a Figma deviation, not a code
+   * fix). Primary copy (#F1F5FF) passes AA on every app surface. */
+  --color-text-primary: #F1F5FF;
+  --color-text-secondary: #94A3B8;
+  --color-text-muted: #64748B;
+  --color-text-placeholder: #3A4060;
+
+  /* ---- Colors — accents (3) ------------------------------------------- */
+  --color-accent: #7B61FF;
+  --color-accent-light: #A78BFA;
+  --color-accent-indigo: #4838C8;
+
+  /* ---- Colors — semantic: rating / format badges / danger (5) --------- */
+  --color-star: #F59E0B;
+  --color-format-epub: #4ADE80;
+  --color-format-mobi: #FBBF24;
+  --color-format-pdf: #F87171;
+  --color-danger: #F87171;
+
+  /* ---- Colors — semantic: FormatBadge opaque chip fills (3) -----------
+   * CONFIRMED Figma App02 fills (node 3:87): each format badge sits on an
+   * opaque dark chip rather than a translucent wash. Promoted to named tokens
+   * so FormatBadge carries zero hex literal (AAP §0.4.5; R3). The badge TEXT
+   * color stays on the bright `--color-format-*` tokens above. Mirrored
+   * byte-for-byte in `src/theme/tokens.ts` (`colors` group). */
+  --color-format-epub-bg: #1A2A1A;       /* EPUB chip fill (green-tinted dark) */
+  --color-format-mobi-bg: #1A1A2E;       /* MOBI chip fill (indigo-tinted dark) */
+  --color-format-pdf-bg: #2A1A1A;        /* PDF chip fill (red-tinted dark) */
+
+  /* ---- Colors — semantic: Button danger fill (1) ---------------------
+   * CONFIRMED Figma App01 "Delete" button (node 2:375): a SOLID dark-maroon
+   * fill #2A1A1A (opacity 1) — NOT a translucent wash of the danger color.
+   * Promoted to a named token so the Button `danger` variant carries zero hex
+   * literal (AAP §0.4.5; R1). Shares the same hex as `--color-format-pdf-bg`
+   * but is kept SEMANTICALLY DISTINCT (a button SURFACE vs a format CHIP) so
+   * either can be retuned independently. Mirrored byte-for-byte in
+   * `src/theme/tokens.ts` (`colors.dangerBg`). */
+  --color-danger-bg: #2A1A1A;            /* Delete/danger button fill (red-tinted dark) */
+
+  /* ---- Colors — semantic: Sidebar TagPill fill (1) --------------------
+   * CONFIRMED Figma App01/App02 sidebar tag chips (2:36): a baked solid dark
+   * fill (NOT the translucent accent wash used by metadata pills). Promoted to
+   * a named token so TagPill's `sidebar` variant carries zero hex literal
+   * (AAP §0.4.5; R3). Mirrored byte-for-byte in `tokens.ts` (`colors` group). */
+  --color-tag-sidebar-bg: #1D2148;       /* Sidebar tag chip solid fill (2:36) */
+
+  /* ---- Colors — semantic: App 04 code-editor syntax theme (5) --------- */
+  --color-syntax-tag: #A78BFA;
+  --color-syntax-attr: #38BDF8;
+  --color-syntax-string: #FBBF24;
+  --color-syntax-value: #4ADE80;
+  --color-syntax-comment: #64748B;
+
+  /* ---- Colors — semantic: macOS window traffic-light dots (3) --------- */
+  --color-window-dot-red: #FF5F57;
+  --color-window-dot-amber: #FFBD2E;
+  --color-window-dot-green: #28CA41;
+
+  /* ---- Border colors — white-opacity hairlines + accent (5) -----------
+   * Declared under `--color-*` so Tailwind generates `border-line-*` /
+   * `border-border-accent` utilities. Keep `0.10` exactly (NOT `0.1`). */
+  --color-line-06: rgba(255,255,255,0.06);   /* AAP border-white-06 */
+  --color-line-07: rgba(255,255,255,0.07);   /* AAP border-white-07 */
+  --color-line-09: rgba(255,255,255,0.09);   /* AAP border-white-09 */
+  --color-line-10: rgba(255,255,255,0.10);   /* AAP border-white-10 */
+  --color-border-accent: rgba(123,97,255,0.6); /* AAP border-accent */
+
+  /* ---- Border aliases — AAP §0.3.2 names for `var()` consumers ---------
+   * Identical values to the `--color-line-*` set above; emitted so code that
+   * references the AAP/tokens.ts names resolves to the same value. */
+  --border-white-04: rgba(255,255,255,0.04); /* App 07 "+ Add ID" quiet-box fill (9:115) */
+  --border-white-06: rgba(255,255,255,0.06);
+  --border-white-07: rgba(255,255,255,0.07);
+  --border-white-09: rgba(255,255,255,0.09);
+  --border-white-10: rgba(255,255,255,0.10);
+  --border-accent: rgba(123,97,255,0.6);
+
+  /* ---- Gradients (3) — consumed via `var()` / `bg-gradient-*` utility -- */
+  --gradient-accent: linear-gradient(-45deg, #7B61FF 0%, #A78BFA 100%);
+  --gradient-cta: linear-gradient(-45deg, #7B61FF 0%, #4838C8 100%);
+  /* Slider filled-track fill (Figma 8:100 — Preferences margins slider). Bottom-up
+   * accent→accent-light ramp; consumed via the `bg-gradient-slider-track` utility. */
+  --gradient-slider-track: linear-gradient(to top, var(--color-accent), var(--color-accent-light));
+  /* Active-tab underline fill (Figma App04 editor 5:34 / App05 convert 6:28 tab
+   * strips). A 2px VERTICAL accent→accent-light ramp rendered as a bottom child
+   * bar on the active tab; consumed via the `bg-gradient-tab-underline` utility.
+   * Replaces the prior flat-accent active border for exact Figma fidelity. */
+  --gradient-tab-underline: linear-gradient(0deg, var(--color-accent) 0%, var(--color-accent-light) 100%);
+
+  /* ---- Scrims (2) — modal overlay backdrops, consumed via `var()` ------ */
+  --scrim-convert: rgba(12,14,26,0.6);
+  --scrim-metadata: rgba(0,0,0,0.55);
+
+  /* ---- Radii (6) — generates `rounded-*` ------------------------------ */
+  --radius-badge: 3px;
+  --radius-toolbar: 7px;
+  --radius-control-sm: 6px;              /* Shared 6px small-control radius: ModalShell close chip (6:15 / 9:19) + App 07 "+ Add ID" quiet box (9:115) */
+  --radius-control: 8px;
+  --radius-card: 10px;
+  --radius-dialog: 16px;
+
+  /* ---- Shadows (3) — dialog elevation + input glow; generates `shadow-*` */
+  --shadow-convert: 0 24px 64px rgba(0,0,0,0.6);
+  --shadow-metadata: 0 20px 60px rgba(0,0,0,0.65);
+  /* App 07 Metadata Title field's ALWAYS-VISIBLE purple glow (Figma 9:53; AAP
+   * §0.3.1 / §0.7.4 / §0.10.2 "Title … with purple focus glow"). A soft 3px
+   * accent ring + a 12px accent halo, consumed via `shadow-[var(--shadow-input-glow)]`
+   * by the `InputField` `active` prop. Accent #7B61FF = `--color-accent`. */
+  --shadow-input-glow: 0 0 0 3px rgba(123,97,255,0.25), 0 0 12px rgba(123,97,255,0.35);
+
+  /* ---- Font family — binds Inter (via `--font-inter` from next/font) --- */
+  --font-sans: var(--font-inter), Inter, system-ui, -apple-system, sans-serif;
+
+  /* ---- Typography roles (13) ------------------------------------------
+   * Each role generates a single `text-<role>` utility that sets font-size +
+   * font-weight (+ line-height where specified). Sizes in px to match Figma. */
+  --text-window-title: 11px;
+  --text-window-title--font-weight: 500;
+
+  --text-dialog-heading: 20px;                 /* pinned 20px (AAP range ~18–22) */
+  --text-dialog-heading--font-weight: 600;
+
+  /* Modal (App05/App07) title bar — CONFIRMED Figma Inter 600 16px (6:9 / 9:9).
+   * Distinct from the larger `--text-dialog-heading`; used only by ModalShell. */
+  --text-modal-title: 16px;
+  --text-modal-title--font-weight: 600;
+
+  --text-detail-title: 15px;
+  --text-detail-title--line-height: 22px;
+  --text-detail-title--font-weight: 600;
+
+  --text-cover-title: 14px;
+  --text-cover-title--line-height: 18px;
+  --text-cover-title--font-weight: 700;
+
+  --text-card-title: 11px;
+  --text-card-title--line-height: 15px;
+  --text-card-title--font-weight: 600;
+
+  --text-body: 12px;
+  --text-body--font-weight: 400;
+
+  --text-meta-label: 10px;
+  --text-meta-label--font-weight: 400;
+
+  --text-meta-value: 10px;
+  --text-meta-value--font-weight: 500;
+
+  /* Metadata-modal (App07) field/section labels — CONFIRMED Figma Inter 600
+   * 10px (node 9:80). Distinct from the lighter `--text-meta-label` (400);
+   * paired with `--color-text-placeholder` (#3A4060) for the exact label tone. */
+  --text-field-label: 10px;
+  --text-field-label--font-weight: 600;
+
+  --text-button-primary: 12px;
+  --text-button-primary--font-weight: 600;
+
+  --text-button-secondary: 11px;
+  --text-button-secondary--font-weight: 500;
+
+  --text-badge: 8px;
+  --text-badge--font-weight: 500;
+
+  --text-toolbar-label: 9px;
+  --text-toolbar-label--font-weight: 400;
+
+  --text-reader-body: 15px;
+  --text-reader-body--line-height: 26px;
+  --text-reader-body--font-weight: 400;
+
+  /* ---- Component geometry — sizes (12) --------------------------------
+   * Confirmed Figma pixel geometry promoted to named tokens so component TSX
+   * carries zero bare px literals (AAP §0.4.5 "zero hardcoded values"). Each is
+   * consumed via an arbitrary `var()` utility, e.g. `h-[var(--size-window-dot)]`.
+   * Mirrored byte-for-byte in `src/theme/tokens.ts` (`sizes` group). */
+  --size-window-dot: 11px;               /* WindowTitleBar traffic-light dot (2:3–2:5, 11×11) */
+  --size-scrollbar: 10px;                /* WebKit scrollbar width/height */
+  --size-button-h: 38px;                 /* Primary/toolbar button height (toolbar 84×38) */
+  --size-button-compact-h: 32px;         /* Secondary/danger compact button height */
+  --size-button-quiet-h: 28px;           /* Ghost/quiet button height (App 07 "+ Add ID" 9:115, 120×28) */
+  --size-toolbar-button-w: 84px;         /* Toolbar button fixed min-width */
+  --size-toolbar-icon: 15px;             /* Toolbar glyph size (use `text-[length:var(--size-toolbar-icon)]`) */
+  --size-toggle-knob: 18px;              /* Toggle iOS knob diameter */
+  --size-conversion-log-max-h: 140px;    /* Convert dialog log max-height (6:88) */
+  --size-modal-convert-w: 880px;         /* Convert dialog width (6:9) */
+  --size-modal-convert-h: 740px;         /* Convert dialog height (6:9) */
+  --size-modal-metadata-w: 860px;        /* Metadata dialog width (9:9) */
+  --size-modal-metadata-h: 800px;        /* Metadata dialog height (9:9) */
+
+  /* ---- Component geometry — leaf-screen sizes (CP2 token-fidelity) ------
+   * CONFIRMED Figma pixel geometry for the leaf/primitive components, promoted
+   * to named tokens so component TSX carries zero arbitrary px/rem bracket
+   * literals or inline px geometry (AAP §0.4.5 "zero hardcoded values"; R3).
+   * Each is consumed via an arbitrary `var()` utility, e.g.
+   * `w-[var(--size-toolbar-search-w)]`. Mirrored byte-for-byte in
+   * `src/theme/tokens.ts` (`sizes` group). rem-authored design lengths are
+   * expressed in px here (exact at the app's 16px root: 13.75rem=220px,
+   * 12rem=192px, 23.25rem=372px, 20rem=320px). */
+  --size-theme-swatch-w: 154px;          /* App 06 ThemeSwatch tile width (8:82) */
+  --size-theme-swatch-h: 98px;           /* App 06 ThemeSwatch tile height (8:82) */
+  --size-cover-sm-w: 20px;               /* BookCoverPlaceholder `sm` table thumb width (2:2) */
+  --size-cover-sm-h: 26px;               /* BookCoverPlaceholder `sm` table thumb height (2:2) */
+  --size-cover-md-w: 182px;              /* BookCoverPlaceholder `md` grid-cover width (3:82) */
+  --size-cover-md-h: 192px;              /* BookCoverPlaceholder `md` grid-cover height (3:82) */
+  --size-cover-lg-w: 196px;              /* BookCoverPlaceholder `lg` detail-cover width (2:347) */
+  --size-cover-lg-h: 264px;              /* BookCoverPlaceholder `lg` detail-cover height (2:347) */
+  --size-cover-metadata-w: 178px;        /* BookCoverPlaceholder `metadata` cover width (9:21) */
+  --size-cover-metadata-h: 238px;        /* BookCoverPlaceholder `metadata` cover height (9:21) */
+  --size-toolbar-search-w: 220px;        /* App 01/02 TopToolbar search field width (2:34) */
+  --size-sidebar-w: 216px;               /* App 01/02 Sidebar column width (2:36) */
+  --size-detail-panel-w: 236px;          /* App 01/02 BookDetailPanel + BatchActionsPanel column width (2:345) */
+  --size-filetree-w: 200px;              /* App 04 FileTree column width (5:53) */
+  --size-preview-basis: 504px;           /* App 04 PreviewPane flex-basis width (5:131) */
+  --size-toc-basis: 220px;               /* App 03 TableOfContents flex-basis width (4:23) */
+  --size-toc-min-w: 192px;               /* App 03 TableOfContents min-width floor (4:23) */
+  --size-reader-tools-basis: 372px;      /* App 03 ReaderToolsPanel flex-basis width (4:56) */
+  --size-reader-tools-min-w: 320px;      /* App 03 ReaderToolsPanel min-width floor (4:56) */
+  --size-reading-progress-h: 3px;        /* App 03 ReadingArea top progress-bar height (4:43) */
+  --size-reading-measure: 680px;         /* App 03 ReadingArea readable prose max-width (4:43) */
+  --size-editor-line-h: 26px;            /* App 04 CodeEditor code/gutter row pitch / line-height (5:74) */
+
+  /* ---- Component geometry — CP4 Figma-fidelity sizes (4) ---------------
+   * CONFIRMED Figma pixel geometry promoted to named tokens for CP4 pixel-
+   * fidelity fixes (AAP §0.4.5 "zero hardcoded values"; R3). Mirrored
+   * byte-for-byte in `src/theme/tokens.ts` (`sizes` group). */
+  --size-card-h: 256px;                  /* App 02 BookCard fixed card footprint height (3:81, 182×256) */
+  --size-format-badge-w: 40px;           /* FormatBadge fixed chip width (3:87, ~40×16) */
+  --size-format-badge-h: 16px;           /* FormatBadge fixed chip height (3:87, ~40×16) */
+  --size-identifier-key-w: 90px;         /* App 07 IdentifierRows key-field width (9:9, ~90px) */
+
+  /* ---- Component geometry — spacing & offsets (8) ----------------------
+   * Sub-grid spacings/insets/translations promoted to named tokens. Consumed via
+   * arbitrary utilities, e.g. `gap-[var(--space-toolbar-button-gap)]`,
+   * `translate-x-[var(--space-toggle-knob-travel)]`. Mirrored in `tokens.ts`
+   * (`spacing` group). */
+  --space-toolbar-button-gap: 5px;       /* Button toolbar glyph→label gap */
+  --space-chip-y: 5px;                   /* TagPill vertical padding */
+  --space-toggle-knob-inset-x: 4px;      /* Toggle knob left inset (knob travels 4→22) */
+  --space-toggle-knob-inset-y: 3px;      /* Toggle knob top inset */
+  --space-toggle-knob-travel: 18px;      /* Toggle knob horizontal travel distance */
+  --space-window-title-nudge: 3px;       /* WindowTitleBar centered-title vertical nudge */
+  --space-conversion-log-gap: 3px;       /* ConversionLog per-line vertical gap */
+  --space-conversion-log-pb: 5px;        /* ConversionLog scroll-area bottom inset */
+
+  /* ---- Component geometry — leaf-screen spacing (CP2 token-fidelity) ----
+   * Sub-grid indents/insets promoted to named tokens so component TSX carries
+   * no arbitrary spacing literal (R3). Consumed via arbitrary utilities, e.g.
+   * `indent-[var(--space-preview-indent)]`, or a `calc()` of the two file-tree
+   * indent tokens. Mirrored in `tokens.ts` (`spacing` group). */
+  --space-filetree-indent-base: 8px;     /* App 04 FileTree base inline-start padding (5:53) */
+  --space-filetree-indent-step: 12px;    /* App 04 FileTree per-depth indent increment (5:53) */
+  --space-preview-indent: 1.2em;         /* App 04 PreviewPane paragraph text-indent (5:131) */
+
+  /* ---- Rings (1) — focus-halo widths ----------------------------------
+   * Consumed via arbitrary box-shadow utilities, e.g.
+   * `shadow-[0_0_0_var(--ring-focus-width)_var(--border-accent)]`. */
+  --ring-focus-width: 3px;               /* Slider thumb focus halo width */
+
+  /* ---- Spacing & sizing rhythm scale — `u<px>` named tokens (27) --------
+   * The bespoke, EXHAUSTIVE spacing/geometry scale that backs every padding,
+   * margin, gap, width, height, inset, size, flex-basis, translate, and
+   * space-between utility across the app (R3 / AAP §0.4.5 — "no hardcoded
+   * spacing/radius literals"; every value must resolve to an `@theme` token).
+   *
+   * NAMING — pixel-encoded: `--spacing-u<px>` where `<px>` is the literal
+   * pixel value (e.g. `--spacing-u16` = 16px). Self-documenting, unique per
+   * value, and non-numeric-leading so a scan for bare `gap-<n>` / `px-<n>`
+   * utilities never re-matches the tokenized form.
+   *
+   * WHY THE `--spacing-*` NAMESPACE — Tailwind v4 derives ALL spacing/sizing
+   * utilities from the `--spacing-*` theme namespace, so declaring a single
+   * `--spacing-uN` token auto-generates the token-backed utilities for every
+   * family at once: `p-uN px-uN py-uN pt/pr/pb/pl-uN ps/pe-uN m*-uN gap-uN
+   * gap-x/gap-y-uN space-x/space-y-uN w-uN h-uN size-uN min-w/min-h/max-w/
+   * max-h-uN basis-uN inset*-uN top/right/bottom/left/start/end-uN
+   * translate-x/translate-y-uN` (negatives compute `calc(var(--spacing-uN) *
+   * -1)`). Components consume these instead of bare Tailwind scale numbers.
+   *
+   * ZERO VISUAL CHANGE — values are byte-identical to the Tailwind default
+   * 0.25rem scale they replace (`px-u16` ≡ the former `px-4` = 16px), so this
+   * is a pure tokenization with no rendered-pixel delta. The dynamic numeric
+   * scale still coexists as a safety net but is no longer used in component
+   * class lists. Mirrored byte-for-byte in `src/theme/tokens.ts`
+   * (`spacingScale` group). */
+  --spacing-u1: 1px;                     /* ≡ Tailwind `*-px`  (1px hairline)        */
+  --spacing-u2: 2px;                     /* ≡ Tailwind `*-0.5` (0.5 × 4px)           */
+  --spacing-u4: 4px;                     /* ≡ Tailwind `*-1`                          */
+  --spacing-u6: 6px;                     /* ≡ Tailwind `*-1.5`                        */
+  --spacing-u8: 8px;                     /* ≡ Tailwind `*-2`                          */
+  --spacing-u10: 10px;                   /* ≡ Tailwind `*-2.5`                        */
+  --spacing-u12: 12px;                   /* ≡ Tailwind `*-3`                          */
+  --spacing-u14: 14px;                   /* ≡ Tailwind `*-3.5`                        */
+  --spacing-u16: 16px;                   /* ≡ Tailwind `*-4`                          */
+  --spacing-u18: 18px;                   /* ≡ Tailwind `*-4.5`                        */
+  --spacing-u20: 20px;                   /* ≡ Tailwind `*-5`                          */
+  --spacing-u24: 24px;                   /* ≡ Tailwind `*-6`                          */
+  --spacing-u28: 28px;                   /* ≡ Tailwind `*-7`                          */
+  --spacing-u32: 32px;                   /* ≡ Tailwind `*-8`                          */
+  --spacing-u36: 36px;                   /* ≡ Tailwind `*-9`                          */
+  --spacing-u40: 40px;                   /* ≡ Tailwind `*-10`                         */
+  --spacing-u44: 44px;                   /* ≡ Tailwind `*-11`                         */
+  --spacing-u48: 48px;                   /* ≡ Tailwind `*-12`                         */
+  --spacing-u52: 52px;                   /* ≡ Tailwind `*-13`                         */
+  --spacing-u64: 64px;                   /* ≡ Tailwind `*-16`                         */
+  --spacing-u96: 96px;                   /* ≡ Tailwind `*-24`                         */
+  --spacing-u120: 120px;                 /* ≡ Tailwind `*-30`                         */
+  --spacing-u128: 128px;                 /* ≡ Tailwind `*-32`                         */
+  --spacing-u160: 160px;                 /* ≡ Tailwind `*-40`                         */
+  --spacing-u220: 220px;                 /* ≡ Tailwind `*-55`                         */
+  --spacing-u240: 240px;                 /* ≡ Tailwind `*-60`                         */
+  --spacing-u288: 288px;                 /* ≡ Tailwind `*-72`                         */
+}
+
+/* ==========================================================================
+ * Base styles — minimal, token-driven, applied globally.
+ * Wrapped in `@layer base` so Tailwind utilities can override when needed.
+ * ======================================================================== */
+@layer base {
+  /* Predictable box model everywhere. */
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  /* Remove default UA margins/padding; let the app own all spacing. */
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    height: 100%;
+  }
+
+  /* The app canvas: dark-navy background, primary text, Inter font.
+   * NOTE: `overflow-x: hidden` is deliberately NOT set — horizontal-overflow
+   * integrity (1440 → 1280, no horizontal scroll) is enforced by component
+   * min-width/flex, and a global hide would mask real layout bugs. */
+  body {
+    min-height: 100%;
+    background-color: var(--color-bg-app);
+    color: var(--color-text-primary);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Token-only dark scrollbar so chrome matches the dark-navy canvas.
+   * Firefox: */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-surface-2) transparent;
+  }
+
+  /* WebKit/Blink: */
+  ::-webkit-scrollbar {
+    width: var(--size-scrollbar);
+    height: var(--size-scrollbar);
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--color-surface-2);
+    border-radius: var(--radius-control);
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color-card);
+  }
+}
+
+/* ==========================================================================
+ * Ergonomic gradient utilities — token-only (no inline gradient literals).
+ * Components may use `bg-gradient-cta` / `bg-gradient-accent` instead of the
+ * arbitrary `bg-[image:var(--gradient-cta)]` form.
+ * ======================================================================== */
+@utility bg-gradient-accent {
+  background-image: var(--gradient-accent);
+}
+
+@utility bg-gradient-cta {
+  background-image: var(--gradient-cta);
+}
+
+@utility bg-gradient-slider-track {
+  background-image: var(--gradient-slider-track);
+}
+
+@utility bg-gradient-tab-underline {
+  background-image: var(--gradient-tab-underline);
+}
