@@ -56,7 +56,14 @@ const SECURITY_HEADERS = [
 ];
 
 const nextConfig: NextConfig = {
-  output: "standalone",
+  // NOTE: `output: "standalone"` is intentionally NOT set. The production
+  // deployment (railway.json `startCommand` + package.json `start`) runs
+  // `next start -p ${PORT:-3000}`, which is the fully-supported production
+  // server. Next.js 15 emits a startup warning when `next start` is combined
+  // with `output: "standalone"` (that mode expects `node .next/standalone/server.js`
+  // instead, which would also require manually copying `.next/static` and
+  // `public/`). Since every deployment path here uses `next start`, omitting
+  // `output: "standalone"` keeps `npm start` warning-free and self-host friendly.
   // Remove the framework-disclosing `X-Powered-By: Next.js` response header.
   poweredByHeader: false,
   // Apply the hardening header set to all routes.

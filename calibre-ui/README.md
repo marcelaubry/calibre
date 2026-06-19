@@ -153,7 +153,7 @@ calibre-ui/
 │  ├─ theme/                     # tokens.ts — TypeScript mirror of the @theme tokens
 │  └─ types/                     # book.ts (the Book interface), index.ts (shared types)
 ├─ package.json                  # scripts: dev / build / start / lint; pinned dependencies
-├─ next.config.ts                # output: "standalone" (self-host friendly)
+├─ next.config.ts                # security headers (CSP etc.); served via `next start`
 ├─ postcss.config.mjs            # registers @tailwindcss/postcss
 ├─ tsconfig.json                 # strict TypeScript; @/* path alias -> ./src/*
 ├─ eslint.config.mjs             # eslint-config-next (flat config)
