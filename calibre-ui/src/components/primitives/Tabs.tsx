@@ -100,8 +100,10 @@
  * no color information — the underline bar thickness (`h-0.5` = 2px), the strip
  * hairline width (`border-b`), the per-variant inter-tab gap (`gap-1` / `gap-0`),
  * the tab padding (`px-2.5` / `py-2.5` = 10px = Convert `6:9`), the standard
- * font-weight utilities (`font-normal`/`font-medium`/`font-semibold`), and the
- * close-button hit area (`h-4 w-4`).
+ * font-weight utilities (`font-normal`/`font-medium`/`font-semibold`), the
+ * close-button VISIBLE size (`h-u16 w-u16` = the Figma 16×16 cell), and its
+ * transparent pointer-target overlay (`after:[inset:-5px]` → ≈26×26 hit area;
+ * see the CLOSE_BTN BLITZY [A11Y] note).
  *
  * RENDERING MODEL
  * --------------------------------------------------------------------------
@@ -131,6 +133,18 @@
  *   tab. Selection is otherwise reported on click.
  * • A token-backed `:focus-visible` ring (`--border-accent`) is shown for
  *   keyboard users only — invisible at rest (DS2-e).
+ * • Editor (closable) variant: each tab + its sibling close `<button>` share a
+ *   PLAIN wrapper `<span>` (no role — a `role="presentation"` would be ignored
+ *   due to the focusable descendants), so the tablist reasserts ownership of its
+ *   `role="tab"` buttons through `aria-owns` (each tab carries a stable
+ *   `useId`-derived id). To keep the tablist's ONLY owned children the tabs
+ *   (`aria-required-children`: a tablist may not own a `button`), the close
+ *   control is `aria-hidden` + `tabIndex=-1` — a decorative MOUSE affordance,
+ *   removed from the accessibility tree and the tab order. KEYBOARD users close
+ *   the focused tab with Delete/Backspace (the WAI-ARIA APG deletable-tabs
+ *   pattern; see `handleKeyDown`). The close glyph's CLICK target is widened to
+ *   ≈26×26 via a transparent `::after` overlay while its VISIBLE size stays the
+ *   Figma 16×16 (see the CLOSE_BTN BLITZY [A11Y] note).
  *
  * Design-parity reference only (NO code reuse): `src/calibre/gui2/tweak_book/
  * file_list.py` (Editor open-file tabs) and `src/calibre/gui2/convert/` (the Qt
@@ -141,7 +155,7 @@
  * @see Agent Action Plan §0.3.2 / §0.3.3 / §0.4.2 — token & component manifests.
  */
 
-import { useRef, type JSX, type KeyboardEvent, type MouseEvent } from 'react';
+import { useId, useRef, type JSX, type KeyboardEvent, type MouseEvent } from 'react';
 
 /**
  * The two CONFIRMED Figma tab-strip treatments (CP4 Figma-fidelity fix per
@@ -316,13 +330,34 @@ const EDITOR_LABEL = 'block max-w-u128 truncate';
  * `'editor'` variant per-tab CLOSE affordance — a real sibling `<button>` (NOT
  * nested inside the `role="tab"` button, which would be invalid), absolutely
  * positioned at the tab's right edge and vertically centered. Token-backed muted
- * glyph that brightens on hover, with a keyboard-only `:focus-visible` ring.
+ * glyph that brightens on hover.
+ *
+ * It is a DECORATIVE, mouse-only affordance: `aria-hidden` + `tabIndex=-1` keep it
+ * out of the accessibility tree and the tab order (so the tablist owns only its
+ * `role="tab"` children — `aria-required-children` — with no `aria-hidden-focus`
+ * conflict). Keyboard/AT users close the focused tab with Delete/Backspace (the
+ * WAI-ARIA APG deletable-tabs pattern; see `handleKeyDown`). A mouse click still
+ * fires `onClose` because pointer events dispatch on aria-hidden nodes. (Because
+ * it is removed from the tab order it shows no `:focus-visible` ring in practice;
+ * the ring utilities are retained as defensive styling only.)
+ *
+ * BLITZY [A11Y]: the VISIBLE control is the CONFIRMED Figma 16×16 (`h-u16 w-u16`)
+ * "×" cell — its hover color, `rounded-control-sm`, and glyph all stay at that
+ * exact Figma size (Figma precedence, UF3 — the rendered output is NOT silently
+ * enlarged). To honour the 24×24 pointer-target recommendation (WCAG 2.5.8)
+ * WITHOUT altering that visual, a transparent `::after` overlay
+ * (`after:[inset:-5px]`) extends the CLICKABLE hit area to ≈26×26px around the
+ * 16×16 glyph. The pseudo-element paints nothing (no background, no border), so
+ * the target is larger only to the pointer, never to the eye. `relative` makes
+ * the button the containing block for that overlay (it is already an `absolute`
+ * positioned element, so the overlay anchors to its border box).
  */
 const CLOSE_BTN =
   'absolute right-u6 top-1/2 -translate-y-1/2 inline-flex h-u16 w-u16 items-center justify-center ' +
   'rounded-control-sm leading-none select-none cursor-pointer ' +
   'text-text-muted hover:text-text-primary motion-safe:transition-colors ' +
-  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--border-accent)]';
+  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--border-accent)] ' +
+  "after:absolute after:content-[''] after:[inset:-5px]";
 
 /**
  * Tabs — the bespoke design-system horizontal tab-strip primitive.
@@ -351,6 +386,13 @@ export function Tabs({
   // navigation (roving tabindex). Kept in a stable array across renders.
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
 
+  // A stable, SSR-safe base id for this strip instance. Each `role="tab"` button
+  // derives a unique id from it (`${baseId}-tab-${index}`). In the editor variant
+  // the tabs are wrapped (so they can sit beside their sibling close `<button>`),
+  // so the tablist claims them explicitly through `aria-owns` — see the render.
+  const baseId = useId();
+  const tabId = (index: number): string => `${baseId}-tab-${index}`;
+
   // The index of the active tab. When `active` matches no label (`-1`), the
   // FIRST tab becomes the keyboard tab stop so the strip is always reachable;
   // `aria-selected` still resolves per-tab from the exact label match below.
@@ -369,6 +411,11 @@ export function Tabs({
 
   // WAI-ARIA horizontal-tablist key handling. Arrow keys wrap; Home/End jump to
   // the ends. `preventDefault` stops the arrow keys from also scrolling the page.
+  // Editor (closable) variant only: Delete/Backspace on the focused tab closes it
+  // — the WAI-ARIA APG "deletable tabs" mechanism. Because the visible "×" is a
+  // decorative, aria-hidden mouse affordance (see the render), Delete/Backspace is
+  // the KEYBOARD close path, so removing the close button from the tab order does
+  // not strand keyboard users.
   const handleKeyDown = (
     event: KeyboardEvent<HTMLButtonElement>,
     index: number,
@@ -395,6 +442,22 @@ export function Tabs({
         event.preventDefault();
         selectIndex(count - 1);
         break;
+      case 'Delete':
+      case 'Backspace':
+        // Keyboard close for the editor (closable) variant. Move focus to a
+        // SURVIVING neighbour first so it is never stranded on the tab that is
+        // about to unmount: prefer the PREVIOUS tab (its key/index is unchanged by
+        // the removal, so React keeps its DOM node and the focus sticks); fall
+        // back to the next tab only when closing the first tab.
+        if (variant === 'editor' && closable && onClose) {
+          event.preventDefault();
+          const neighbour = index > 0 ? index - 1 : index + 1;
+          if (neighbour >= 0 && neighbour < count) {
+            tabRefs.current[neighbour]?.focus();
+          }
+          onClose(tabs[index]);
+        }
+        break;
       default:
         break;
     }
@@ -414,13 +477,32 @@ export function Tabs({
     .filter(Boolean)
     .join(' ');
 
-  // Editor variant renders a per-tab close affordance (a sibling button), which
-  // requires wrapping each tab in a `role="presentation"` element so the
-  // `role="tab"` stays the tablist's accessible child.
+  // Editor variant renders a per-tab close affordance (a real SIBLING <button>),
+  // so each tab is wrapped together with its close button in a styling <span>.
+  // That wrapper carries NO role: a `role="presentation"` on it would be IGNORED
+  // whenever it has focusable descendants (here the tab AND the close button) per
+  // the ARIA presentational-roles-conflict rule, leaving a generic element as the
+  // tablist's direct child and breaking the required tablist→tab ownership
+  // (`aria-required-children`). Instead the tablist claims its tabs EXPLICITLY
+  // via `aria-owns` (see `ownsAttr`), so the `role="tab"` buttons remain its owned
+  // children regardless of the DOM wrapper.
   const showClose = variant === 'editor' && closable;
 
+  // When tabs are wrapped (editor/closable), reassert tablist→tab ownership via
+  // `aria-owns` listing every tab id. When the bare `role="tab"` buttons are
+  // already the tablist's direct DOM children (convert/display), `aria-owns` is
+  // unnecessary and is omitted so assistive tech never double-counts the tabs.
+  const ownsAttr = showClose
+    ? tabs.map((_, index) => tabId(index)).join(' ')
+    : undefined;
+
   return (
-    <div role="tablist" aria-orientation="horizontal" className={containerClassName}>
+    <div
+      role="tablist"
+      aria-orientation="horizontal"
+      aria-owns={ownsAttr}
+      className={containerClassName}
+    >
       {tabs.map((tab, index) => {
         const isActive = tab === active;
         const tabClassName = [TAB_BASE, isActive ? TAB_ACTIVE[variant] : TAB_INACTIVE]
@@ -436,6 +518,7 @@ export function Tabs({
             ref={(node) => {
               tabRefs.current[index] = node;
             }}
+            id={tabId(index)}
             type="button"
             role="tab"
             aria-selected={isActive}
@@ -456,23 +539,33 @@ export function Tabs({
 
         // Non-closable (convert / display): the bare `role="tab"` button is the
         // tablist's direct child. Closable (editor): wrap the tab + its sibling
-        // close `<button>` in a `role="presentation"` span (so the `role="tab"`
-        // stays the tablist's accessible child and the close button is NOT nested
-        // inside it — nested buttons are invalid HTML).
+        // close `<button>` in a PLAIN styling `<span>` (NO role). The close button
+        // must be a SIBLING of the `role="tab"` (nested buttons are invalid HTML)
+        // and is `aria-hidden` + `tabIndex=-1`, so the tablist's ONLY owned children
+        // are the `role="tab"` buttons (`aria-required-children`); the tablist also
+        // claims them explicitly via `aria-owns` (`ownsAttr`) so the relationship
+        // holds regardless of the DOM wrapper. Keyboard close is Delete/Backspace on
+        // the focused tab (handleKeyDown); the hidden "×" remains a mouse affordance.
         return showClose ? (
-          <span
-            key={key}
-            role="presentation"
-            className="relative inline-flex items-stretch"
-          >
+          <span key={key} className="relative inline-flex items-stretch">
             {tabButton}
             <button
               type="button"
+              aria-hidden="true"
+              tabIndex={-1}
               aria-label={`Close ${tab}`}
               className={CLOSE_BTN}
               onClick={(event) => handleClose(event, tab)}
             >
-              {/* Decorative glyph; the button's aria-label is the accessible name. */}
+              {/* Decorative "×" mouse affordance. It is `aria-hidden` + `tabIndex=-1`
+                  so it is NOT an owned child of the `role="tablist"` (the tablist may
+                  only own `role="tab"` children — `aria-required-children`) and is
+                  removed from the tab order (no `aria-hidden-focus` violation).
+                  KEYBOARD users close the focused tab with Delete/Backspace (see
+                  handleKeyDown, the WAI-ARIA APG deletable-tabs pattern); MOUSE
+                  users still click here (pointer events fire on aria-hidden nodes).
+                  Its CLICK target is widened to ≈26×26 via the CLOSE_BTN `::after`
+                  overlay while the VISIBLE glyph stays the Figma 16×16. */}
               <span aria-hidden="true">{'\u00D7'}</span>
             </button>
           </span>
@@ -482,6 +575,7 @@ export function Tabs({
             ref={(node) => {
               tabRefs.current[index] = node;
             }}
+            id={tabId(index)}
             type="button"
             role="tab"
             aria-selected={isActive}

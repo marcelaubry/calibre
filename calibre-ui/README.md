@@ -89,7 +89,7 @@ All commands below are run from **inside the `calibre-ui/` directory**.
 
 ```bash
 cd calibre-ui
-npm install      # installs the pinned dependency tree from package-lock.json
+npm ci           # lockfile-exact install of the pinned dependency tree (package-lock.json)
 npm run dev      # starts the Next.js dev server
 ```
 
@@ -234,7 +234,7 @@ repository-root Python project.
 With the Root Directory set correctly, Railway:
 
 1. Auto-detects the Node provider from `package.json`.
-2. Runs `npm install` and then `npm run build` (`next build`).
+2. Runs `npm ci` (lockfile-exact) and then `npm run build` (`next build`).
 3. Starts the server with `npm run start` (`next start -p ${PORT:-3000}`), which
    **binds Railway's injected `PORT`** automatically.
 

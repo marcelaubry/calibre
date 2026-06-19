@@ -126,7 +126,7 @@
  * @see Agent Action Plan §0.3.2 / §0.3.3 / §0.4.2 — token & component manifests.
  */
 
-import type { KeyboardEvent } from 'react';
+import { memo, type KeyboardEvent } from 'react';
 
 import type { Book, FormatKind } from '@/types';
 import { useLibrary } from '@/state/LibraryProvider';
@@ -282,7 +282,7 @@ const TAG_OVERFLOW_CLASS = 'shrink-0 text-meta-label text-text-muted';
  * @param props - {@link BookCardProps}
  * @returns The rendered selectable book card.
  */
-export function BookCard({ book }: BookCardProps) {
+function BookCardComponent({ book }: BookCardProps) {
   const { isSelected, toggleSelect } = useLibrary();
   const selected = isSelected(book.id);
 
@@ -313,9 +313,20 @@ export function BookCard({ book }: BookCardProps) {
     selected ? CARD_SELECTED : CARD_HOVER,
   ].join(' ');
 
-  // Concise accessible name for the toggle button (selection state is conveyed
-  // separately by `aria-pressed`, and the inner cover/badge are aria-hidden).
-  const ariaLabel = book.author ? `${book.title} by ${book.author}` : book.title;
+  // COMPREHENSIVE accessible name for the toggle button. The inner cover and the
+  // entire info strip are `aria-hidden` (see the render), so this label is the
+  // card's SOLE announcement — it therefore mirrors the key visible info (title,
+  // author, format, rating) rather than the title alone. Selection state is
+  // conveyed separately by `aria-pressed`. This resolves the QA "card
+  // label-content-name mismatch" finding: with no exposed inner text, the card's
+  // accessible name can no longer diverge from its (now hidden) visible content,
+  // and WCAG 2.5.3 still holds because the name contains the visible title (so
+  // voice control "click Dune" matches). Rating uses the raw 0–5 value (e.g.
+  // "4.5") to read naturally; an empty author is guarded so we never emit " by ".
+  const ratingText = `rated ${book.rating} of 5 stars`;
+  const ariaLabel = book.author
+    ? `${book.title} by ${book.author}, ${book.format}, ${ratingText}`
+    : `${book.title}, ${book.format}, ${ratingText}`;
 
   // Tags band: show up to MAX_VISIBLE_TAGS chips, then collapse the rest into a
   // single muted "+N" indicator so the narrow card never overflows its track
@@ -342,15 +353,24 @@ export function BookCard({ book }: BookCardProps) {
           pins its 192px height (the main-axis size in this flex-COLUMN) so the
           cover never compresses — guaranteeing cover (192px) + info strip (64px)
           = the exact 256px card. The card's `overflow-hidden` clips it to the
-          rounded card bounds. */}
-      <BookCoverPlaceholder book={book} size="md" className="shrink-0" />
+          rounded card bounds. `decorative` removes the cover from the a11y tree
+          (the card's own `aria-label` is the sole announcement) so its title
+          overlay does not duplicate into the card's accessible name. */}
+      <BookCoverPlaceholder book={book} size="md" className="shrink-0" decorative />
 
       {/* Info strip (lower band) — small title, then the full-metadata band:
           author ↔ format, rating ↔ date-added, and tags ↔ size (R6 — every
           surface a book appears on renders its full metadata). Each row uses the
           justified `META_ROW` layout with `min-w-0` truncation so the narrow card
-          never forces horizontal overflow as the grid degrades 1440 → 1280. */}
-      <div className={INFO_STRIP}>
+          never forces horizontal overflow as the grid degrades 1440 → 1280.
+          `aria-hidden`: the strip is the card's VISIBLE content but is removed
+          from the a11y tree — the card's comprehensive `aria-label` already
+          conveys this information, so exposing the strip's text would make the
+          card's visible inner content diverge from its accessible name (the
+          resolved QA `label-content-name-mismatch` finding). The full metadata
+          remains visually present and is announced verbatim on the App 01 list
+          rows and the detail/metadata panels, which are not nested controls. */}
+      <div className={INFO_STRIP} aria-hidden="true">
         <span className={TITLE_CLASS}>{book.title}</span>
 
         {/* Author ↔ format. `Book.format` is a plain string per the verbatim
@@ -396,5 +416,23 @@ export function BookCard({ book }: BookCardProps) {
     </GlassCard>
   );
 }
+
+/**
+ * BookCard — the `React.memo`-wrapped public component.
+ *
+ * The only prop, `book`, is a referentially-STABLE object from the static
+ * `@/data/books` dataset, so the default shallow prop comparison makes a card
+ * re-render only when its own selection state actually changes — when the grid
+ * PAGE re-renders for reasons unrelated to this card's selection, memo skips the
+ * 15 cards' work. (Selection toggles still re-render the cards that subscribe to
+ * the changed library Context value, which is correct.) Combined with the
+ * stable-reference {@link getCoverPalette} memo, this trims the redundant
+ * synchronous render work behind the QA "/grid initial-render long task"
+ * finding. The wrapped inner function is named so it keeps a clean React
+ * DevTools display name.
+ *
+ * @see getCoverPalette in `@/lib/covers` — the companion stable-reference memo.
+ */
+export const BookCard = memo(BookCardComponent);
 
 export default BookCard;

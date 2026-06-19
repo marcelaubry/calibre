@@ -90,19 +90,23 @@
  * --------------------------------------------------------------------------
  * Marked `'use client'` (first line) because it owns interactive state: a
  * `keydown` listener (Escape closes; Tab/Shift+Tab is trapped), a backdrop click
- * that calls `onClose`, a body scroll-lock, and full focus management — all in a
- * single `useEffect` whose cleanup removes the listener, restores the prior
- * `document.body.style.overflow` (no scroll-lock leaks), AND returns focus to the
- * opener. The effect is called UNCONDITIONALLY (before the `open === false → null`
- * early return) to honor the Rules of Hooks, and is internally guarded so it only
- * runs while open.
+ * that calls `onClose`, a body scroll-lock, and in-dialog focus management — all
+ * in a single `useEffect` whose cleanup removes the listener and restores the
+ * prior `document.body.style.overflow` (no scroll-lock leaks). The effect is
+ * called UNCONDITIONALLY (before the `open === false → null` early return) to
+ * honor the Rules of Hooks, and is internally guarded so it only runs while open.
  *   • The dialog card is a semantic `role="dialog"` with `aria-modal="true"`,
  *     `aria-label={title}`, and `tabIndex={-1}` so it can receive initial focus.
- *   • FOCUS MANAGEMENT (modal-correct, AAP A11y): on open the effect records the
- *     opener (`document.activeElement`), moves focus into the dialog (its first
- *     tabbable, else the dialog container), and TRAPS Tab/Shift+Tab so focus
- *     cycles among the dialog's tabbable descendants and can never reach the
- *     inert background; on close/unmount it restores focus to the opener.
+ *   • FOCUS MANAGEMENT (modal-correct, AAP A11y): on open the effect moves focus
+ *     INTO the dialog — but only when focus is not already inside it, so a field
+ *     that claimed focus on mount via `autoFocus` (e.g. the Metadata Title input)
+ *     is respected rather than overridden — landing on the first tabbable, else
+ *     the dialog container; and TRAPS Tab/Shift+Tab so focus cycles among the
+ *     dialog's tabbable descendants and can never reach the inert background.
+ *   • FOCUS RESTORATION on close is owned by `ModalProvider`, NOT this shell: it
+ *     captures the invoker synchronously at open-time (before any re-render, so
+ *     `autoFocus` cannot mask it) and restores it on `close()`. Capturing here in
+ *     a post-commit effect was unreliable for the autoFocus'd Metadata dialog.
  *   • The close control is a real `<button type="button">` with `aria-label`
  *     and a token-backed `:focus-visible` ring (keyboard users only, invisible
  *     at rest — DS2-e); the "×" glyph itself is `aria-hidden`.
@@ -356,20 +360,25 @@ export function ModalShell({
   // Focus management + Escape-to-close + body scroll-lock for the open dialog.
   // Called UNCONDITIONALLY (before the early return below) to honor the Rules of
   // Hooks; the internal `open` guard means nothing runs while closed. On open it
-  // (1) remembers the opener (`document.activeElement`), (2) moves focus into the
-  // dialog (first tabbable, else the container), and (3) traps Tab/Shift+Tab
-  // among the dialog's tabbables so keyboard focus can never reach the inert
-  // background. The cleanup removes the listener, restores the exact prior
-  // `overflow`, and returns focus to the opener — no leaks across open/close
-  // cycles or on unmount.
+  // (1) moves INITIAL focus into the dialog ONLY if focus is not already inside
+  // it, and (2) traps Tab/Shift+Tab among the dialog's tabbables so keyboard
+  // focus can never reach the inert background. The cleanup removes the listener
+  // and restores the exact prior `overflow` — no scroll-lock leaks across
+  // open/close cycles or on unmount.
+  //
+  // Focus RESTORATION (returning focus to the opener on close) is intentionally
+  // NOT done here. It is owned by `ModalProvider`, which captures the invoker
+  // synchronously at open-time — before any re-render — and restores it on
+  // `close()`. Capturing here (in a post-commit effect) was unreliable: the
+  // Metadata dialog's `autoFocus` Title input takes focus during commit, BEFORE
+  // this effect runs, so `document.activeElement` was already a field INSIDE the
+  // dialog and focus dropped to <body> on close. See ModalProvider for the fix.
   useEffect(() => {
     if (!open) {
       return;
     }
 
     const dialog = dialogRef.current;
-    // Remember who opened the dialog so focus can be restored on close.
-    const opener = document.activeElement as HTMLElement | null;
 
     // Tabbable descendants in document order (excludes disabled controls and
     // tabindex="-1"); the dialog container itself is the focus-of-last-resort.
@@ -381,10 +390,15 @@ export function ModalShell({
         ? []
         : Array.from(dialog.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR));
 
-    // Initial focus: the first tabbable (e.g. the ✕ close button), else the
-    // dialog container (which carries tabIndex={-1}).
-    const initialTabbables = getTabbables();
-    (initialTabbables[0] ?? dialog)?.focus();
+    // Initial focus: only pull focus into the dialog when it is not ALREADY
+    // inside it. A dialog field may legitimately have claimed focus on mount via
+    // `autoFocus` (e.g. the Metadata Title input) — respect that rather than
+    // yanking focus to the ✕ close button. Otherwise focus the first tabbable,
+    // else the dialog container (which carries tabIndex={-1}).
+    if (dialog != null && !dialog.contains(document.activeElement)) {
+      const initialTabbables = getTabbables();
+      (initialTabbables[0] ?? dialog).focus();
+    }
 
     const handleKeyDown = (event: KeyboardEvent): void => {
       if (event.key === 'Escape') {
@@ -428,8 +442,8 @@ export function ModalShell({
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = previousOverflow;
-      // Restore focus to the element that had it before the dialog opened.
-      opener?.focus?.();
+      // Focus restoration is owned by ModalProvider.close() (see the effect
+      // header note); nothing to restore here.
     };
   }, [open, onClose]);
 

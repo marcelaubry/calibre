@@ -149,7 +149,12 @@
  * • The ▾ glyph is `aria-hidden` (the select owns the accessible name).
  * • A token-backed `:focus-visible` ring (the `--border-accent` token) is shown
  *   for keyboard users only (UI3) — invisible at rest (DS2-e).
- * • Callers MUST supply an accessible name via a `<label htmlFor>` bound to a
+ * • The `<select>` ALWAYS carries an `id` and a `name`: a caller-supplied value
+ *   wins, otherwise a stable `useId()` identifier is generated (and the `name`
+ *   falls back to that `id`). This keeps every dropdown free of the Chrome /
+ *   Lighthouse "form field should have an id or name" finding without the caller
+ *   having to remember — see the {@link Select} body.
+ * • Callers MUST supply an accessible name via a `<label htmlFor>` bound to the
  *   forwarded `id`, or an `aria-label` / `aria-labelledby` (forwarded via
  *   `...rest`) — e.g. `aria-label="Output format"` for the Convert output
  *   dropdown.
@@ -163,7 +168,7 @@
  * @see Agent Action Plan §0.3.2 / §0.3.3 / §0.4.2 — token & component manifests.
  */
 
-import type { ChangeEvent, JSX, SelectHTMLAttributes } from 'react';
+import { useId, type ChangeEvent, type JSX, type SelectHTMLAttributes } from 'react';
 
 /**
  * A single dropdown choice: the human-readable `label` shown in the list and on
@@ -357,8 +362,23 @@ export function Select({
   placeholder,
   disabled = false,
   className,
+  id,
+  name,
   ...rest
 }: SelectProps): JSX.Element {
+  // STABLE id/name fallback (a11y + browser-autofill hygiene). A native form
+  // control with neither `id` nor `name` is flagged by Chrome DevTools / the
+  // Lighthouse audit ("A form field element should have an id or name
+  // attribute"), which surfaced on the App 02 grid sort dropdown (QA Issues 3 &
+  // 13). `useId()` yields an SSR-stable identifier (identical on server and
+  // client, so no hydration mismatch); a caller-supplied `id`/`name` always wins,
+  // and the `name` falls back to the resolved `id` so EVERY Select instance
+  // (grid sort, Convert format dropdowns, Preferences font) carries both
+  // attributes systemically — not just the one the QA happened to flag.
+  const generatedId = useId();
+  const resolvedId = id ?? generatedId;
+  const resolvedName = name ?? resolvedId;
+
   // Normalize every entry to the canonical { label, value } shape so the render
   // path is uniform whether the caller passed objects or bare strings.
   const normalizedOptions: SelectOption[] = options.map(normalizeOption);
@@ -418,6 +438,8 @@ export function Select({
     <div className={wrapperClassName}>
       <select
         {...rest}
+        id={resolvedId}
+        name={resolvedName}
         value={value}
         onChange={handleChange}
         disabled={disabled}

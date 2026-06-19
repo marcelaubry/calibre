@@ -37,25 +37,26 @@
  *   network, and no DOM dependency (no `document`, `window`, `canvas`). Cover
  *   markup is generated as a plain string, so the helpers run unchanged inside
  *   React Server Components. This module carries NO `'use client'` directive.
- * • EXACT-TOKEN FIDELITY. Every color emitted is either a sanctioned LOCAL
- *   cover tint defined in {@link COVER_PALETTE} below, or a named token
- *   imported from `@/theme/tokens` (`colors.accentIndigo`, `colors.textPrimary`).
- *   The only bare literals used are non-color values (coordinates, opacity,
+ * • EXACT-TOKEN FIDELITY — ZERO COLOR LITERALS IN THIS FILE. Every color emitted
+ *   is a named import from `@/theme/tokens`: the gradient stops come from the
+ *   sanctioned `coverTints` palette and the title overlay uses
+ *   `colors.textPrimary`. This module declares NO bare color literal of its own;
+ *   the only bare literals used are non-color values (coordinates, opacity,
  *   font sizes, and the font-family stack).
  *
  * ──────────────────────────────────────────────────────────────────────────
  * TOKEN BOUNDARY (theme contract)
  * ──────────────────────────────────────────────────────────────────────────
- * The sibling `@/theme/tokens` module deliberately EXCLUDES per-book cover
- * tints from the global `@theme` token set — generated-cover art owns its
- * palette LOCALLY here. This file therefore owns its full {@link COVER_PALETTE}
- * of sanctioned, generated-cover-only tint literals (11 hex values: the deep
- * indigo / deep plum / navy / steel-navy / brighter-violet / deep-forest stops
- * enumerated in full on COVER_PALETTE below), while importing only the two named
- * tokens the theme contract sanctions for cover use: `colors.accentIndigo`
- * (`#4838C8`, one palette base) and `colors.textPrimary` (`#F1F5FF`, the title
- * color). These cover-tint literals are the file's ONLY sanctioned color-literal
- * exception; see COVER_PALETTE for the authoritative, per-literal enumeration.
+ * The sibling `@/theme/tokens` module is the single home for every color value
+ * in the app. It excludes per-book cover tints from the CSS-side `@theme` token
+ * set (generated-cover art is data, never application chrome), but it DOES own
+ * those tints as the sanctioned, generated-cover-only `coverTints` data export.
+ * This file therefore imports `coverTints` (the deep indigo / deep plum / navy /
+ * steel-navy / accent-indigo / deep-forest pairs) plus `colors.textPrimary`
+ * (`#F1F5FF`, the title color) and `colors.accentIndigo` (`#4838C8`, the Pair-5
+ * base, referenced from within the palette) — and declares no palette of its
+ * own. See {@link coverTints} in `@/theme/tokens` for the authoritative,
+ * per-pair enumeration and the rationale for keeping these out of `@theme`.
  *
  * ──────────────────────────────────────────────────────────────────────────
  * DESIGN-PARITY REFERENCE ONLY — NOT CODE REUSE (+ a DELIBERATE deviation)
@@ -92,7 +93,7 @@
  */
 
 import type { Book } from '@/types';
-import { colors } from '@/theme/tokens';
+import { colors, coverTints } from '@/theme/tokens';
 
 // ───────────────────────────────────────────────────────────────────────────
 // Public types
@@ -116,38 +117,26 @@ export interface CoverPalette {
 // ───────────────────────────────────────────────────────────────────────────
 
 /**
- * LOCAL cover-tint palette — navy / indigo / plum / forest tones matching the
- * Figma book-cover style (nodes 2:347, 3:82). Each entry is a same-family pair:
- * a dark `bg` base tint and a slightly brighter `bgAccent` for the subtle
- * diagonal gradient.
+ * Cover-tint palette — navy / indigo / plum / forest tones matching the Figma
+ * book-cover style (nodes 2:347, 3:82). Each entry is a same-family pair: a dark
+ * `bg` base tint and a slightly brighter `bgAccent` for the subtle diagonal
+ * gradient.
  *
- * SANCTIONED GENERATED-COVER-ONLY LITERAL EXCEPTION (AAP §0.4.4 / §0.3.4 + the
- * TOKEN BOUNDARY note in the file header). The global `@theme` token set in
- * `@/theme/tokens` deliberately does NOT model per-book cover tints — generated
- * placeholder-cover art owns its palette LOCALLY, here. EVERY color literal in
- * this array is therefore an intentional, generated-cover-only exception to the
- * "zero hardcoded values" rule: none is ever used for application chrome, only
- * for placeholder cover art. The COMPLETE sanctioned set (11 local hex literals
- * + the single named-token reference) is:
- *   • Pair 1 — deep indigo  : bg `#1C1442`, bgAccent `#2A1860`  (Dune family; node 2:347)
- *   • Pair 2 — deep plum    : bg `#2A1028`, bgAccent `#451530`  (1984 family; node 2:347)
- *   • Pair 3 — navy         : bg `#0F1A3C`, bgAccent `#162A5E`
- *   • Pair 4 — steel navy   : bg `#142036`, bgAccent `#1D2F50`
- *   • Pair 5 — accent-indigo: bg `colors.accentIndigo` (`#4838C8`, the ONE named
- *                              token — not a literal), bgAccent `#5B39F3` (brighter violet)
- *   • Pair 6 — deep forest  : bg `#1A2A1A`, bgAccent `#243A24`
- * No other color literal exists in this file — the title overlay uses the
- * `colors.textPrimary` token; every remaining bare literal is non-color
- * (geometry / opacity / font size / font-family stack).
+ * SOURCED FROM THE TOKEN MODULE — ZERO COLOR LITERALS HERE. The sanctioned,
+ * generated-cover-only palette is defined ONCE in `@/theme/tokens`
+ * ({@link coverTints}) and imported here, so this file declares NO bare color
+ * literal of its own. This keeps `@/theme/tokens` the single home for every
+ * color value in the app and satisfies the "no hardcoded color literals" rule
+ * (AAP §0.4.5 / §0.9) while honoring the generated-cover-art exception
+ * (AAP §0.3.4 / §0.4.4): the tints are never used for application chrome, only
+ * for placeholder cover art, and are intentionally kept out of the CSS `@theme`
+ * set. See {@link coverTints} in `@/theme/tokens` for the full per-pair
+ * enumeration (Pair 1 deep indigo `#1C1442` Dune … Pair 5 `colors.accentIndigo`
+ * … Pair 6 deep forest) and rationale. The title overlay color is the
+ * `colors.textPrimary` token; every remaining bare literal in this file is
+ * non-color (geometry / opacity / font size / font-family stack).
  */
-const COVER_PALETTE: ReadonlyArray<{ bg: string; bgAccent: string }> = [
-  { bg: '#1C1442', bgAccent: '#2A1860' }, // deep indigo (Figma cover 2:347 family; Dune = #1C1442)
-  { bg: '#2A1028', bgAccent: '#451530' }, // deep plum   (Figma cover 2:347; 1984 = #2A1028)
-  { bg: '#0F1A3C', bgAccent: '#162A5E' }, // navy
-  { bg: '#142036', bgAccent: '#1D2F50' }, // steel navy
-  { bg: colors.accentIndigo, bgAccent: '#5B39F3' }, // accent-indigo (#4838C8) → brighter violet
-  { bg: '#1A2A1A', bgAccent: '#243A24' }, // deep forest (cool variant)
-];
+const COVER_PALETTE: ReadonlyArray<{ bg: string; bgAccent: string }> = coverTints;
 
 // ───────────────────────────────────────────────────────────────────────────
 // Title-overlay layout constants (Figma `text-cover-title`: Inter 700 14px/18px)
@@ -307,14 +296,49 @@ function wrapTitle(
  * satisfies this), so callers that only have a book's identity can still get a
  * matching palette.
  *
+ * PERFORMANCE — MEMOIZED, STABLE-REFERENCE RESULT (perf gate)
+ * --------------------------------------------------------------------------
+ * The palette is a PURE function of the book's identity key, so its result is
+ * cached in a module-level {@link PALETTE_CACHE} keyed on `${id}::${title}`.
+ * This serves two ends: (1) repeated calls — the same cover is resolved by the
+ * list thumb, the grid card, the detail panel, and across List↔Grid navigations
+ * — skip the (already cheap) hash + object allocation; and (2), more importantly,
+ * every call for a given book returns the SAME FROZEN object REFERENCE, so the
+ * `style` object passed to `BookCoverPlaceholder` is referentially stable and
+ * downstream `React.memo` reconciliation is never defeated by a fresh object on
+ * each render. The cache is sound because the function is deterministic and the
+ * dataset is static for the app's lifetime; entries are `Object.freeze`d so a
+ * shared reference can never be mutated by a consumer. This is the proportionate
+ * resolution of the QA "/grid initial-render long task" finding (it removes
+ * per-render recompute/allocation on the warm path) — see also `BookCard`'s
+ * `React.memo` wrapper and the `CoverGrid` notes.
+ *
  * @param book - an object with at least `id` and `title`.
- * @returns the deterministic `{ bg, bgAccent, text }` palette for the book.
+ * @returns the deterministic, FROZEN `{ bg, bgAccent, text }` palette for the
+ *          book (a stable reference — do not mutate).
  */
+const PALETTE_CACHE = new Map<string, CoverPalette>();
+
 export function getCoverPalette(book: Pick<Book, 'id' | 'title'>): CoverPalette {
   const key = `${book.id}::${book.title}`;
+
+  // Return the cached, frozen palette if this book was already resolved (stable
+  // reference across every call — see the PERFORMANCE note above).
+  const cached = PALETTE_CACHE.get(key);
+  if (cached !== undefined) {
+    return cached;
+  }
+
   const index = hashString(key) % COVER_PALETTE.length;
   const entry = COVER_PALETTE[index];
-  return { bg: entry.bg, bgAccent: entry.bgAccent, text: colors.textPrimary };
+  // Freeze so the shared, cached reference can never be mutated by a consumer.
+  const palette: CoverPalette = Object.freeze({
+    bg: entry.bg,
+    bgAccent: entry.bgAccent,
+    text: colors.textPrimary,
+  });
+  PALETTE_CACHE.set(key, palette);
+  return palette;
 }
 
 /**

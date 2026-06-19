@@ -80,6 +80,7 @@ import {
   useCallback,
   useContext,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react';
@@ -140,24 +141,72 @@ export function ModalProvider({ children }: { children: ReactNode }) {
   const [openModal, setOpenModal] = useState<ModalKind>(null);
   const [targetBookId, setTargetBookId] = useState<string | null>(null);
 
-  const open = useCallback((kind: OpenableModal, bookId: string | null = null) => {
-    setOpenModal(kind);
-    setTargetBookId(bookId);
+  // FOCUS RESTORATION (a11y, invisible — WCAG 2.4.3 Focus Order). The element
+  // that had focus when a modal was OPENED, so `close` can return focus to it.
+  // Capturing the invoker HERE — synchronously inside the open action, which runs
+  // in the triggering control's click handler BEFORE React re-renders — is what
+  // makes restoration reliable: at that instant `document.activeElement` is the
+  // real opener (e.g. the "Edit Metadata" button). The previous design captured
+  // the opener inside `ModalShell`'s post-commit effect, which ran AFTER the
+  // Metadata dialog's `autoFocus` Title input had already taken focus, so it
+  // wrongly recorded a field INSIDE the dialog and dropped focus to <body> on
+  // close. The ref is only captured on a FRESH open (`current === null`), so the
+  // in-place ← → "re-target" opens (which call `openMetadata`/`openConvert` again
+  // while the dialog is already open) preserve the ORIGINAL invoker rather than
+  // overwriting it with an in-dialog arrow button.
+  const invokerRef = useRef<HTMLElement | null>(null);
+
+  // Record the current `document.activeElement` as the invoker, but only when no
+  // modal is currently tracked as open (a fresh open, not an in-place re-target).
+  const captureInvoker = useCallback(() => {
+    if (invokerRef.current === null && typeof document !== 'undefined') {
+      invokerRef.current = document.activeElement as HTMLElement | null;
+    }
   }, []);
 
-  const openConvert = useCallback((bookId: string | null = null) => {
-    setOpenModal('convert');
-    setTargetBookId(bookId);
-  }, []);
+  const open = useCallback(
+    (kind: OpenableModal, bookId: string | null = null) => {
+      captureInvoker();
+      setOpenModal(kind);
+      setTargetBookId(bookId);
+    },
+    [captureInvoker],
+  );
 
-  const openMetadata = useCallback((bookId: string | null = null) => {
-    setOpenModal('metadata');
-    setTargetBookId(bookId);
-  }, []);
+  const openConvert = useCallback(
+    (bookId: string | null = null) => {
+      captureInvoker();
+      setOpenModal('convert');
+      setTargetBookId(bookId);
+    },
+    [captureInvoker],
+  );
+
+  const openMetadata = useCallback(
+    (bookId: string | null = null) => {
+      captureInvoker();
+      setOpenModal('metadata');
+      setTargetBookId(bookId);
+    },
+    [captureInvoker],
+  );
 
   const close = useCallback(() => {
     setOpenModal(null);
     setTargetBookId(null);
+    // Return focus to the opener AFTER the dialog has unmounted. The close above
+    // triggers a re-render that removes the dialog from the DOM; deferring the
+    // focus to the next animation frame lets that commit happen first, and the
+    // `isConnected` guard skips a stale opener that is no longer in the document.
+    const invoker = invokerRef.current;
+    invokerRef.current = null;
+    if (invoker !== null && typeof window !== 'undefined') {
+      window.requestAnimationFrame(() => {
+        if (invoker.isConnected) {
+          invoker.focus();
+        }
+      });
+    }
   }, []);
 
   const value = useMemo<ModalContextValue>(

@@ -86,6 +86,11 @@
  *   expose `aria-pressed` so assistive tech announces the active view, and the
  *   active grid toggle adds a purple accent ring — so the active state is
  *   conveyed by `aria-pressed` + a ring, never by color alone (UI3).
+ * • The sort dropdown is a `Select` with a stable `id`/`name` ({@link
+ *   SORT_SELECT_ID}) and a real `<label htmlFor>` ("Sort by"), so it has a
+ *   programmatic label, the visible label matches its accessible name, and it
+ *   never trips the Chrome/Lighthouse "form field should have an id or name"
+ *   finding (QA Issues 3 & 13).
  *
  * DESIGN-PARITY REFERENCE ONLY — NOT CODE REUSE
  * --------------------------------------------------------------------------
@@ -129,6 +134,17 @@ const GLYPH_SORT_DESC = '\u25BC';
 /** View-toggle glyphs — grid `⊞` (U+229E) / list `☰` (U+2630). */
 const GLYPH_VIEW_GRID = '\u229E';
 const GLYPH_VIEW_LIST = '\u2630';
+
+/**
+ * Stable DOM id for the sort dropdown, shared by the visible `<label htmlFor>`
+ * and the `Select`'s `id`/`name`. A fixed, human-readable id (rather than a
+ * generated one) lets the visible "Sort by" label be PROGRAMMATICALLY associated
+ * with the control — clicking the label focuses the select, and the label text
+ * becomes the control's accessible name (so the visible label exactly matches the
+ * accessible name, WCAG 2.5.3). This, with the `id`/`name` on the control,
+ * resolves the QA "grid sort select missing id/name" finding (Issues 3 & 13).
+ */
+const SORT_SELECT_ID = 'grid-sort-field';
 
 /**
  * Bar container classes — all token-backed.
@@ -250,12 +266,21 @@ export function SortFilterBar({ className }: SortFilterBarProps): JSX.Element {
           Documented verification limitation; revisit if Figma tooling is restored. */}
       <div className="flex min-w-0 items-center gap-u8">
         <span className={LABEL_CLASSES}>{countLabel}</span>
-        <span className={LABEL_CLASSES}>Sort by</span>
+        {/* A real <label> programmatically bound to the select (htmlFor → the
+            control's id): clicking it focuses the dropdown and its visible text
+            ("Sort by") becomes the control's accessible name — so the visible
+            label matches the accessible name (WCAG 2.5.3). No `aria-label` is
+            passed (it would override the <label> and risk a label-in-name
+            divergence). Resolves QA Issues 3 & 13 together with the id/name. */}
+        <label htmlFor={SORT_SELECT_ID} className={LABEL_CLASSES}>
+          Sort by
+        </label>
         <Select
+          id={SORT_SELECT_ID}
+          name={SORT_SELECT_ID}
           value={sortField}
           onChange={handleSortFieldChange}
           options={SORT_OPTIONS}
-          aria-label="Sort books by"
           className="w-u160 shrink-0"
         />
         {/* Order toggle — glyph reflects the current direction; the visible

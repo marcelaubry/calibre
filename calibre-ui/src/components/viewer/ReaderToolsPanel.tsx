@@ -91,10 +91,19 @@
  * --------------------------------------------------------------------------
  * • Each section is a labelled region (`<section aria-labelledby>` → `<h3>`).
  * • Each navigable row is a keyboard-operable `role="button"` with `tabIndex={0}`
- *   and an Enter/Space `onKeyDown` activator, plus an `aria-label` naming the
- *   navigation target.
+ *   and an Enter/Space `onKeyDown` activator. Its inner presentational content —
+ *   the bookmark title / highlighted passage + note and the trailing "Ch N"
+ *   `TagPill` — is `aria-hidden` so the row exposes NO conflicting child text;
+ *   a single COMPREHENSIVE `aria-label` then names the row with the same
+ *   information a sighted user reads (the title/passage and the destination
+ *   chapter). Hiding the visible subtree and naming the control wholesale is the
+ *   proven library-grid `BookCard` pattern: it satisfies WCAG 2.5.3 "Label in
+ *   Name" and clears the axe `label-content-name-mismatch` advisory (which fires
+ *   when a named control ALSO surfaces real visible text not contained in its
+ *   accessible name — here the book/chapter title and the "Ch N" pill).
  * • Every remove `Button` carries an explicit `aria-label` (e.g. "Remove
- *   bookmark …") so the decorative "×" glyph is not its accessible name.
+ *   bookmark …") so the decorative "×" glyph is not its accessible name (the
+ *   symbol-only glyph is stripped by the name-comparison advisory regardless).
  * • A token-backed `:focus-visible` ring (`--border-accent`) is shown for
  *   keyboard users only; hover/focus background is invisible at rest, and color
  *   transitions run only under `motion-safe` (prefers-reduced-motion).
@@ -311,12 +320,22 @@ export function ReaderToolsPanel({ className }: ReaderToolsPanelProps): JSX.Elem
                   role="button"
                   tabIndex={0}
                   className={ROW_NAV}
-                  aria-label={`Go to bookmark ${bookmark.title}`}
+                  aria-label={`Go to bookmark ${bookmark.title}, chapter ${
+                    bookmark.chapterIndex + 1
+                  }`}
                   onClick={() => goToChapter(bookmark.chapterIndex)}
                   onKeyDown={activateOnKey(() => goToChapter(bookmark.chapterIndex))}
                 >
-                  <span className={BOOKMARK_TITLE}>{bookmark.title}</span>
-                  <TagPill label={`Ch ${bookmark.chapterIndex + 1}`} className="shrink-0" />
+                  {/* Presentational content is `aria-hidden` so the row exposes
+                      no conflicting child text — the comprehensive `aria-label`
+                      above is the sole accessible name (WCAG 2.5.3). The pill is
+                      wrapped because `TagPill` does not forward `aria-hidden`. */}
+                  <span className={BOOKMARK_TITLE} aria-hidden="true">
+                    {bookmark.title}
+                  </span>
+                  <span aria-hidden="true" className="inline-flex shrink-0">
+                    <TagPill label={`Ch ${bookmark.chapterIndex + 1}`} />
+                  </span>
                 </div>
                 {/* Sibling of the navigable region → its click never bubbles
                     through the navigate handler (no stopPropagation needed). */}
@@ -367,15 +386,22 @@ export function ReaderToolsPanel({ className }: ReaderToolsPanelProps): JSX.Elem
                   aria-label={`Go to highlight in ${
                     chapters[highlight.chapterIndex]?.title ??
                     `chapter ${highlight.chapterIndex + 1}`
-                  }`}
+                  }: ${highlight.text}${highlight.note ? `, note: ${highlight.note}` : ''}`}
                   onClick={() => goToChapter(highlight.chapterIndex)}
                   onKeyDown={activateOnKey(() => goToChapter(highlight.chapterIndex))}
                 >
-                  <div className={HIGHLIGHT_QUOTE}>
+                  {/* Presentational content is `aria-hidden` so the row exposes
+                      no conflicting child text — the comprehensive `aria-label`
+                      above (chapter + passage + optional note) is the sole
+                      accessible name (WCAG 2.5.3). The pill is wrapped because
+                      `TagPill` does not forward `aria-hidden`. */}
+                  <div className={HIGHLIGHT_QUOTE} aria-hidden="true">
                     <p className={HIGHLIGHT_TEXT}>{highlight.text}</p>
                     {highlight.note ? <p className={HIGHLIGHT_NOTE}>{highlight.note}</p> : null}
                   </div>
-                  <TagPill label={`Ch ${highlight.chapterIndex + 1}`} className="shrink-0 self-start" />
+                  <span aria-hidden="true" className="inline-flex shrink-0 self-start">
+                    <TagPill label={`Ch ${highlight.chapterIndex + 1}`} />
+                  </span>
                 </div>
                 <Button
                   variant="danger"

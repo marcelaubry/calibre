@@ -42,10 +42,15 @@
  *   time beyond declaring constants, renders no UI, and contains no JSX. It is
  *   framework-agnostic and intentionally carries NO client-component directive
  *   (it is safe to import from both Server and Client Components).
- * • BOUNDARY — per-book cover placeholder tints are NOT part of the named
- *   `@theme` token set and are deliberately NOT defined here; they belong to
- *   `@/lib/covers` (which may import named tokens such as `colors.accentIndigo`
- *   from this file but owns its own extra tint palette).
+ * • BOUNDARY — per-book cover placeholder tints are NOT part of the CSS-side
+ *   `@theme` token set (they are never emitted as Tailwind utilities / CSS
+ *   custom properties and never style application chrome). They ARE, however,
+ *   centralized HERE as the sanctioned, generated-cover-only {@link coverTints}
+ *   data export so that NO bare color literal lives in `@/lib/covers`. The
+ *   cover generator imports `coverTints` (and named tokens such as
+ *   `colors.accentIndigo` / `colors.textPrimary`) from this file rather than
+ *   declaring any palette of its own. See {@link coverTints} for the full,
+ *   per-pair enumeration and the rationale for keeping these out of `@theme`.
  *
  * DESIGN-PARITY REFERENCE ONLY — NOT CODE REUSE
  * The Calibre appearance/theme settings page (`src/calibre/gui2/preferences/
@@ -106,6 +111,44 @@ export const colors = {
   windowDotAmber: '#FFBD2E',
   windowDotGreen: '#28CA41',
 } as const;
+
+// ---------------------------------------------------------------------------
+// Cover tints — sanctioned generated-cover-only palette (6 same-family pairs)
+// ---------------------------------------------------------------------------
+
+/**
+ * Per-book placeholder-cover tint palette consumed EXCLUSIVELY by the
+ * deterministic cover generator in `@/lib/covers` (and, transitively, the
+ * `primitives/BookCoverPlaceholder` component). Each entry is a same-family
+ * pair: a dark `bg` base stop and a slightly brighter `bgAccent` stop for the
+ * subtle diagonal gradient of a generated cover.
+ *
+ * WHY THESE LIVE HERE (and NOT in the CSS `@theme` set):
+ * Generated cover art is data, not application chrome — these tints are never
+ * emitted as Tailwind utilities or `var(--token)` custom properties and never
+ * paint a button, panel, or surface. Per AAP §0.3.4 / §0.4.4 covers are
+ * runtime-generated placeholders (never real art) whose palette is intentionally
+ * separate from the screen token set. Centralizing them HERE (rather than as
+ * bare literals inside `covers.ts`) keeps this `tokens.ts` module the single
+ * home for every color value in the app, so `@/lib/covers` carries ZERO color
+ * literals — satisfying the "no hardcoded color literals" rule (AAP §0.4.5 /
+ * §0.9) while honoring the cover-art exception.
+ *
+ * FIGMA GROUNDING (file JduUzjVHNhZivm5A0pAiCD, cover nodes 2:347 / 3:82): the
+ * confirmed dark, low-saturation cover palette. The Dune thumbnail = `#1C1442`
+ * (deep indigo) and the 1984 cover = `#2A1028` (deep plum) are reproduced
+ * verbatim. The full sanctioned set is the 6 pairs below; `colors.accentIndigo`
+ * (`#4838C8`) is reused as the Pair-5 base so even the cover palette references
+ * a named token where one exists.
+ */
+export const coverTints: ReadonlyArray<{ bg: string; bgAccent: string }> = [
+  { bg: '#1C1442', bgAccent: '#2A1860' },        // Pair 1 — deep indigo (Figma 2:347; Dune = #1C1442)
+  { bg: '#2A1028', bgAccent: '#451530' },        // Pair 2 — deep plum   (Figma 2:347; 1984 = #2A1028)
+  { bg: '#0F1A3C', bgAccent: '#162A5E' },        // Pair 3 — navy
+  { bg: '#142036', bgAccent: '#1D2F50' },        // Pair 4 — steel navy
+  { bg: colors.accentIndigo, bgAccent: '#5B39F3' }, // Pair 5 — accent-indigo (#4838C8) → brighter violet
+  { bg: '#1A2A1A', bgAccent: '#243A24' },        // Pair 6 — deep forest (cool variant)
+] as const;
 
 // ---------------------------------------------------------------------------
 // Gradients — 4 named tokens (distinct: `accent` ≠ `cta` ≠ `sliderTrack` ≠ `tabUnderline`)
@@ -332,6 +375,7 @@ export const typography = {
  */
 export const tokens = {
   colors,
+  coverTints,
   gradients,
   borders,
   scrims,

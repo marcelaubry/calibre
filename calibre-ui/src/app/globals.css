@@ -84,6 +84,17 @@
   --color-preview-cream: #F5F0E8;
 
   /* ---- Colors — text (4) ---------------------------------------------- */
+  /* BLITZY [A11Y]: the secondary/muted/placeholder text tones below are the
+   * CONFIRMED, authoritative Figma values (AAP §0.3.2 token manifest:
+   * color-text-secondary #94A3B8, color-text-muted #64748B, color-text-placeholder
+   * #3A4060) used for meta labels and secondary copy on the dark navy surfaces.
+   * Against those surfaces some small-text pairings compute below the WCAG AA
+   * 4.5:1 body-text threshold (≈3.25–4.22:1). Per the design-precedence rule
+   * (D1 / UF3 — Figma is authoritative for VISIBLE color and must NOT be silently
+   * altered), these values are reproduced EXACTLY rather than darkened/lightened
+   * to chase the AA ratio; the contrast finding is therefore FLAGGED here and
+   * DEFERRED to designer review (changing them is a Figma deviation, not a code
+   * fix). Primary copy (#F1F5FF) passes AA on every app surface. */
   --color-text-primary: #F1F5FF;
   --color-text-secondary: #94A3B8;
   --color-text-muted: #64748B;

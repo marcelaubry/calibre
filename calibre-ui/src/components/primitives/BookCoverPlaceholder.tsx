@@ -187,6 +187,21 @@ export interface BookCoverPlaceholderProps {
    * utilities win on conflicts (typically parent-supplied margins/positioning).
    */
   className?: string;
+  /**
+   * When `true`, the cover is exposed as DECORATIVE: it renders
+   * `aria-hidden="true"` and drops its `role="img"` + `aria-label`, removing it
+   * from the accessibility tree entirely. Use this when the cover sits INSIDE a
+   * larger labelled control whose own accessible name already conveys the book —
+   * e.g. the App 02 `BookCard`, a single `role="button"` whose comprehensive
+   * `aria-label` (title, author, format, rating) is the card's accessible name.
+   * Leaving the inner cover as a separately-labelled image there would duplicate
+   * the title and make the card's visible inner content diverge from its
+   * accessible name (the WCAG 2.5.3 "label in name" / axe
+   * `label-content-name-mismatch` finding). Standalone covers (the detail panel,
+   * the metadata modal, the list thumb) omit this prop and stay labelled images.
+   * @default false
+   */
+  decorative?: boolean;
 }
 
 /**
@@ -359,10 +374,13 @@ function resolveSize(
  * derived from the book's {@link getCoverPalette palette} (NEVER real art), at
  * the CONFIRMED Figma dimensions for the chosen `size`, with the per-context
  * radius token and (for sufficiently large covers) the book title overlaid in
- * Inter Bold white at the bottom-left. The whole element is exposed to assistive
- * tech as a single labelled image (`role="img"` + `aria-label`), and the visible
- * title is `aria-hidden` to avoid a duplicate announcement. The caller
- * `className` is merged AFTER the base/radius classes so caller utilities win.
+ * Inter Bold white at the bottom-left. By default the whole element is exposed to
+ * assistive tech as a single labelled image (`role="img"` + `aria-label`), and the
+ * visible title is `aria-hidden` to avoid a duplicate announcement; when
+ * {@link BookCoverPlaceholderProps.decorative} is set (e.g. inside `BookCard`'s
+ * labelled button) the element is instead `aria-hidden` and exposes no role/name.
+ * The caller `className` is merged AFTER the base/radius classes so caller
+ * utilities win.
  *
  * @param props - {@link BookCoverPlaceholderProps}
  * @returns The rendered generated-cover element.
@@ -371,6 +389,7 @@ export function BookCoverPlaceholder({
   book,
   size = 'lg',
   className,
+  decorative = false,
 }: BookCoverPlaceholderProps): JSX.Element {
   // Deterministic per-book tint set (pure, SSR-safe) — the ONLY source of cover
   // color. `palette.bg`/`palette.bgAccent` form the gradient; `palette.text`
@@ -404,10 +423,18 @@ export function BookCoverPlaceholder({
     ? `Cover of ${book.title} by ${book.author}`
     : `Cover of ${book.title}`;
 
+  // Accessibility exposure: a STANDALONE cover (default) is a single labelled
+  // image (`role="img"` + `aria-label`); a `decorative` cover (one nested inside
+  // a larger labelled control such as `BookCard`) is removed from the a11y tree
+  // via `aria-hidden` and exposes NO role/name, so the parent control's own
+  // accessible name is the sole announcement (see the `decorative` prop doc).
+  const a11yProps = decorative
+    ? ({ 'aria-hidden': true } as const)
+    : ({ role: 'img', 'aria-label': accessibleLabel } as const);
+
   return (
     <div
-      role="img"
-      aria-label={accessibleLabel}
+      {...a11yProps}
       className={containerClassName}
       style={{
         width: dimensions.width,

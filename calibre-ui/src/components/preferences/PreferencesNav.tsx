@@ -363,6 +363,8 @@ export default function PreferencesNav(): JSX.Element {
         value={filter}
         onChange={setFilter}
         placeholder="Filter preferences..."
+        id="preferences-filter"
+        name="preferences-filter"
         aria-label="Filter preferences"
         autoComplete="off"
         spellCheck={false}
